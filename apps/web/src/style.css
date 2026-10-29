@@ -72,3 +72,23 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .eventpanel{background:linear-gradient(160deg,#0e1d1e,#0b1418)}
 #log{scrollbar-color:#567568 #101b1c;scrollbar-width:thin}
 @media(prefers-reduced-motion:reduce){.action:hover:not(:disabled),.action:active:not(:disabled){transform:none}.viewport:before{display:none}}
+
+/* v1.2 — legibility, depth and responsive console polish */
+:root{color-scheme:dark;--ui-gold:#e5c47f;--ui-line:#426459}
+.shell{max-width:1600px}
+.viewport{position:relative;border-color:#7a8c70;box-shadow:0 0 0 1px #14221f,inset 0 0 80px #020908,0 18px 55px #0009}
+.viewport::after{content:"";pointer-events:none;position:absolute;inset:8px;border:1px solid #e0c88624;box-shadow:inset 0 0 24px #0007}
+.world-canvas{filter:contrast(1.07) saturate(1.14)}
+.eventpanel,.side-card,.combatbar{border-color:#3e5d53;box-shadow:0 15px 34px #0005}
+.section-title{color:var(--ui-gold)}
+.action,.icon-btn,.system-actions button,.zoom button,.modal-option{transition:background-color .12s ease,border-color .12s ease,box-shadow .12s ease}
+.action:active,.icon-btn:active,.zoom button:active,.system-actions button:active{transform:translateY(1px)}
+.action:focus-visible,.icon-btn:focus-visible,.system-actions button:focus-visible,.modal-option:focus-visible,.zoom button:focus-visible{outline:2px solid #ffe1a0;outline-offset:2px;box-shadow:0 0 0 4px #08110e}
+#log p.latest{background:linear-gradient(90deg,#b38b3417,transparent);padding-block:4px}
+.meter{height:8px;overflow:hidden;background:#061412}
+.meter i{box-shadow:0 0 10px #91dbb366}
+.modal-card{border-color:#ddbb73;box-shadow:0 35px 100px #000e,0 0 45px #ad8c3420}
+@media(min-width:1180px){.sidebar{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;scrollbar-width:thin}}
+@media(max-width:800px){.shell{padding-inline:12px}.layout{gap:12px}.top-controls{gap:8px}.brand{gap:10px}.hero-strip{letter-spacing:.06em}.viewport{min-height:330px}.toolbar{overflow-wrap:anywhere}.actionbar{gap:6px}}
+@media(max-width:440px){.topbar{flex-wrap:wrap;padding-block:10px}.top-controls{width:100%;justify-content:flex-end}.panel-heading{flex-wrap:wrap}.action{min-height:44px}.modal-card{max-height:87dvh}}
+@media(prefers-reduced-motion:reduce){.action,.icon-btn,.system-actions button,.zoom button,.modal-option{transition:none}.world-canvas{filter:none}}
