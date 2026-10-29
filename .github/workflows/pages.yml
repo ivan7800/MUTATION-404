@@ -1,0 +1,53 @@
+name: MUTATION 404 — Validate and deploy Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: mutation-404-pages
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: TypeScript, tests and web build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Type check
+        run: npm run typecheck
+      - name: Core tests
+        run: npm run test:core
+      - name: Build static web release
+        run: npm run build:offline
+      - name: Verify Pages entry point
+        run: |
+          test -f play/index.html
+          test -f play/style.css
+          test -f play/js/apps/web/src/main.js
+          grep -q './js/apps/web/src/main.js' play/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: play/
+
+  deploy:
+    name: Deploy game to GitHub Pages
+    needs: validate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
