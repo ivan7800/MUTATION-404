@@ -7,7 +7,7 @@ const SAVE_KEY='mutation404.v10.save',V09_KEY='mutation404.v09.save',V08_KEY='mu
 const root=document.querySelector<HTMLElement>('#app');if(!root)throw new Error('Falta #app');
 root.innerHTML=`
 <div class="shell">
-<header class="topbar"><div class="brand"><span class="brand-mark">◈</span><div><div class="brand-title">MUTATION <em>404</em></div><div class="brand-sub">NÁCAR // ARCHIVO 11 — RENACIMIENTO VISUAL</div></div></div><div class="top-controls"><span class="live"><span class="live-dot"></span>SEÑAL INESTABLE</span><button class="icon-btn" id="audio-btn" aria-pressed="false">♫ ACTIVAR SONIDO</button><button class="icon-btn" id="help-btn">? AYUDA</button></div></header>
+<header class="topbar"><div class="brand"><span class="brand-mark">◈</span><div><div class="brand-title">MUTATION <em>404</em></div><div class="brand-sub">NÁCAR // ARCHIVO 11 — ECOS DE NÁCAR</div></div></div><div class="top-controls"><span class="live"><span class="live-dot"></span>SEÑAL INESTABLE</span><button class="icon-btn" id="audio-btn" aria-pressed="false">♫ ACTIVAR SONIDO</button><button class="icon-btn" id="help-btn">? AYUDA</button></div></header>
 <div class="hero-strip"><span><span id="biome-strip">REGIÓN / SALINAS DE VÉRTICE</span></span><span id="clock">07:00</span><span id="coords">X:32 Y:32</span><span class="strip-accent" id="exploration">EXPLORACIÓN 0%</span></div>
 <main class="layout">
 <section class="game-column" aria-label="Área de juego">
@@ -32,7 +32,7 @@ root.innerHTML=`
 <div class="side-card mission-card"><div class="section-title">MISIÓN EN CURSO <span>PRINCIPAL</span></div><h3 id="quest-name">Eco bajo la sal</h3><p id="quest-text">Habla con Mara Venn, en la plaza.</p><div class="quest-state" id="quest-state">● SIN INICIAR</div></div>
 <div class="side-card"><div class="section-title">EQUIPO Y SUMINISTROS <span>W3</span></div><div id="equipment-summary" class="equipment-summary"></div></div>
 <div class="side-card"><div class="section-title">SISTEMA <span>v1.0</span></div><div class="system-actions"><button id="save-btn">GUARDAR</button><button id="load-btn">CARGAR</button><button id="new-btn">NUEVA PARTIDA</button></div><div class="save-status" id="save-status">Autoguardado local activado.</div></div></aside></main>
-<footer><span>FARO CIEGO / NACAR_404</span><span>W10 — LOS ARCHIVOS DEL ABISMO</span><span>JUGABLE SIN CONEXIÓN EXTERNA</span></footer>
+<footer><span>FARO CIEGO / NACAR_404</span><span>W13 — ECOS DE NÁCAR</span><span>JUGABLE SIN CONEXIÓN EXTERNA</span></footer>
 </div>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-header"><span id="modal-caption">TRANSMISIÓN LOCAL</span><button id="modal-close" aria-label="Cerrar diálogo">✕</button></div><h2 id="modal-title">Registro</h2><div id="modal-content"></div><div id="modal-options"></div></div></div>`;
 const $=<T extends HTMLElement>(selector:string):T=>{const el=document.querySelector<T>(selector);if(!el)throw new Error(`Elemento ${selector} ausente`);return el;};
@@ -148,7 +148,12 @@ function actFromModal(command:Command):void{closeModal();act(command);}
 function handleDialogue():void{const d=state.dialogue;if(d)showModal(d.speaker,`<p>${escapeHtml(d.text)}</p>`,d.options,'dialogue');}
 function act(command:Command):void{
   if(modalMode)return;
+  const beforeHp=state.stats.hp;
   const result=dispatch(state,command);
+  if(result.accepted){
+    const kind=state.stats.hp<beforeHp?'damage':command.type==='cast'?'mutation':command.type==='scan'?'scan':(['attack','fire'].includes(command.type)?'attack':null);
+    if(kind){renderer.effect(state,kind);audio.cue(kind);}
+  }
   if(command.type==='interact'&&state.dialogue)handleDialogue();
   if(!result.accepted&&!['inspect','target'].includes(command.type))write('#save-status',result.message);
   if(result.accepted&&result.timeCost>0){stepCount++;if(stepCount%8===0&&state.stats.hp>0)save(true);}
