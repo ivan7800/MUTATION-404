@@ -16,6 +16,23 @@ export class AsciiRenderer {
   private cellW=15;
   private cellH=23;
   private ambience=0;
+  private lastState:GameState|null=null;
+  private effectUntil=0;
+  private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
+  private effectFrame=0;
+  /** Cosmetic-only bursts: never advance simulation time or consume RNG. */
+  effect(state:GameState,kind:'attack'|'mutation'|'scan'|'damage'):void{
+    if(this.reducedMotion)return;
+    this.lastState=state;this.effectKind=kind;this.effectUntil=performance.now()+300;
+    if(this.effectFrame)return;
+    const animate=():void=>{
+      this.effectFrame=0;
+      if(!this.lastState||performance.now()>=this.effectUntil)return;
+      this.draw(this.lastState);
+      this.effectFrame=requestAnimationFrame(animate);
+    };
+    this.effectFrame=requestAnimationFrame(animate);
+  }
   private reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
   constructor(element:HTMLElement){
     this.canvas=document.createElement('canvas');
@@ -35,6 +52,7 @@ export class AsciiRenderer {
   zoom(dir:number):void{this.fontSize=Math.max(13,Math.min(25,this.fontSize+dir));this.cellW=Math.round(this.fontSize*.83);this.cellH=this.fontSize+5;this.resize();}
   focus():void{this.canvas.focus();}
   draw(state:GameState):void{
+    this.lastState=state;
     const ctx=this.ctx,w=VIEW_W*this.cellW,h=VIEW_H*this.cellH;
     const currentBiome=biomeAt(state.seed,state.player.x,state.player.y);
     ctx.globalAlpha=1;ctx.fillStyle=coordsForZone(state.zone)?BIOMES[currentBiome].shadow:'#080c16';ctx.fillRect(0,0,w,h);
@@ -134,6 +152,20 @@ export class AsciiRenderer {
         ctx.fillStyle=weather==='esporas'?'#9fdca7':weather==='estatica'?'#b5f5ec':weather==='distorsion'?'#da8acc':'#d9c49d';
         ctx.fillRect(x,y,weather==='polvo'?3:2,weather==='polvo'?1:2);
       }
+    }
+    // Short-lived frame-driven feedback never changes simulation rules.
+    const remaining=this.effectUntil-performance.now();
+    if(remaining>0&&!this.reducedMotion){
+      const progress=1-remaining/300;
+      const cx=px+this.cellW/2,cy=py+this.cellH/2;
+      const tint=this.effectKind==='mutation'?'#bda5ff':this.effectKind==='damage'?'#ff6b74':this.effectKind==='attack'?'#ffcb81':'#8de3dc';
+      ctx.beginPath();ctx.arc(cx,cy,7+progress*90,0,Math.PI*2);
+      ctx.strokeStyle=tint;ctx.lineWidth=Math.max(.5,2*(1-progress));ctx.globalAlpha=Math.max(0,.8*(1-progress));ctx.stroke();
+      for(let i=0;i<10;i++){
+        const a=i*Math.PI/5+progress*.9,d=11+progress*48;
+        ctx.fillStyle=tint;ctx.fillRect(cx+Math.cos(a)*d,cy+Math.sin(a)*d,2,2);
+      }
+      ctx.globalAlpha=1;
     }
     ctx.globalAlpha=1;
     const shade=ctx.createRadialGradient(w/2,h/2,h*.18,w/2,h/2,w*.68);
