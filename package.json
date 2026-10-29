@@ -1,0 +1,30 @@
+{
+  "name": "mutation-404",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "vite --config apps/web/vite.config.ts",
+    "build": "tsc -p tsconfig.play.json --noEmit && vite build --config apps/web/vite.config.ts",
+    "build:offline": "tsc -p tsconfig.play.json && node scripts/build-offline.mjs",
+    "typecheck": "tsc -p tsconfig.play.json --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "test:core": "tsc -p tsconfig.core.json && node --test tests/*.test.mjs",
+    "lint": "eslint .",
+    "start": "node scripts/server.mjs"
+  },
+  "dependencies": {
+    "pixi.js": "^8.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^7.0.0",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

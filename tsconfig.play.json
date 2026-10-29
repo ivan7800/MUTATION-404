@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "rootDir": ".",
+    "outDir": "play/js",
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true,
+    "noEmitOnError": true
+  },
+  "include": ["packages/core/src/**/*.ts", "apps/web/src/main.ts", "apps/web/src/renderer.ts", "apps/web/src/audio.ts"]
+}

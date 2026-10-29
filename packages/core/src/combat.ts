@@ -1,0 +1,165 @@
+import { placeField, type Field } from './environment.js';
+import { hasLineOfSight } from './fov.js';
+import { biomeAt, WEATHER, weatherAt } from './biomes.js';
+import { SeededRng } from './rng.js';
+import { ACTORS, HEIGHT, index, passable, WIDTH, within, type Point, type Tile } from './world.js';
+
+export type EnemyKind = 'crawler' | 'sentinel' | 'larva' | 'moth' | 'drone' | 'spore';
+export type Behaviour = 'idle' | 'hunting' | 'searching' | 'fleeing';
+export interface Enemy extends Point { id:string; kind:EnemyKind; hp:number; mode:Behaviour; lastKnown?:Point; searchTurns:number;stunned?:number }
+export interface EnemyDef {name:string; glyph:string; color:string; hp:number; attack:number; armor:number; evade:number; xp:number; sight:number}
+export const ENEMY_DEFS:Record<EnemyKind,EnemyDef>={
+  crawler:{name:'Carroñero de sal',glyph:'s',color:'#f0a66c',hp:9,attack:4,armor:0,evade:12,xp:5,sight:6},
+  sentinel:{name:'Vigía de cobre',glyph:'V',color:'#e6be79',hp:16,attack:5,armor:2,evade:3,xp:9,sight:7},
+  larva:{name:'Larva de médula',glyph:'l',color:'#ba89d9',hp:12,attack:6,armor:1,evade:7,xp:7,sight:5},
+  moth:{name:'Polilla de ceniza',glyph:'p',color:'#e5a28c',hp:7,attack:3,armor:0,evade:15,xp:6,sight:6},
+  drone:{name:'Cazador de ferrita',glyph:'D',color:'#9ac6d6',hp:15,attack:5,armor:2,evade:7,xp:10,sight:7},
+  spore:{name:'Pastor de esporas',glyph:'f',color:'#9be3a9',hp:11,attack:4,armor:1,evade:11,xp:8,sight:5}
+};
+export type ItemId='blade'|'pistol'|'coat'|'medkit'|'ammo'|'scrap'|'carapace'|'capacitor'|'rifle'|'shell-armor';
+export interface ItemDef {name:string; description:string; kind:'melee'|'ranged'|'armor'|'consumable'|'resource'; damage?:number; range?:number; armor?:number }
+export const ITEM_DEFS:Record<ItemId,ItemDef>={
+  blade:{name:'Hoja de desguace',description:'Acero recocido para corta distancia.',kind:'melee',damage:2,range:1},
+  pistol:{name:'Lanzapúas',description:'Arma de proyectiles de corto alcance; usa munición.',kind:'ranged',damage:4,range:6},
+  coat:{name:'Abrigo salino',description:'Protección ligera para errantes.',kind:'armor',armor:1},
+  medkit:{name:'Ampolla reconstituyente',description:'Restaura 12 puntos de vitalidad.',kind:'consumable'},
+  ammo:{name:'Púas de munición',description:'Munición para lanzapúas y rifle.',kind:'resource'},
+  scrap:{name:'Chatarra conductora',description:'Material de artesanía futuro.',kind:'resource'},
+  carapace:{name:'Caparazón petrificado',description:'Restos de fauna mutada.',kind:'resource'},
+  capacitor:{name:'Condensador de cobre',description:'Componente de máquinas antiguas.',kind:'resource'},
+  rifle:{name:'Carabina de bobina',description:'Alcance elevado y daño superior.',kind:'ranged',damage:7,range:8},
+  'shell-armor':{name:'Coraza de médula',description:'Protección pesada de tejido mineral.',kind:'armor',armor:3}
+};
+export interface ItemStack {id:ItemId; count:number}
+export interface GroundItem extends Point {id:string; item:ItemId; count:number}
+export interface PlayerStats {hp:number;maxHp:number;focus:number;maxFocus:number;xp:number;level:number;credits:number}
+export interface Equipment {melee:'blade';ranged:'pistol'|'rifle';armor:'coat'|'shell-armor';active:'melee'|'ranged'}
+export const INITIAL_INVENTORY:ItemStack[]=[
+  {id:'blade',count:1},{id:'pistol',count:1},{id:'coat',count:1},{id:'medkit',count:2},{id:'ammo',count:12}
+];
+export const INITIAL_STATS:PlayerStats={hp:32,maxHp:32,focus:18,maxFocus:18,xp:0,level:1,credits:20};
+export const INITIAL_EQUIPMENT:Equipment={melee:'blade',ranged:'pistol',armor:'coat',active:'melee'};
+const PRESETS:{x:number;y:number;kind:EnemyKind}[]=[
+  {x:13,y:13,kind:'crawler'},{x:16,y:11,kind:'crawler'},
+  {x:73,y:14,kind:'sentinel'},{x:81,y:16,kind:'sentinel'},
+  {x:73,y:49,kind:'larva'},{x:78,y:54,kind:'larva'},
+  {x:19,y:51,kind:'crawler'},{x:18,y:55,kind:'larva'},
+  {x:54,y:17,kind:'crawler'},{x:63,y:32,kind:'sentinel'},{x:57,y:45,kind:'larva'},
+  {x:8,y:18,kind:'moth'},{x:10,y:16,kind:'moth'},
+  {x:85,y:22,kind:'drone'},{x:84,y:29,kind:'drone'},
+  {x:86,y:53,kind:'spore'},{x:89,y:57,kind:'spore'}
+];
+export const inFaro=(p:Point):boolean=>p.x>=18&&p.x<=47&&p.y>=21&&p.y<=43;
+export const manhattan=(a:Point,b:Point):number=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+export function spawnEnemies(tiles:readonly Tile[]):Enemy[]{
+  const occupied=new Set<string>(ACTORS.map(a=>`${a.x},${a.y}`));
+  return PRESETS.map((s,i)=>{
+    let pos:Point|undefined;
+    // Fixed deterministic fallback, independent of RNG and pre-existing NPCs.
+    for(let radius=0;radius<=6&&!pos;radius++){
+      for(let dy=-radius;dy<=radius&&!pos;dy++)for(let dx=-radius;dx<=radius;dx++){
+        const x=s.x+dx,y=s.y+dy;
+        if(Math.max(Math.abs(dx),Math.abs(dy))!==radius||!within(x,y)||inFaro({x,y})||!passable(tiles[index(x,y)])||occupied.has(`${x},${y}`))continue;
+        pos={x,y};break;
+      }
+    }
+    if(!pos)throw new Error(`No se puede colocar criatura ${i}`);
+    occupied.add(`${pos.x},${pos.y}`);
+    return {id:`hostile-${i}`,kind:s.kind,x:pos.x,y:pos.y,hp:ENEMY_DEFS[s.kind].hp,mode:'idle',searchTurns:0};
+  });
+}
+export function stackCount(inventory:readonly ItemStack[],id:ItemId):number{return inventory.find(x=>x.id===id)?.count??0;}
+export function addStack(inventory:ItemStack[],id:ItemId,count:number):void{
+  if(!Number.isInteger(count)||count<=0)throw new Error('Cantidad de objetos inválida.');
+  const found=inventory.find(x=>x.id===id);if(found)found.count+=count;else inventory.push({id,count});
+}
+export function removeStack(inventory:ItemStack[],id:ItemId,count:number):boolean{
+  if(!Number.isInteger(count)||count<=0)return false;
+  const found=inventory.find(x=>x.id===id);if(!found||found.count<count)return false;
+  found.count-=count;if(found.count===0)inventory.splice(inventory.indexOf(found),1);return true;
+}
+export function xpNeeded(level:number):number{return level*12;}
+export interface EnemyWorld {
+  player:Point;tiles:Tile[];enemies:Enemy[];stats:PlayerStats;rngState:number;equipment:Equipment;seed?:number;tick?:number;exposure?:number;fields?:Field[];bonusArmor?:number;genome?:{unlocked:string[]};
+}
+export function nextRandom(s:EnemyWorld):SeededRng{
+  const rng=new SeededRng(s.rngState);return rng;
+}
+/** Pathfind a single move; BFS is bounded to a local search envelope (performance). */
+export function nextStep(tiles:readonly Tile[],from:Point,to:Point,occupied:Set<string>,maxSearch=240):Point|undefined{
+  const start=index(from.x,from.y),dest=index(to.x,to.y);
+  if(start===dest)return undefined;
+  const q=[start],parents=new Map<number,number>([[start,-1]]);
+  for(let at=0;at<q.length&&at<maxSearch;at++){
+    const v=q[at];if(v===dest)break;
+    const x=v%WIDTH,y=Math.floor(v/WIDTH);
+    for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
+      const nx=x+dx,ny=y+dy,ni=index(nx,ny);
+      if(!within(nx,ny)||parents.has(ni)||!passable(tiles[ni])||inFaro({x:nx,y:ny})||occupied.has(`${nx},${ny}`))continue;
+      parents.set(ni,v);q.push(ni);
+    }
+  }
+  if(!parents.has(dest))return undefined;
+  let cursor=dest;
+  while(parents.get(cursor)!==start&&parents.get(cursor)!==-1)cursor=parents.get(cursor)!;
+  return {x:cursor%WIDTH,y:Math.floor(cursor/WIDTH)};
+}
+export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
+  if(s.stats.hp<=0||inFaro(s.player))return;
+  const rng=nextRandom(s);
+  const blocked=new Set<string>(ACTORS.map(a=>`${a.x},${a.y}`));
+  for(const enemy of s.enemies)if(enemy.hp>0)blocked.add(`${enemy.x},${enemy.y}`);
+  for(const e of s.enemies){
+    if(e.hp<=0)continue;
+    if((e.stunned??0)>0){e.stunned!--;report(`ATURDIMIENTO // ${ENEMY_DEFS[e.kind].name} pierde su turno.`);continue;}
+    const def=ENEMY_DEFS[e.kind],dist=manhattan(e,s.player);
+    const sight=s.seed===undefined||s.tick===undefined?def.sight:Math.min(def.sight,WEATHER[weatherAt(s.seed,s.tick,biomeAt(s.seed,e.x,e.y))].radius);
+    const canSee=dist<=sight&&(e.kind==='larva'?dist<=3||hasLineOfSight(s.tiles,e.x,e.y,s.player.x,s.player.y):hasLineOfSight(s.tiles,e.x,e.y,s.player.x,s.player.y));
+    if(canSee){e.mode='hunting';e.lastKnown={...s.player};e.searchTurns=3;}
+    if(e.kind==='crawler'&&e.hp<=3&&canSee)e.mode='fleeing';
+    if(e.mode==='hunting'&&!canSee)e.mode='searching';
+    if(e.mode==='searching'){if(e.searchTurns<=0){e.mode='idle';delete e.lastKnown;}else e.searchTurns--;}
+    // Attack using true position only when target currently sensed.
+    if(e.mode==='hunting'&&canSee&&dist===1){
+      const hit=rng.int(1,100)<=Math.min(95,67+e.kind.length-(eqArmor(s.equipment)+(s.genome?.unlocked.includes('dermal-plates')?1:0))*5);
+      if(hit){const damage=Math.max(1,rng.int(1,def.attack+2)-eqArmor(s.equipment)-(s.genome?.unlocked.includes('dermal-plates')?1:0));s.stats.hp=Math.max(0,s.stats.hp-damage);report(`COMBATE // ${def.name} te hiere: -${damage} PV.`);
+        if(e.kind==='spore'&&s.exposure!==undefined){const amount=s.genome?.unlocked.includes('spore-symbiosis')?1:3;s.exposure=Math.min(100,s.exposure+amount);report(`ESPORAS // El contacto aumenta tu exposición biológica (+${amount}).`);}
+      }
+      else report(`COMBATE // Esquivas el ataque de ${def.name}.`);
+      if(s.stats.hp<=0){report('ESTADO CRÍTICO // Has caído en las salinas.');break;}
+      continue;
+    }
+    // Species-specific terrain-changing abilities; telegraphed and subject to sight.
+    if(s.fields&&canSee&&dist>=2&&dist<=4&&s.tick!==undefined){
+      const turn=Math.floor(s.tick/100);
+      if(e.kind==='spore'&&turn%4===0){placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'spores',ttl:3});report('AVISO // El pastor libera una nube de esporas bajo tus pies.');continue;}
+      if(e.kind==='drone'&&turn%5===0){placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});report('AVISO // El cazador polariza el suelo: aléjate del arco eléctrico.');continue;}
+      if(e.kind==='moth'&&turn%6===0){placeField(s.fields,{x:e.x,y:e.y,kind:'spores',ttl:3});report('AVISO // Una polilla exhala polvo vivo sobre su posición.');continue;}
+    }
+    // Sentinels have low-frequency ranged attacks; require real LoS.
+    if((e.kind==='sentinel'||e.kind==='drone')&&e.mode==='hunting'&&canSee&&dist>=2&&dist<=4&&rng.int(0,2)===0){
+      const hit=rng.int(1,100)<=60;
+      if(hit){const damage=Math.max(1,rng.int(2,6)-eqArmor(s.equipment));s.stats.hp=Math.max(0,s.stats.hp-damage);report(`DISPARO // Un vigía te alcanza: -${damage} PV.`);}
+      else report('DISPARO // Una descarga de cobre pasa a tu lado.');
+      if(s.stats.hp<=0){report('ESTADO CRÍTICO // Has caído en las salinas.');break;}
+      continue;
+    }
+    let to:Point|undefined;
+    if(e.mode==='fleeing'){
+      const candidates:[[number,number],[number,number],[number,number],[number,number]]=[[0,-1],[1,0],[0,1],[-1,0]];
+      to=candidates.map(([dx,dy])=>({x:e.x+dx,y:e.y+dy})).filter(p=>within(p.x,p.y)&&passable(s.tiles[index(p.x,p.y)])&&!inFaro(p)&&!blocked.has(`${p.x},${p.y}`)).sort((a,b)=>manhattan(b,s.player)-manhattan(a,s.player))[0];
+    } else if((e.mode==='hunting'||e.mode==='searching')&&e.lastKnown){
+      to=nextStep(s.tiles,e,e.lastKnown,blocked);
+      if(e.mode==='searching'&&manhattan(e,e.lastKnown)===0){e.mode='idle';delete e.lastKnown;}
+    } else if(rng.int(0,4)===0&&dist<=14){
+      const dirs:[[number,number],[number,number],[number,number],[number,number]]=[[0,-1],[1,0],[0,1],[-1,0]];
+      const [dx,dy]=dirs[rng.int(0,3)];const p={x:e.x+dx,y:e.y+dy};
+      if(within(p.x,p.y)&&passable(s.tiles[index(p.x,p.y)])&&!inFaro(p)&&!blocked.has(`${p.x},${p.y}`))to=p;
+    }
+    if(to&&!(to.x===s.player.x&&to.y===s.player.y)){
+      blocked.delete(`${e.x},${e.y}`);e.x=to.x;e.y=to.y;blocked.add(`${e.x},${e.y}`);
+    }
+  }
+  s.rngState=rng.state;
+}
+export function eqArmor(equipment:Equipment):number{return ITEM_DEFS[equipment.armor].armor??0;}
