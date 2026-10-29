@@ -1,3 +1,15 @@
+# MUTATION 404 v1.2 — Consola de Nácar
+
+Actualización incremental: mayor contraste del mapa ASCII, navegación y foco más visibles, adaptación móvil y pipeline de publicación de GitHub Pages.
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+**Publicación:** el workflow `.github/workflows/pages.yml` ejecuta comprobación de tipos, pruebas y compilación estática; publica el contenido de `play/` como raíz del sitio.
+
+**Limitaciones:** Canvas 2D sigue siendo el renderizador; PixiJS, simulación avanzada y pruebas visuales de extremo a extremo continúan pendientes. Este hito no certifica un 9,5/10.
+
+---
+
 # MUTATION 404 v1.1 — Renacimiento visual
 
 Versión candidata del RPG ASCII para web, Linux y Windows mediante navegador local.
