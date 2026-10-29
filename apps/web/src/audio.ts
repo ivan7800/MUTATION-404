@@ -20,6 +20,21 @@ export class AtmosphereAudio {
     try{await this.context.resume();}catch{return false;}
     this.enabled=true;this.gain?.gain.setTargetAtTime(.04,this.context.currentTime,.3);return true;
   }
+  /** Subtle synthesized cues; opt-in through existing audio toggle. */
+  cue(kind:'attack'|'mutation'|'scan'|'damage'):void{
+    if(!this.enabled||!this.context)return;
+    const context=this.context,now=context.currentTime;
+    const osc=context.createOscillator(),env=context.createGain();
+    const freq={attack:180,mutation:510,scan:650,damage:100}[kind];
+    osc.type=kind==='mutation'?'triangle':'sine';
+    osc.frequency.setValueAtTime(freq,now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(45,freq*.56),now+.16);
+    env.gain.setValueAtTime(.0001,now);
+    env.gain.exponentialRampToValueAtTime(.035,now+.015);
+    env.gain.exponentialRampToValueAtTime(.0001,now+.18);
+    osc.connect(env);env.connect(context.destination);
+    osc.start(now);osc.stop(now+.19);
+  }
   update(biome:BiomeId,weather:WeatherId):void{
     if(!this.context||!this.oscillator||!this.overtone)return;
     const pitch:Record<BiomeId,number>={salinas:68,ceniza:53,hierro:82,vidrio:111,medula:61,umbral:43};
