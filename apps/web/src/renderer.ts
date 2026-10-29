@@ -100,7 +100,12 @@ export class AsciiRenderer {
       if(cx<0||cy<0||cx>=VIEW_W||cy>=VIEW_H)continue;
       const def=FIELD_VISUALS[field.kind],px=cx*this.cellW,py=cy*this.cellH;
       ctx.fillStyle=field.kind==='fire'?'#70352b':field.kind==='electric'?'#173e4c':'#244830';
-      ctx.globalAlpha=.83;ctx.fillRect(px,py,this.cellW,this.cellH);
+      ctx.globalAlpha=.72;ctx.fillRect(px,py,this.cellW,this.cellH);
+      if(!this.reducedMotion){
+        const flicker=.18+.13*Math.sin(this.ambience*.8+field.x*2.3+field.y);
+        ctx.fillStyle=def.color;ctx.globalAlpha=flicker;
+        ctx.fillRect(px+1,py+1,this.cellW-2,this.cellH-2);
+      }
       ctx.globalAlpha=1;ctx.fillStyle=def.color;ctx.fillText(def.glyph,px+this.cellW/2,py+this.cellH/2);
     }
     // Naturally occurring materials are visible once their sector has been surveyed.
@@ -131,6 +136,10 @@ export class AsciiRenderer {
       if(state.targetId===enemy.id){ctx.shadowBlur=11;ctx.shadowColor='#f6b76e';}
       if(state.targetId===enemy.id){ctx.strokeStyle='#ffcb72';ctx.lineWidth=1.5;ctx.strokeRect(px+1,py+1,this.cellW-2,this.cellH-2);}
       ctx.fillStyle=(enemy.stunned??0)>0?'#e3aaf5':def.color;ctx.fillText(def.glyph,px+this.cellW/2,py+this.cellH/2);ctx.shadowBlur=0;
+      // Miniature health bar provides threat feedback without a separate modal.
+      const health=Math.max(0,Math.min(1,enemy.hp/def.hp));
+      if(health<1){ctx.fillStyle='#361c20';ctx.fillRect(px+1,py+this.cellH-3,this.cellW-2,2);ctx.fillStyle=health>.45?'#ddb878':'#ee7373';ctx.fillRect(px+1,py+this.cellH-3,(this.cellW-2)*health,2);}
+
     }
     const px=(state.player.x-ox)*this.cellW,py=(state.player.y-oy)*this.cellH;
     ctx.shadowColor=state.stats.hp>0?'#ffe29a':'#c78487';ctx.shadowBlur=this.reducedMotion?5:9;
