@@ -1,3 +1,13 @@
+# MUTATION 404 v1.3 — Ecos de Nácar
+
+La versión 1.3 suma retroalimentación visual animada de ataques, mutaciones, escaneo y daño; señales sonoras sintetizadas opcionales (solo después de activar el audio) y conserva el motor y los guardados.
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+**Estado:** 88 pruebas de núcleo superadas en la comprobación local; la compilación web ha pasado. La validación visual manual en navegador real sigue pendiente. El renderizador todavía es Canvas 2D.
+
+---
+
 # MUTATION 404 v1.2 — Consola de Nácar
 
 Actualización incremental: mayor contraste del mapa ASCII, navegación y foco más visibles, adaptación móvil y pipeline de publicación de GitHub Pages.
