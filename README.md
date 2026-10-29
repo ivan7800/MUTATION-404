@@ -1,3 +1,21 @@
+# MUTATION 404 v1.4 — Nácar Vivo
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Novedades
+- Las criaturas evitan fuego y electricidad al perseguir al jugador cuando hay un camino alternativo, conservando una ruta de emergencia si no pueden rodear el obstáculo.
+- Campos de fuego, electricidad y esporas con pulsos visuales (desactivados cuando el sistema solicita menos movimiento).
+- Barras de salud compactas directamente bajo enemigos heridos en el mapa ASCII.
+- Compatibilidad con guardados anteriores: los cambios son de lógica de IA y presentación.
+
+## Validación
+
+El workflow `.github/workflows/pages.yml` realiza comprobación TypeScript, pruebas del motor, construcción web y despliegue en GitHub Pages. Verifica su resultado en Actions. La validación manual en navegador real y el balance de los nuevos comportamientos siguen siendo tareas de QA.
+
+**Motor gráfico:** Canvas 2D; PixiJS/WebGL2 todavía no está integrado.
+
+---
+
 # MUTATION 404 v1.3 — Ecos de Nácar
 
 La versión 1.3 suma retroalimentación visual animada de ataques, mutaciones, escaneo y daño; señales sonoras sintetizadas opcionales (solo después de activar el audio) y conserva el motor y los guardados.
