@@ -86,7 +86,7 @@ export function nextRandom(s:EnemyWorld):SeededRng{
   const rng=new SeededRng(s.rngState);return rng;
 }
 /** Pathfind a single move; BFS is bounded to a local search envelope (performance). */
-export function nextStep(tiles:readonly Tile[],from:Point,to:Point,occupied:Set<string>,maxSearch=240):Point|undefined{
+export function nextStep(tiles:readonly Tile[],from:Point,to:Point,occupied:Set<string>,maxSearch=240,hazards:ReadonlySet<string>=new Set()):Point|undefined{
   const start=index(from.x,from.y),dest=index(to.x,to.y);
   if(start===dest)return undefined;
   const q=[start],parents=new Map<number,number>([[start,-1]]);
@@ -95,7 +95,7 @@ export function nextStep(tiles:readonly Tile[],from:Point,to:Point,occupied:Set<
     const x=v%WIDTH,y=Math.floor(v/WIDTH);
     for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
       const nx=x+dx,ny=y+dy,ni=index(nx,ny);
-      if(!within(nx,ny)||parents.has(ni)||!passable(tiles[ni])||inFaro({x:nx,y:ny})||occupied.has(`${nx},${ny}`))continue;
+      if(!within(nx,ny)||parents.has(ni)||!passable(tiles[ni])||inFaro({x:nx,y:ny})||occupied.has(`${nx},${ny}`)||(hazards.has(`${nx},${ny}`)&&ni!==dest))continue;
       parents.set(ni,v);q.push(ni);
     }
   }
@@ -108,6 +108,8 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
   if(s.stats.hp<=0||inFaro(s.player))return;
   const rng=nextRandom(s);
   const blocked=new Set<string>(ACTORS.map(a=>`${a.x},${a.y}`));
+  // Avoid hazardous ground unless no safe route exists; spores remain safe for their own species.
+  const hazards=new Set((s.fields??[]).filter(f=>f.ttl>0&&f.kind!=='spores').map(f=>`${f.x},${f.y}`));
   for(const enemy of s.enemies)if(enemy.hp>0)blocked.add(`${enemy.x},${enemy.y}`);
   for(const e of s.enemies){
     if(e.hp<=0)continue;
@@ -147,14 +149,14 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
     let to:Point|undefined;
     if(e.mode==='fleeing'){
       const candidates:[[number,number],[number,number],[number,number],[number,number]]=[[0,-1],[1,0],[0,1],[-1,0]];
-      to=candidates.map(([dx,dy])=>({x:e.x+dx,y:e.y+dy})).filter(p=>within(p.x,p.y)&&passable(s.tiles[index(p.x,p.y)])&&!inFaro(p)&&!blocked.has(`${p.x},${p.y}`)).sort((a,b)=>manhattan(b,s.player)-manhattan(a,s.player))[0];
+      to=candidates.map(([dx,dy])=>({x:e.x+dx,y:e.y+dy})).filter(p=>within(p.x,p.y)&&passable(s.tiles[index(p.x,p.y)])&&!inFaro(p)&&!blocked.has(`${p.x},${p.y}`)&&!hazards.has(`${p.x},${p.y}`)).sort((a,b)=>manhattan(b,s.player)-manhattan(a,s.player))[0];
     } else if((e.mode==='hunting'||e.mode==='searching')&&e.lastKnown){
-      to=nextStep(s.tiles,e,e.lastKnown,blocked);
+      to=nextStep(s.tiles,e,e.lastKnown,blocked,240,hazards)??nextStep(s.tiles,e,e.lastKnown,blocked);
       if(e.mode==='searching'&&manhattan(e,e.lastKnown)===0){e.mode='idle';delete e.lastKnown;}
     } else if(rng.int(0,4)===0&&dist<=14){
       const dirs:[[number,number],[number,number],[number,number],[number,number]]=[[0,-1],[1,0],[0,1],[-1,0]];
       const [dx,dy]=dirs[rng.int(0,3)];const p={x:e.x+dx,y:e.y+dy};
-      if(within(p.x,p.y)&&passable(s.tiles[index(p.x,p.y)])&&!inFaro(p)&&!blocked.has(`${p.x},${p.y}`))to=p;
+      if(within(p.x,p.y)&&passable(s.tiles[index(p.x,p.y)])&&!inFaro(p)&&!blocked.has(`${p.x},${p.y}`)&&!hazards.has(`${p.x},${p.y}`))to=p;
     }
     if(to&&!(to.x===s.player.x&&to.y===s.player.y)){
       blocked.delete(`${e.x},${e.y}`);e.x=to.x;e.y=to.y;blocked.add(`${e.x},${e.y}`);
