@@ -61,7 +61,15 @@ export function generateRuin(seed:number,x:number,y:number,depth:1|2):ZoneMemory
    if(generated.tiles[index(xx,yy)]==='#')continue;
    generated.fields.push({x:xx,y:yy,kind:theme.hazard,ttl:20+i*5});
  }
- for(const e of generated.enemies)e.id=`ruin-${x}-${y}-${depth}-${e.id}`;
+ // Distinctive connected encounter chamber, one elite per deep regional ruin.
+ if(depth===2){
+   for(let xx=22;xx<=32;xx++)generated.tiles[index(xx,12)]=':';
+   for(let yy=9;yy<=16;yy++)for(let xx=27;xx<=33;xx++)generated.tiles[index(xx,yy)]='.';
+   generated.tiles[index(26,12)]='o';
+   generated.enemies=generated.enemies.filter(e=>!(e.x>=25&&e.x<=34&&e.y>=8&&e.y<=17));
+   generated.enemies.push({id:`elite-${x}-${y}-${depth}`,kind:'drone',x:30,y:12,hp:ENEMY_DEFS.drone.hp,mode:'idle',searchTurns:0});
+ }
+ for(const e of generated.enemies)if(!e.id.startsWith('elite-'))e.id=`ruin-${x}-${y}-${depth}-${e.id}`;
  return generated;
 }
 
