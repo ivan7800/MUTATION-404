@@ -66,3 +66,34 @@ test('the initial signal decision influences epilogue tone',async()=>{
   assert.notEqual(on.title,'');
  }
 });
+
+test('Nácar phase hazards are deterministic, signalled and compatible with save/load',()=>{
+ const s=finale();
+ assert.equal(dispatch(s,{type:'interact'}).accepted,true);
+ const g=s.enemies.find(e=>e.id===FINAL_GUARDIAN_ID);
+ assert.ok(g);
+ // Isolate the arena to test only phase emission, not the normal drone attack.
+ g.stunned=20;
+ s.tick=300;
+ assert.equal(dispatch(s,{type:'wait'}).accepted,true);
+ assert.ok(s.fields.some(f=>f.kind==='electric'));
+ assert.ok(s.log.some(x=>x.includes('NÁCAR · FASE 1')));
+ const saved=deserialize(serialize(s));
+ assert.deepEqual(saved.fields,s.fields);
+ const phaseOne=s.fields.length;
+ g.hp=15;
+ s.tick=700;
+ dispatch(s,{type:'wait'});
+ assert.ok(s.fields.some(f=>f.kind==='spores'),'phase 2 introduces spores');
+ g.hp=5;
+ s.tick=1100;
+ dispatch(s,{type:'wait'});
+ assert.ok(s.fields.some(f=>f.kind==='fire'),'phase 3 introduces fire');
+ assert.ok(s.fields.length>=phaseOne);
+});
+test('Nácar cannot create phase hazards outside the finale',()=>{
+ const s=createGame(404);
+ s.tick=300;
+ dispatch(s,{type:'wait'});
+ assert.equal(s.log.some(x=>x.includes('NÁCAR · FASE')),false);
+});

@@ -130,6 +130,30 @@ function changeZone(s:GameState,to:ZoneId):void{
 }
 const MARKET:Partial<Record<ItemId,{buy:number;sell:number}>>={medkit:{buy:12,sell:5},ammo:{buy:2,sell:1},scrap:{buy:6,sell:3},carapace:{buy:8,sell:4},capacitor:{buy:15,sell:8}};
 export { ZONE_NAMES, MARKET };
+/** Three deterministic guardian phases, without timers, RNG draws or save fields.
+ * Each pulse leaves a visible, avoidable tile hazard for the following turn.
+ * The same seed, turn, player position and guardian HP always produce the same result.
+ */
+function pulseNacar(s:GameState):void{
+  if(s.zone!=='zero-3'||s.stats.hp<=0||s.tick%400!==0)return;
+  const guardian=s.enemies.find(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0);
+  if(!guardian)return;
+  const ratio=guardian.hp/(ENEMY_DEFS.drone.hp*3);
+  const phase=ratio>2/3?1:ratio>1/3?2:3;
+  const kind:Field['kind']=phase===1?'electric':phase===2?'spores':'fire';
+  // One of two diagonal pairs alternates predictably, allowing dodging.
+  const diagonal=(Math.floor(s.tick/400)%2)===0;
+  const offsets=diagonal?[[-1,-1],[1,1]]:[[-1,1],[1,-1]];
+  let placed=0;
+  for(const [dx,dy] of offsets){
+    const x=s.player.x+dx,y=s.player.y+dy;
+    if(within(x,y)&&passable(s.tiles[index(x,y)])){
+      placeField(s.fields,{x,y,kind,ttl:3});
+      placed++;
+    }
+  }
+  if(placed)message(s,`NÁCAR · FASE ${phase} // ${phase===1?'Arcos eléctricos':phase===2?'Memorias esporales':'Incendio del corazón'}: el suelo diagonal se activa. Busca una ruta libre.`);
+}
 /** Every world-changing action uses this entry point; no hidden UI-side combat. */
 function advance(s:GameState,cost:number):void {
   s.tick+=cost;
@@ -146,6 +170,7 @@ function advance(s:GameState,cost:number):void {
     stepEnvironment(s,text=>message(s,text));
     for(const foe of s.enemies)if(foe.hp===0&&alive.has(foe.id))killEnemy(s,foe);
     if(s.stats.hp>0)takeEnemyTurn(s,text=>message(s,text));
+    pulseNacar(s);
     if(knows(s.genome,'regeneration')&&s.environmentalTurns%4===3&&s.exposure<65&&s.stats.hp>0){
       const healed=Math.min(1,s.stats.maxHp-s.stats.hp);s.stats.hp+=healed;
       if(healed)message(s,'MUTACIÓN // Tus tejidos se recomponen (+1 PV).');

@@ -4,6 +4,8 @@
 
 La v2.9 inicia la ampliación visual premium: el atlas de losetas de píxel se aplica a **todos los biomas regionales**, no solo al poblado y una ruina. Hay paletas específicas para Salinas, Ceniza, Hierro, Vidrio, Médula y Umbral, detalles propios por región y caché de texturas con separación de biomas. El modo ASCII permanece intacto, al igual que combate, generación y esquema de guardado 11.
 
+**Combate final v2.9:** Nácar libera ataques de área deterministas en tres fases según sus PV: descargas, esporas y fuego. Las áreas se colocan en diagonal, se anuncian mediante la bitácora y pueden esquivarse antes del siguiente pulso ambiental. No hay nuevos campos de guardado ni cambios al RNG.
+
 **Jefe final — mejora gráfica:** Nácar tiene ahora una silueta original con ocho espinas y corazón de cristal, glifo ASCII diferenciado y barra de salud proporcional a sus PV reforzados. Las mecánicas del combate final siguen pendientes de una revisión específica.
 
 **QA añadido:** Chromium captura una región exterior en los modos píxel y ASCII y comprueba errores JavaScript; las pruebas, compilación y despliegue siguen bloqueados por GitHub Actions si falla la validación.
