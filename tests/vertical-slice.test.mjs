@@ -36,3 +36,13 @@ test('v2.1 reusable character sprites cover all original species and reduced mot
  assert.match(renderer,/this\.artMode==='pixel'\?this\.drawCreature/);
  assert.match(renderer,/this\.reducedMotion\?0/);
 });
+
+test('v2.2 combat effects use real before/after HP, without mutating the game core',()=>{
+ assert.match(renderer,/combatFeedback\(previous:ReadonlyMap/);
+ assert.match(renderer,/enemy\.hp<before\.hp/);
+ assert.match(renderer,/this\.flashes\.set\(enemy\.id/);
+ assert.match(renderer,/this\.echoes\.push/);
+ assert.match(renderer,/field\.kind!=='electric'/);
+ assert.match(main,/beforeEnemies=new Map\(state\.enemies/);
+ assert.match(main,/renderer\.combatFeedback\(beforeEnemies,state\)/);
+});
