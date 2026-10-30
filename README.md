@@ -1,3 +1,24 @@
+# MUTATION 404 v2.6 — EQUILIBRIO Y SUPERVIVENCIA
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Mejoras verificables
+- Los enemigos heridos que huyen descansan un turno de cada dos. Antes, algunos carroñeros podían mantener una huida a la misma velocidad que el jugador, impidiendo terminar un combate cuerpo a cuerpo.
+- Los drones y vigías tecnológicos ofrecen ahora una probabilidad de recuperar **munición**, no medicina. La probabilidad de botín adicional continúa siendo 35 %; los enemigos biológicos mantienen la posibilidad de dejar ampollas.
+- Nuevo indicador persistente de supervivencia: PV, ampollas, munición y concentración, con advertencias de salud baja y crítica en colores legibles.
+- Auditoría reproducible de 24 semillas y cuatro escenarios: carroñeros cuerpo a cuerpo, vigías a distancia, drones a distancia y recuperación en el refugio. El resultado es un JSON descargable desde GitHub Actions.
+- Pruebas de regresión de huida y avisos de supervivencia, y pruebas Chromium para el HUD en WebGL y Canvas.
+
+## Compatibilidad
+Sigue vigente el esquema de guardado **11** y el selector Píxel/ASCII (Z). La simulación sigue siendo por turnos y determinista.
+
+## Alcance del análisis
+La telemetría evalúa **arenas controladas**, no una campaña completa. No mide la dificultad del mundo abierto, exploración, rutas de misiones, diversión subjetiva, ni FPS sobre GPU física. No se atribuye una puntuación 9,5/10 sin esas pruebas.
+
+[Informe y resultados de v2.6](./AUDITORIA_V2.6.md).
+
+---
+
 # MUTATION 404 v2.5 — AUDITORÍA DE LA EXPERIENCIA
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
