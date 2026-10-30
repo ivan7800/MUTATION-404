@@ -35,6 +35,26 @@ export class AtmosphereAudio {
     osc.connect(env);env.connect(context.destination);
     osc.start(now);osc.stop(now+.19);
   }
+  /** Distinct procedural tones per mutation; sound remains strictly opt-in. */
+  mutationCue(id:'kinetic-pulse'|'neural-shock'|'pyrokinesis'|'phase-step'):void{
+    if(!this.enabled||!this.context)return;
+    const now=this.context.currentTime;
+    const voices={
+      'kinetic-pulse':{start:130,end:54,wave:'sawtooth',length:.24},
+      'neural-shock':{start:770,end:210,wave:'square',length:.19},
+      'pyrokinesis':{start:330,end:92,wave:'triangle',length:.31},
+      'phase-step':{start:95,end:510,wave:'sine',length:.28}
+    } as const;
+    const voice=voices[id],osc=this.context.createOscillator(),env=this.context.createGain();
+    osc.type=voice.wave;
+    osc.frequency.setValueAtTime(voice.start,now);
+    osc.frequency.exponentialRampToValueAtTime(voice.end,now+voice.length);
+    env.gain.setValueAtTime(.0001,now);
+    env.gain.exponentialRampToValueAtTime(.027,now+.018);
+    env.gain.exponentialRampToValueAtTime(.0001,now+voice.length);
+    osc.connect(env);env.connect(this.context.destination);
+    osc.start(now);osc.stop(now+voice.length+.01);
+  }
   update(biome:BiomeId,weather:WeatherId):void{
     if(!this.context||!this.oscillator||!this.overtone)return;
     const pitch:Record<BiomeId,number>={salinas:68,ceniza:53,hierro:82,vidrio:111,medula:61,umbral:43};
