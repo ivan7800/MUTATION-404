@@ -67,26 +67,34 @@ test('the initial signal decision influences epilogue tone',async()=>{
  }
 });
 
-test('Nácar phase hazards are deterministic, signalled and compatible with save/load',()=>{
+test('Nácar phase hazards are deterministic, signalled and compatible with save/load',async()=>{
  const s=finale();
  assert.equal(dispatch(s,{type:'interact'}).accepted,true);
  const g=s.enemies.find(e=>e.id===FINAL_GUARDIAN_ID);
  assert.ok(g);
  // Isolate the arena to test only phase emission, not the normal drone attack.
  g.stunned=10;
- s.tick=300;
+ s.tick=200;
+ assert.equal(dispatch(s,{type:'wait'}).accepted,true);
+ const {nacarMark}=await import('../dist/core/core/src/campaign.js');
+ const marks=nacarMark(s.events,400);
+ assert.equal(marks.length,2);
+ const saved=deserialize(serialize(s));
+ assert.deepEqual(nacarMark(saved.events,400),marks);
+ s.player={x:16,y:10}; // Player dodges; attack must land at stored coordinates.
  assert.equal(dispatch(s,{type:'wait'}).accepted,true);
  assert.ok(s.fields.some(f=>f.kind==='electric'));
- assert.ok(s.log.some(x=>x.includes('NÁCAR · FASE 1')));
- const saved=deserialize(serialize(s));
- assert.deepEqual(saved.fields,s.fields);
+ assert.deepEqual(s.fields.filter(f=>f.kind==='electric').map(({x,y})=>({x,y})),marks.map(({x,y})=>({x,y})));
+ assert.equal(nacarMark(s.events,400).length,0);
  const phaseOne=s.fields.length;
  g.hp=25;
- s.tick=700;
+ s.tick=600;
+ dispatch(s,{type:'wait'});
  dispatch(s,{type:'wait'});
  assert.ok(s.fields.some(f=>f.kind==='spores'),'phase 2 introduces spores');
  g.hp=5;
- s.tick=1100;
+ s.tick=1000;
+ dispatch(s,{type:'wait'});
  dispatch(s,{type:'wait'});
  assert.ok(s.fields.some(f=>f.kind==='fire'),'phase 3 introduces fire');
  assert.ok(s.fields.length>=phaseOne);

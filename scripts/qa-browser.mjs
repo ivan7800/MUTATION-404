@@ -155,6 +155,8 @@ try{
     bossState.fields=[];bossState.ground=[];bossState.tick=300;
     bossState.quest={status:'completed',outcome:'broadcast',fuseFound:true};
     bossState.events.push('heart','campaign:awakened');
+    // Preserved telegraph fixture: the warning must already be committed to save data.
+    bossState.events.push(`nacar:mark:400:13:11:${phase}`,`nacar:mark:400:15:9:${phase}`);
     for(const site of CAMPAIGN_SITES){
       bossState.events.push(`relic:${site.x}:${site.y}:2`);
       bossState.events.push(`elite-cache:ruin-${site.x}-${site.y}-2`);

@@ -1,5 +1,5 @@
 import { RECIPES, RESOURCE_INFO, seedResources, initialEcology, ecologicalPulse, type EcologyState } from './ecology.js';
-import {campaignProgress, campaignObjective, endingStory, FINAL_GUARDIAN_ID, nacarPhase, nacarStrikeOffsets, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
+import {campaignProgress, campaignObjective, endingStory, FINAL_GUARDIAN_ID, nacarPhase, nacarStrikeOffsets, nacarMark, NACAR_MARK_PREFIX, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
 import { TASKS, GOODS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior, generateInterior, type Citizen } from './civilizations.js';
 import { SECTORS, coordsForZone, generateSector, sectorName, zoneForSector } from './frontier.js';
 import { generateDepth, generateRuin, ruinId, ruinName, parseRuin, themeForRuin, ZONE_NAMES, type ZoneId, type ZoneMemory } from './depths.js';
@@ -135,22 +135,32 @@ export { ZONE_NAMES, MARKET };
  * The same seed, turn, player position and guardian HP always produce the same result.
  */
 function pulseNacar(s:GameState):void{
-  if(s.zone!=='zero-3'||s.stats.hp<=0||s.tick%400!==0)return;
-  const guardian=s.enemies.find(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0);
-  if(!guardian)return;
-  const phase=nacarPhase(guardian.hp,ENEMY_DEFS.drone.hp*3);
-  const kind:Field['kind']=phase===1?'electric':phase===2?'spores':'fire';
-  // One of two diagonal pairs alternates predictably, allowing dodging.
-  const offsets=nacarStrikeOffsets(s.tick);
-  let placed=0;
-  for(const [dx,dy] of offsets){
-    const x=s.player.x+dx,y=s.player.y+dy;
-    if(within(x,y)&&passable(s.tiles[index(x,y)])){
-      placeField(s.fields,{x,y,kind,ttl:3});
-      placed++;
+  if(s.zone!=='zero-3'||s.stats.hp<=0)return;
+  const boss=s.enemies.find(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0);
+  if(!boss){s.events=s.events.filter(e=>!e.startsWith(NACAR_MARK_PREFIX));return;}
+  if(s.tick%400===300){
+    s.events=s.events.filter(e=>!e.startsWith(NACAR_MARK_PREFIX));
+    if(s.events.length>47)return; // Never overflow the 50-entry save validation.
+    const phase=nacarPhase(boss.hp,ENEMY_DEFS.drone.hp*3);
+    for(const [dx,dy] of nacarStrikeOffsets(s.tick+100)){
+      const x=s.player.x+dx,y=s.player.y+dy;
+      if(within(x,y)&&passable(s.tiles[index(x,y)]))
+        s.events.push(`${NACAR_MARK_PREFIX}${s.tick+100}:${x}:${y}:${phase}`);
     }
+    if(nacarMark(s.events,s.tick+100).length)
+      message(s,'NÁCAR // Impacto anunciado: las casillas señaladas no cambiarán aunque te muevas.');
+    return;
   }
-  if(placed)message(s,`NÁCAR · FASE ${phase} // ${phase===1?'Arcos eléctricos':phase===2?'Memorias esporales':'Incendio del corazón'}: el suelo diagonal se activa. Busca una ruta libre.`);
+  if(s.tick%400!==0)return;
+  const marks=nacarMark(s.events,s.tick);
+  s.events=s.events.filter(e=>!e.startsWith(NACAR_MARK_PREFIX));
+  // Never launch an untelegraphed strike (including resumed legacy saves).
+  for(const mark of marks){
+    if(!within(mark.x,mark.y)||!passable(s.tiles[index(mark.x,mark.y)]))continue;
+    const kind:Field['kind']=mark.phase===1?'electric':mark.phase===2?'spores':'fire';
+    placeField(s.fields,{x:mark.x,y:mark.y,kind,ttl:3});
+  }
+  if(marks.length)message(s,'NÁCAR // Las casillas anunciadas reciben el impacto. Esquiva las siguientes marcas.');
 }
 /** Every world-changing action uses this entry point; no hidden UI-side combat. */
 function advance(s:GameState,cost:number):void {

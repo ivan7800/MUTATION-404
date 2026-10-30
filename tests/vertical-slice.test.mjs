@@ -113,7 +113,7 @@ test('Nácar shows distinct phase text and persistent accessible boss HUD',()=>{
 test('v2.9 boss danger telegraph uses shared strike positions and supports reduced motion',()=>{
  const campaign=readFileSync('packages/core/src/campaign.ts','utf8');
  assert.match(campaign,/export function nacarStrikeOffsets/);
- assert.match(renderer,/nacarStrikeOffsets\(state\.tick\+100\)/);
+ assert.match(renderer,/nacarMark\(state\.events,state\.tick\+100\)/);
  assert.match(renderer,/state\.tick%400===300/);
  assert.match(renderer,/this\.reducedMotion\?\.85/);
  assert.match(main,/id="nacar-boss-warning"/);

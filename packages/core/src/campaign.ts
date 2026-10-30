@@ -21,6 +21,16 @@ export function nacarPhase(hp:number,maxHp:number):1|2|3{
 export function nacarStrikeOffsets(tick:number):ReadonlyArray<readonly [number,number]>{
   return Math.floor(tick/400)%2===0?[[-1,-1],[1,1]]:[[-1,1],[1,-1]];
 }
+export const NACAR_MARK_PREFIX='nacar:mark:';
+/** Saved, fixed attack coordinates — player movement cannot redirect a warning. */
+export function nacarMark(events:readonly string[],tick:number):{x:number;y:number;phase:1|2|3}[]{
+  return events.filter(e=>e.startsWith(NACAR_MARK_PREFIX+tick+':')).flatMap(raw=>{
+    const m=/^nacar:mark:(\d+):(\d+):(\d+):([123])$/.exec(raw);
+    if(!m)return [];
+    const x=Number(m[2]),y=Number(m[3]),phase=Number(m[4]) as 1|2|3;
+    return Number.isSafeInteger(x)&&Number.isSafeInteger(y)?[{x,y,phase}]:[];
+  });
+}
 export const NACAR_PHASES={
   1:{name:'RESONANCIA ELÉCTRICA',color:'#8fe8f2'},
   2:{name:'MEMORIAS ESPORALES',color:'#b9e78c'},

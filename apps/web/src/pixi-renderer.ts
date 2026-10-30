@@ -1,5 +1,5 @@
 import {Application, Container, Graphics, Sprite, Texture} from 'pixi.js';
-import {nacarPhase,nacarStrikeOffsets} from '../../../packages/core/src/campaign.js';
+import {nacarPhase,nacarMark} from '../../../packages/core/src/campaign.js';
 import {ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, weatherAt, WEATHER, WIDTH, settlementCitizens, type GameState, type Tile} from '../../../packages/core/src/game.js';
 import {index,passable,within} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
@@ -368,10 +368,9 @@ export class PixiAsciiRenderer {
     // Uses the SAME offsets as pulseNacar; does not mutate world state or RNG.
     const guardian=state.zone==='zero-3'?state.enemies.find(e=>e.id==='campaign-heart-custodian'&&e.hp>0):null;
     if(guardian&&state.tick%400===300){
-      const phase=nacarPhase(guardian.hp,ENEMY_DEFS.drone.hp*3);
-      const warningColor=phase===1?0x8fe8f2:phase===2?0xb9e78c:0xff9b71;
-      for(const [dx,dy] of nacarStrikeOffsets(state.tick+100)){
-        const tx=state.player.x+dx,ty=state.player.y+dy;
+      for(const mark of nacarMark(state.events,state.tick+100)){
+        const warningColor=mark.phase===1?0x8fe8f2:mark.phase===2?0xb9e78c:0xff9b71;
+        const tx=mark.x,ty=mark.y;
         if(!within(tx,ty)||!passable(state.tiles[index(tx,ty)])||state.visible[index(tx,ty)]!==1)continue;
         const cx=tx-ox,cy=ty-oy;
         if(cx<0||cy<0||cx>=this.viewW||cy>=this.viewH)continue;

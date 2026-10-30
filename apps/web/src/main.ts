@@ -5,7 +5,7 @@ import { AsciiRenderer } from './renderer.js';
 import type { PixiAsciiRenderer } from './pixi-renderer.js';
 import { AtmosphereAudio } from './audio.js';
 import { tacticalSignal } from './tactical.js';
-import {nacarPhase,NACAR_PHASES,FINAL_GUARDIAN_ID} from '../../../packages/core/src/campaign.js';
+import {nacarPhase,NACAR_PHASES,FINAL_GUARDIAN_ID,nacarMark} from '../../../packages/core/src/campaign.js';
 
 const SAVE_KEY='mutation404.v10.save',V09_KEY='mutation404.v09.save',V08_KEY='mutation404.v08.save',V07_KEY='mutation404.v07.save',LAST_KEY='mutation404.v06.save',OLDER_KEY='mutation404.v05.save',OLD_KEY='mutation404.v04.save',PREVIOUS_KEY='mutation404.v03.save',LEGACY_KEY='mutation404.v02.save',FIRST_KEY='mutation404.v01.save';
 const root=document.querySelector<HTMLElement>('#app');if(!root)throw new Error('Falta #app');
@@ -155,7 +155,7 @@ function draw():void{
   bossPanel.classList.toggle('hidden',!guardian);
   if(guardian){
     const phase=nacarPhase(guardian.hp,ENEMY_DEFS.drone.hp*3),meta=NACAR_PHASES[phase];
-    write('#nacar-boss-warning',state.tick%400===300?'⚠ IMPACTO PRÓXIMO // LAS DIAGONALES MARCADAS SERÁN PELIGROSAS EN EL SIGUIENTE TURNO':'OBSERVA EL SUELO // LOS ATAQUES CAMBIAN DE DIAGONAL CADA CUATRO TURNOS');
+    write('#nacar-boss-warning',state.tick%400===300&&nacarMark(state.events,state.tick+100).length>0?'⚠ IMPACTO PRÓXIMO // LAS DIAGONALES MARCADAS SERÁN PELIGROSAS EN EL SIGUIENTE TURNO':'OBSERVA EL SUELO // LOS ATAQUES CAMBIAN DE DIAGONAL CADA CUATRO TURNOS');
     bossPanel.dataset.phase=String(phase);
     bossPanel.style.setProperty('--nacar-color',meta.color);
     write('#nacar-boss-phase',`NÁCAR · FASE ${['I','II','III'][phase-1]}`);
