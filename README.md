@@ -1,3 +1,24 @@
+# MUTATION 404 v2.5 — AUDITORÍA DE LA EXPERIENCIA
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Correcciones reales
+- **P0 combat:** la inmunidad de Faro Ciego solo funciona en la superficie. Las criaturas de una mazmorra ya no se paralizan por coincidir con las coordenadas geográficas del refugio. La búsqueda de caminos usa el contexto de zona correcto.
+- **P1 ambiental:** el refugio ya no reduce exposición ni otorga recuperación gratuita dentro de CERO-7 o las ocho ruinas. El empuje cinético tampoco confunde las zonas subterráneas con la superficie.
+- **P2 exploración:** las ocho ruinas muestran su propio nombre, estrato, anomalía y texto narrativo en el HUD.
+- Tests de regresión del combate y las zonas de protección, 400 acciones deterministas, cinco semillas y ocho cámaras de élite.
+- QA Chromium WebGL y respaldo Canvas con comprobación del texto específico de El Ojo del Silencio.
+
+## Informe de auditoría
+[Ver auditoría técnica, defectos corregidos y riesgos pendientes](./AUDITORIA_V2.5.md).
+
+## Compatibilidad
+Se mantiene el formato de guardado 11 y el modo Píxel/ASCII (Z). No cambia la configuración del jugador ni se requiere reiniciar la campaña.
+
+La puntuación 9,5/10 sigue **sin acreditarse**: faltan hardware real, jugabilidad prolongada, arte final y balance cuantitativo.
+
+---
+
 # MUTATION 404 v2.4 — EL MUNDO QUE RESPONDE
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
