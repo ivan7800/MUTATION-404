@@ -29,9 +29,11 @@ try{
     page.on('pageerror',e=>errors.push(e.message));
     await page.goto(base,{waitUntil:'networkidle',timeout:45000});
     assert.ok(await page.locator('#start-menu').isVisible(),'startup menu must open before gameplay');
+    await page.screenshot({path:`qa-evidence/menu-${mode}.png`,fullPage:true,animations:'disabled'});
     assert.equal(await page.locator('#start-continue').isDisabled(),true,'continue must be disabled without a save');
     await page.locator('#start-options').click();
     assert.ok(await page.locator('#start-settings').isVisible(),'audio options panel missing');
+    await page.screenshot({path:`qa-evidence/opciones-${mode}.png`,fullPage:true,animations:'disabled'});
     await page.locator('#start-volume').evaluate(el=>{
       el.value='75';
       el.dispatchEvent(new Event('input',{bubbles:true}));
