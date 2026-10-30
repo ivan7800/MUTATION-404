@@ -12,30 +12,46 @@ function arena(seed,kind){
 }
 function battle(seed,kind,weapon){
  const s=arena(seed,kind),startHp=s.stats.hp;
- let attacks=0,attempted=0,kills=0,heals=0,failures=0,damageTaken=0;
+ let attacks=0,actions=0,kills=0,heals=0,blocked=0,lootRecovered=0;
  const startingAmmo=stackCount(s.inventory,'ammo'),startingKits=stackCount(s.inventory,'medkit');
- for(let wave=0;wave<6;wave++){
-   if(s.stats.hp<=0)break;
-   const enemy={id:`balance-${wave}`,kind,x:weapon==='fire'?63:61,y:30,hp:ENEMY_DEFS[kind].hp,mode:'idle',searchTurns:0};
+ for(let wave=0;wave<6&&s.stats.hp>0;wave++){
+   const enemy={id:`balance-${wave}`,kind,x:s.player.x+(weapon==='fire'?3:1),y:s.player.y,hp:ENEMY_DEFS[kind].hp,mode:'idle',searchTurns:0};
    s.enemies.push(enemy);refreshVisibility(s);
-   for(let turn=0;turn<18&&enemy.hp>0&&s.stats.hp>0;turn++){
+   for(let turn=0;turn<36&&enemy.hp>0&&s.stats.hp>0;turn++){
      if(s.stats.hp<=12&&stackCount(s.inventory,'medkit')>0){
-       const response=dispatch(s,{type:'heal'});if(response.accepted)heals++;
+       const response=dispatch(s,{type:'heal'});if(response.accepted){heals++;actions++;}
      }
      if(s.stats.hp<=0)break;
-     const prior=s.stats.hp,response=dispatch(s,{type:weapon});
-     if(response.accepted){attacks++;damageTaken+=Math.max(0,prior-s.stats.hp);}
-     else {failures++;break;}
+     const dist=Math.abs(enemy.x-s.player.x)+Math.abs(enemy.y-s.player.y);
+     let command;
+     if(weapon==='fire'&&dist<=6&&stackCount(s.inventory,'ammo')>0)command={type:'fire'};
+     else if(dist===1)command={type:'attack'};
+     else command={type:'move',dx:Math.sign(enemy.x-s.player.x),dy:0};
+     // Combat decisions respect the original world rules: no direct HP edits.
+     const response=dispatch(s,command);
+     if(response.accepted){actions++;if(command.type==='attack'||command.type==='fire')attacks++;}
+     else {blocked++;break;}
    }
-   if(enemy.hp<=0)kills++;
-   else break;
+   if(enemy.hp>0)break;
+   kills++;
+   // Realistic recovery: walk to the corpse and collect the earned drops.
+   for(let walk=0;walk<12;walk++){
+     const dx=Math.sign(enemy.x-s.player.x),dy=Math.sign(enemy.y-s.player.y);
+     if(dx===0&&dy===0)break;
+     const r=dispatch(s,{type:'move',dx:dx!==0?dx:0,dy:dx===0?dy:0});
+     if(!r.accepted){blocked++;break;}
+     actions++;
+   }
+   const recover=dispatch(s,{type:'pickup'});
+   if(recover.accepted){lootRecovered++;actions++;}
  }
  const saved=deserialize(serialize(s));
  if(saved.kills!==s.kills||saved.stats.hp!==s.stats.hp)throw Error('Save/load lost balance state');
- return {seed,kind,weapon,waves:kills,alive:s.stats.hp>0,hp:s.stats.hp,startHp,attacks,heals,failures,
+ return {seed,kind,weapon,waves:kills,alive:s.stats.hp>0,hp:s.stats.hp,startHp,attacks,actions,heals,blocked,
   level:s.stats.level,xp:s.stats.xp,credits:s.stats.credits,
   ammoUsed:startingAmmo-stackCount(s.inventory,'ammo'),kitsUsed:startingKits-stackCount(s.inventory,'medkit'),
-  lootOnGround:s.ground.length,damageTaken};
+  ammoLeft:stackCount(s.inventory,'ammo'),kitsLeft:stackCount(s.inventory,'medkit'),
+  lootRecovered,lootOnGround:s.ground.length};
 }
 function shelter(seed){
  const s=createGame(seed);s.enemies=[];s.fields=[];s.exposure=30;s.stats.hp=21;
@@ -57,7 +73,10 @@ for(const kind of ['crawler','sentinel','shelter']){
  if(kind!=='shelter')Object.assign(r,{meanWaves:Math.round(mean(rows.map(e=>e.waves))*100)/100,
   meanAttacks:Math.round(mean(rows.map(e=>e.attacks))*10)/10,meanHeals:Math.round(mean(rows.map(e=>e.heals))*100)/100,
   meanAmmoUsed:Math.round(mean(rows.map(e=>e.ammoUsed))*10)/10,meanLootLeft:Math.round(mean(rows.map(e=>e.lootOnGround))*10)/10,
-  blocked:rows.filter(e=>e.failures>0).length});
+  meanLootRecovered:Math.round(mean(rows.map(e=>e.lootRecovered))*10)/10,
+  meanKitsLeft:Math.round(mean(rows.map(e=>e.kitsLeft))*10)/10,
+  meanAmmoLeft:Math.round(mean(rows.map(e=>e.ammoLeft))*10)/10,
+  blocked:rows.filter(e=>e.blocked>0).length});
  else Object.assign(r,{meanExposure:mean(rows.map(e=>e.exposure)),meanFocus:mean(rows.map(e=>e.focus))});
  summary.scenarios[kind]=r;
 }
