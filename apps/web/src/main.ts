@@ -47,6 +47,7 @@ const write=(selector:string,text:string)=>{$<HTMLElement>(selector).textContent
 const escapeHtml=(s:string):string=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c));
 const percent=(a:number,b:number):string=>`${Math.round(100*a/b)}%`;
 function currentLocation():string{
+  if(state.zone.startsWith('ruin-')||state.zone.startsWith('zero-'))return ruinName(state.zone);
   if(exteriorForInterior(state.zone))return `CASA COMUNAL · ${exteriorForInterior(state.zone)}`;
   if(state.zone.startsWith('sector-')){const at=coordsForZone(state.zone)!;return sectorName(at.x,at.y);}
   if(state.player.x>=18&&state.player.x<=47&&state.player.y>=21&&state.player.y<=43)return 'Faro Ciego';
