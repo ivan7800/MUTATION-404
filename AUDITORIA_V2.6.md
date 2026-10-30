@@ -18,7 +18,7 @@ Referencia de la medición anterior al ajuste: [GitHub Actions, ejecución 41111
 
 ## Cambios de v2.6
 
-1. **Huida con agotamiento.** Los enemigos con comportamiento `fleeing` descansan cada segundo turno; el jugador puede alcanzarlos cuerpo a cuerpo. La pausa depende del turno simulado, sin temporizadores reales ni modificación del esquema de guardado.
+1. **Huida con agotamiento.** Los carroñeros heridos con comportamiento `fleeing` descansan cada segundo turno (los pastores de esporas conservan su conducta anterior); el jugador puede alcanzarlos cuerpo a cuerpo. La pausa depende del turno simulado, sin temporizadores reales ni modificación del esquema de guardado.
 2. **Recuperación de munición coherente.** Los drones mecánicos, igual que los vigías, pueden ofrecer proyectiles en un 35 % de botín adicional; para drones son dos púas y para vigías tres. Los enemigos biológicos conservan sus posibles ampollas. No se ha aumentado la probabilidad general de botín.
 3. **Indicador de recursos.** PV, ampollas, munición y concentración están visibles constantemente; la interfaz distingue salud baja y crítica.
 4. **Telemetría reproducible ampliada.** Se miden encuentros con carroñeros, vigías y drones, además de la recuperación del refugio, incluyendo supervivencia, vida, botín recuperado, munición y ampollas restantes, y acciones no aceptadas.
