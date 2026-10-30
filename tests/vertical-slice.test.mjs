@@ -46,3 +46,16 @@ test('v2.2 combat effects use real before/after HP, without mutating the game co
  assert.match(main,/beforeEnemies=new Map\(state\.enemies/);
  assert.match(main,/renderer\.combatFeedback\(beforeEnemies,state\)/);
 });
+
+test('v2.3 distinct audiovisual mutation feedback is tied to accepted cast commands',()=>{
+ const audio=readFileSync('apps/web/src/audio.ts','utf8');
+ for(const id of ['kinetic-pulse','neural-shock','pyrokinesis','phase-step']){
+  assert.ok(audio.includes("'"+id+"'"),'no synthesized voice for '+id);
+  assert.ok(renderer.includes("'"+id+"'"),'no GPU effect for '+id);
+ }
+ assert.match(audio,/if\(!this\.enabled\|\|!this\.context\)return/);
+ assert.match(renderer,/mutationFeedback\(state:GameState/);
+ assert.match(main,/audio\.mutationCue\(command\.mutation\)/);
+ assert.match(main,/renderer\.mutationFeedback\(state,command\.mutation\)/);
+ assert.match(renderer,/this\.reducedMotion\)return/);
+});
