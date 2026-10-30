@@ -1,3 +1,27 @@
+# MUTATION 404 v2.8 — LA CAMPAÑA DE NÁCAR
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Campaña de cinco actos
+1. **Eco bajo la sal.** Conserva la misión de Mara Venn en Faro Ciego, la investigación de la Torre del Nudo y la decisión inicial de difundir o aislar la señal.
+2. **Los ocho testigos.** Recoge la reliquia del segundo estrato de cada una de las ocho ruinas regionales. El diario (J) muestra todos los nombres, ubicaciones e hitos.
+3. **Los custodios.** Derrota al guardián de cada segunda planta y recupera su archivo (26,12); el progreso permanece guardado.
+4. **Bajo la sal.** Entra en CERO-7 por (62,44) en la superficie y alcanza la tercera planta, tras visitar el corazón del laboratorio.
+5. **La última decisión.** Activa el terminal (14,10) de CERO-7 / Cámara del eco. Si has recuperado los archivos, se despierta el custodio final (enemigo real). Tras derrotarlo, decide entre **encadenar, liberar o borrar** la memoria de Nácar. Cada elección presenta un epílogo exclusivo influido por tu decisión anterior.
+
+## Continuidad y calidad
+- El seguimiento de la campaña se calcula a partir de eventos persistentes ya existentes; **no se cambia el formato de guardado 11**. Las partidas anteriores conservan sus objetivos completados.
+- El diario ofrece la lista de ocho ruinas y marca reliquia y custodio individualmente.
+- El panel principal cambia de objetivo según el acto, y al finalizar aparece una pantalla de epílogo con créditos.
+- Puedes continuar explorando tras terminar la campaña.
+- Pruebas automatizadas de cinco actos, barrera previa a final, aparición del guardián, bloqueo de decisión mientras vive, tres epílogos y persistencia después de guardar/cargar.
+- Chromium ejecuta el final a través de la interfaz, verifica el diálogo, los créditos y que la finalización persiste tras recargar la página.
+
+## Limitaciones
+Esta versión cierra **un arco principal estructurado** con tres desenlaces, pero no acredita una campaña equilibrada en todos los estilos de juego ni una duración de decenas de horas. El combate final reutiliza el tipo dron con vida reforzada, pendiente de un diseño artístico y mecánico exclusivo. También faltan escenas cinematográficas, más ramificación de decisiones y prueba humana de principio a fin. No se certifica una nota 9,5/10.
+
+---
+
 # MUTATION 404 v2.7 — EL DESPERTAR DE NÁCAR
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
