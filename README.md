@@ -3,7 +3,7 @@
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
 
 ## Mejoras verificables
-- Los enemigos heridos que huyen descansan un turno de cada dos. Antes, algunos carroñeros podían mantener una huida a la misma velocidad que el jugador, impidiendo terminar un combate cuerpo a cuerpo.
+- Los carroñeros heridos que huyen descansan un turno de cada dos; los pastores de esporas conservan su retirada propia. Antes, algunos carroñeros podían mantener una huida a la misma velocidad que el jugador, impidiendo terminar un combate cuerpo a cuerpo.
 - Los drones y vigías tecnológicos ofrecen ahora una probabilidad de recuperar **munición**, no medicina. La probabilidad de botín adicional continúa siendo 35 %; los enemigos biológicos mantienen la posibilidad de dejar ampollas.
 - Nuevo indicador persistente de supervivencia: PV, ampollas, munición y concentración, con advertencias de salud baja y crítica en colores legibles.
 - Auditoría reproducible de 24 semillas y cuatro escenarios: carroñeros cuerpo a cuerpo, vigías a distancia, drones a distancia y recuperación en el refugio. El resultado es un JSON descargable desde GitHub Actions.
