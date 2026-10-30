@@ -160,8 +160,11 @@ function act(command:Command):void{
     if(kind){
       renderer.effect(state,kind);
       if(command.type==='cast'){
-        audio.mutationCue(command.mutation);
-        if('mutationFeedback' in renderer)renderer.mutationFeedback(state,command.mutation);
+        const m=command.mutation;
+        if(m==='kinetic-pulse'||m==='neural-shock'||m==='pyrokinesis'||m==='phase-step'){
+          audio.mutationCue(m);
+          if('mutationFeedback' in renderer)renderer.mutationFeedback(state,m);
+        }else audio.cue(kind);
       }else audio.cue(kind);
     }
   }
