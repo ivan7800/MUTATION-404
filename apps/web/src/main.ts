@@ -3,6 +3,7 @@ import { index } from '../../../packages/core/src/world.js';
 import { AsciiRenderer } from './renderer.js';
 import type { PixiAsciiRenderer } from './pixi-renderer.js';
 import { AtmosphereAudio } from './audio.js';
+import { tacticalSignal } from './tactical.js';
 
 const SAVE_KEY='mutation404.v10.save',V09_KEY='mutation404.v09.save',V08_KEY='mutation404.v08.save',V07_KEY='mutation404.v07.save',LAST_KEY='mutation404.v06.save',OLDER_KEY='mutation404.v05.save',OLD_KEY='mutation404.v04.save',PREVIOUS_KEY='mutation404.v03.save',LEGACY_KEY='mutation404.v02.save',FIRST_KEY='mutation404.v01.save';
 const root=document.querySelector<HTMLElement>('#app');if(!root)throw new Error('Falta #app');
@@ -77,7 +78,9 @@ function draw():void{
   write('#weather-badge',coordsForZone(state.zone)?`◉ ${weatherDef.name.toUpperCase()}`:'◉ ATMÓSFERA ESTANCADA');
   write('#weather-info',weatherDef.name);
   write('#climate-note',coordsForZone(state.zone)?`ATMÓSFERA // ${weatherDef.description}`:'ATMÓSFERA // SIN SOL, SIN VIENTO · SEÑALES ANÓMALAS');
-  write('#threat-note',coordsForZone(state.zone)?`PELIGRO // ${biomeDef.threat}`:'PELIGRO // INSTALACIÓN HOSTIL');
+  const tactical=tacticalSignal(state);
+  write('#threat-note',tactical.level==='clear'?(coordsForZone(state.zone)?`PELIGRO AMBIENTAL // ${biomeDef.threat}`:'RIESGO // INSTALACIÓN HOSTIL'):tactical.label);
+  $('#threat-note').dataset.level=tactical.level;
   write('#research-count',`${state.biomeNotes.length} / 6`);
   write('#ecology-pressure',`${state.ecology.pressure[state.zone]??0} / 5`);
   write('#exposure-text',`${state.exposure}%`);
@@ -153,8 +156,10 @@ function act(command:Command):void{
   if(modalMode)return;
   const beforeHp=state.stats.hp;
   const beforeEnemies=new Map(state.enemies.filter(e=>e.hp>0).map(e=>[e.id,{hp:e.hp,x:e.x,y:e.y}]));
+  const beforeFields=state.fields.map(field=>({...field}));
   const result=dispatch(state,command);
   if(result.accepted&&'combatFeedback' in renderer)renderer.combatFeedback(beforeEnemies,state);
+  if(result.accepted&&'environmentFeedback' in renderer)renderer.environmentFeedback(beforeFields,state);
   if(result.accepted){
     const kind=state.stats.hp<beforeHp?'damage':command.type==='cast'?'mutation':command.type==='scan'?'scan':(['attack','fire'].includes(command.type)?'attack':null);
     if(kind){
