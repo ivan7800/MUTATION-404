@@ -118,3 +118,11 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 #viewport[data-art-mode="ascii"] .pixi-canvas{image-rendering:crisp-edges;filter:contrast(1.13)}
 @media(max-width:540px){#art-mode-btn{min-width:110px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){#viewport .pixi-canvas{filter:none!important}}
+
+/* v2.4 danger-first field console: severity is visible even without animations */
+#threat-note{font-weight:700;letter-spacing:.045em;transition:color .15s ease}
+#threat-note[data-level="contact"]{color:#ffb8b6;text-shadow:0 0 10px #bc424255}
+#threat-note[data-level="near"]{color:#f5c791}
+#threat-note[data-level="enemy"]{color:#f4deae}
+#threat-note[data-level="clear"]{color:#b0c5b5}
+@media(prefers-reduced-motion:reduce){#threat-note{transition:none;text-shadow:none!important}}
