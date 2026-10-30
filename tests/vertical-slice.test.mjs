@@ -59,3 +59,21 @@ test('v2.3 distinct audiovisual mutation feedback is tied to accepted cast comma
  assert.match(main,/renderer\.mutationFeedback\(state,m\)/);
  assert.match(renderer,/this\.reducedMotion\)return/);
 });
+
+test('v2.4 tactical warnings only consider visible enemies and fields',()=>{
+ const tactical=readFileSync('apps/web/src/tactical.ts','utf8');
+ assert.match(tactical,/state\.visible\[index\(field\.x,field\.y\)\]!==1/);
+ assert.match(tactical,/state\.visible\[index\(enemy\.x,enemy\.y\)\]!==1/);
+ assert.match(tactical,/level:'contact'/);
+ assert.match(tactical,/level:'near'/);
+ assert.match(tactical,/level:'enemy'/);
+ assert.match(tactical,/level:'clear'/);
+ assert.match(main,/tacticalSignal\(state\)/);
+ assert.match(main,/dataset\.level=tactical\.level/);
+ assert.match(renderer,/environmentFeedback\(previous:ReadonlyArray/);
+ assert.match(renderer,/this\.fieldBursts\.push/);
+ assert.match(renderer,/field\.kind==='fire'/);
+ assert.match(renderer,/field\.kind==='electric'/);
+ assert.match(renderer,/field\.kind==='spores'/);
+ assert.match(qa,/data-level'\),'contact'/);
+});
