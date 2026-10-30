@@ -92,7 +92,7 @@ function draw():void{
   const warnHp=state.stats.hp<=Math.floor(state.stats.maxHp*.5);
   const risk=criticalHp?'critical':warnHp||kits===0?'warning':'stable';
   $('#survival-strip').dataset.risk=risk;
-  write('#survival-strip',`SUPERVIVENCIA // PV ${state.stats.hp}/${state.stats.maxHp} · AMPOLLas ${kits} · PÚAS ${ammo} · CONCENTRACIÓN ${state.stats.focus}/${state.stats.maxFocus}${criticalHp?' · ¡SALUD CRÍTICA!':warnHp?' · BUSCA COBERTURA O CURACIÓN':''}`);
+  write('#survival-strip',`SUPERVIVENCIA // PV ${state.stats.hp}/${state.stats.maxHp} · AMPOLLAS ${kits} · PÚAS ${ammo} · CONCENTRACIÓN ${state.stats.focus}/${state.stats.maxFocus}${criticalHp?' · ¡SALUD CRÍTICA!':warnHp?' · BUSCA COBERTURA O CURACIÓN':''}`);
   write('#exposure-text',`${state.exposure}%`);
   $<HTMLElement>('#exposure-bar').style.width=`${state.exposure}%`;
   $<HTMLElement>('#exposure-bar').classList.toggle('critical',state.exposure>=65);
