@@ -272,10 +272,22 @@ export function dispatch(s:GameState, command:Command):ActionResult {
       if(option==='resonance-stabilize'){
         if(!removeStack(s.inventory,'capacitor',1))return reply(false,0,'Necesitas un condensador.');
         s.exposure=Math.max(0,s.exposure-25);s.stats.focus=Math.min(s.stats.maxFocus,s.stats.focus+8);
+        // Neutralization changes this physical floor and survives zone snapshots.
+        s.fields=s.fields.filter(field=>manhattan(field,{x:22,y:12})>6);
         message(s,'RESONANCIA // El condensador absorbe la frecuencia. Exposición -25, concentración +8.');
       }else{
         s.exposure=Math.min(100,s.exposure+18);s.genome.genePoints++;
         placeField(s.fields,{x:22,y:12,kind:themeForRuin(r!.x,r!.y).hazard,ttl:5});
+        // The absorbed signal wakes a real guardian, retained by the zone save.
+        for(const x of [24,25,26]){
+          const y=12,cell=index(x,y);
+          if(!passable(s.tiles[cell]))s.tiles[cell]=':';
+          if(!enemyAt(s,x,y)&&!(s.player.x===x&&s.player.y===y)){
+            s.enemies.push({id:`resonance-guardian-${s.zone}`,kind:'drone',x,y,hp:ENEMY_DEFS.drone.hp,mode:'hunting',lastKnown:{...s.player},searchTurns:3});
+            message(s,'GUARDIÁN DESPERTADO // Un cazador de ferrita responde a la señal.');
+            break;
+          }
+        }
         message(s,'RESONANCIA // La frecuencia entra en tu carne. +1 gen, exposición +18; el suelo despierta.');
       }
       s.events.push(key);advance(s,100);return reply(true,100,'Decisión de resonancia registrada.');
