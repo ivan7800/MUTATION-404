@@ -120,3 +120,16 @@ test('v2.9 boss danger telegraph uses shared strike positions and supports reduc
  assert.match(main,/IMPACTO PRÓXIMO/);
  assert.match(qa,/nacar-v29-phase-/);
 });
+
+test('v2.9 boss transitions are handled once by accepted turns and respect audio settings',()=>{
+ const audio=readFileSync('apps/web/src/audio.ts','utf8');
+ assert.match(main,/if\(result\.accepted&&state\.zone==='zero-3'\)/);
+ assert.match(main,/newPhase>oldPhase/);
+ assert.match(main,/audio\.bossCue\(event\)/);
+ assert.match(main,/renderer\.bossFeedback\(state,event\)/);
+ for(const event of ['awaken','phase2','phase3','defeat'])assert.ok(audio.includes(event+':'));
+ assert.match(audio,/if\(!this\.enabled\|\|!this\.context\|\|!this\.master\)return/);
+ assert.match(renderer,/private readonly bossBursts/);
+ assert.match(renderer,/bossFeedback\(state:GameState,event:/);
+ assert.match(renderer,/if\(this\.reducedMotion\)return/);
+});

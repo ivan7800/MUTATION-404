@@ -72,6 +72,18 @@ export class AtmosphereAudio {
     const voices={attack:[210,80,.17,'sawtooth',.12],mutation:[510,220,.23,'triangle',.10],scan:[700,320,.3,'sine',.11],damage:[150,55,.29,'sawtooth',.14]} as const;
     const [a,b,d,w,v]=voices[kind];this.beep(a,b,d,w,v);
   }
+  /** Original non-autoplay boss stingers, respecting mute and master volume. */
+  bossCue(event:'awaken'|'phase2'|'phase3'|'defeat'):void{
+    if(!this.enabled||!this.context||!this.master)return;
+    const voices={
+      awaken:[88,176,.45,'sawtooth',.11],
+      phase2:[190,62,.55,'triangle',.15],
+      phase3:[370,49,.68,'sawtooth',.15],
+      defeat:[250,38,1.05,'sine',.17]
+    } as const;
+    const [start,end,duration,wave,level]=voices[event];
+    this.beep(start,end,duration,wave,level);
+  }
   mutationCue(id:'kinetic-pulse'|'neural-shock'|'pyrokinesis'|'phase-step'):void{
     const voices={'kinetic-pulse':[140,46,.32,'sawtooth',.16],'neural-shock':[840,170,.25,'square',.09],pyrokinesis:[370,75,.34,'triangle',.14],'phase-step':[90,560,.36,'sine',.14]} as const;
     const [a,b,d,w,v]=voices[id];this.beep(a,b,d,w,v);

@@ -229,9 +229,25 @@ function act(command:Command):void{
   const beforeHp=state.stats.hp;
   const beforeEnemies=new Map(state.enemies.filter(e=>e.hp>0).map(e=>[e.id,{hp:e.hp,x:e.x,y:e.y}]));
   const beforeFields=state.fields.map(field=>({...field}));
+  const priorNacar=state.zone==='zero-3'?beforeEnemies.get(FINAL_GUARDIAN_ID):undefined;
   const result=dispatch(state,command);
   if(result.accepted&&'combatFeedback' in renderer)renderer.combatFeedback(beforeEnemies,state);
   if(result.accepted&&'environmentFeedback' in renderer)renderer.environmentFeedback(beforeFields,state);
+  if(result.accepted&&state.zone==='zero-3'){
+    const nacar=state.enemies.find(e=>e.id===FINAL_GUARDIAN_ID);
+    let event:'awaken'|'phase2'|'phase3'|'defeat'|null=null;
+    if(!priorNacar&&nacar&&nacar.hp>0)event='awaken';
+    else if(priorNacar&&priorNacar.hp>0&&(!nacar||nacar.hp<=0))event='defeat';
+    else if(priorNacar&&nacar&&nacar.hp>0){
+      const oldPhase=nacarPhase(priorNacar.hp,ENEMY_DEFS.drone.hp*3);
+      const newPhase=nacarPhase(nacar.hp,ENEMY_DEFS.drone.hp*3);
+      if(newPhase>oldPhase)event=newPhase===3?'phase3':'phase2';
+    }
+    if(event){
+      audio.bossCue(event);
+      if('bossFeedback' in renderer)renderer.bossFeedback(state,event);
+    }
+  }
   if(result.accepted){
     const kind=state.stats.hp<beforeHp?'damage':command.type==='cast'?'mutation':command.type==='scan'?'scan':(['attack','fire'].includes(command.type)?'attack':null);
     if(kind){

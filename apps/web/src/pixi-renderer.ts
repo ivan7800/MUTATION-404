@@ -37,6 +37,7 @@ export class PixiAsciiRenderer {
   private readonly flashes=new Map<string,{until:number;heavy:boolean}>();
   private readonly echoes:{x:number;y:number;until:number}[]=[];
   private readonly fieldBursts:{x:number;y:number;kind:'fire'|'electric'|'spores';until:number}[]=[];
+  private readonly bossBursts:{x:number;y:number;until:number;color:number}[]=[];
   private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
   private mutationEffect:'kinetic-pulse'|'neural-shock'|'pyrokinesis'|'phase-step'|null=null;
   private reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -89,6 +90,16 @@ export class PixiAsciiRenderer {
       this.flashes.delete(id);
     }
     if(this.echoes.length>20)this.echoes.splice(0,this.echoes.length-20);
+    this.draw(state);
+  }
+  /** Ephemeral transition choreography: never stored in saves or game state. */
+  bossFeedback(state:GameState,event:'awaken'|'phase2'|'phase3'|'defeat'):void{
+    if(this.reducedMotion)return;
+    const boss=state.enemies.find(e=>e.id==='campaign-heart-custodian');
+    if(!boss)return;
+    const color=event==='awaken'?0xbbe8fb:event==='phase2'?0xb9e78c:event==='phase3'?0xff9b71:0xe5c99d;
+    this.bossBursts.push({x:boss.x,y:boss.y,until:performance.now()+900,color});
+    if(this.bossBursts.length>4)this.bossBursts.shift();
     this.draw(state);
   }
   private texture(character:string):Texture{
@@ -450,6 +461,22 @@ export class PixiAsciiRenderer {
       const color=burst.kind==='electric'?0xa2f9f2:burst.kind==='fire'?0xffae78:0xb3ef9e;
       this.backdrop.circle((x+.5)*this.cellW,(y+.5)*this.cellH,4+progress*26).stroke({color,width:2,alpha:1-progress});
     }
+    const burstTime=performance.now();
+    for(let i=this.bossBursts.length-1;i>=0;i--){
+      const burst=this.bossBursts[i],left=burst.until-burstTime;
+      if(left<=0){this.bossBursts.splice(i,1);continue;}
+      const cx=(burst.x-ox+.5)*this.cellW,cy=(burst.y-oy+.5)*this.cellH;
+      if(cx<0||cy<0||cx>=this.viewW*this.cellW||cy>=this.viewH*this.cellH)continue;
+      const progress=1-left/900;
+      for(let ring=0;ring<3;ring++){
+        const radius=6+progress*55+ring*10;
+        this.backdrop.circle(cx,cy,radius).stroke({color:burst.color,width:Math.max(.6,2.5-progress*1.8),alpha:(1-progress)*.7});
+      }
+      for(let shard=0;shard<8;shard++){
+        const angle=shard*Math.PI/4+progress*.35,dist=9+progress*(18+shard%3*9);
+        this.backdrop.circle(cx+Math.cos(angle)*dist,cy+Math.sin(angle)*dist,Math.max(.5,3*(1-progress))).fill({color:burst.color,alpha:1-progress});
+      }
+    }
     const currentTime=performance.now();
     for(let i=this.echoes.length-1;i>=0;i--){
       const e=this.echoes[i],remaining=e.until-currentTime;
@@ -490,7 +517,7 @@ export class PixiAsciiRenderer {
       if(now-this.lastAmbient>=125){
         this.lastAmbient=now;
         const biome=biomeAt(this.state.seed,this.state.player.x,this.state.player.y);
-        if(this.artMode==='pixel'||this.flashes.size>0||this.echoes.length>0||this.fieldBursts.length>0||this.state.fields.length>0||weatherAt(this.state.seed,this.state.tick,biome)!=='calma'||this.effectUntil>now)this.draw(this.state);
+        if(this.artMode==='pixel'||this.flashes.size>0||this.echoes.length>0||this.fieldBursts.length>0||this.bossBursts.length>0||this.state.fields.length>0||weatherAt(this.state.seed,this.state.tick,biome)!=='calma'||this.effectUntil>now)this.draw(this.state);
       }
       this.ambientFrame=requestAnimationFrame(loop);
     };
