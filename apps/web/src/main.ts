@@ -157,7 +157,13 @@ function act(command:Command):void{
   if(result.accepted&&'combatFeedback' in renderer)renderer.combatFeedback(beforeEnemies,state);
   if(result.accepted){
     const kind=state.stats.hp<beforeHp?'damage':command.type==='cast'?'mutation':command.type==='scan'?'scan':(['attack','fire'].includes(command.type)?'attack':null);
-    if(kind){renderer.effect(state,kind);audio.cue(kind);}
+    if(kind){
+      renderer.effect(state,kind);
+      if(command.type==='cast'){
+        audio.mutationCue(command.mutation);
+        if('mutationFeedback' in renderer)renderer.mutationFeedback(state,command.mutation);
+      }else audio.cue(kind);
+    }
   }
   if(command.type==='interact'&&state.dialogue)handleDialogue();
   if(!result.accepted&&!['inspect','target'].includes(command.type))write('#save-status',result.message);
