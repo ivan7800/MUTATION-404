@@ -76,6 +76,40 @@ try{
     results.push(info);
     await context.close();
   }
+  // Production audit: exercise the on-screen D-pad at phone and tablet sizes.
+  // Record actual viewport overflow instead of assuming the desktop checks cover it.
+  for(const [width,height] of [[390,844],[768,1024]]){
+    const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:width===390,hasTouch:width===390});
+    const page=await context.newPage(),errors=[];
+    page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(base,{waitUntil:'networkidle',timeout:45000});
+    await page.locator('#start-new').click();
+    await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
+    const before=await page.locator('#coords').textContent();
+    if(width===390){
+      assert.ok(await page.locator('.touch-controls').isVisible(),'mobile D-pad must be visible');
+      await page.locator('[data-move="right"]').click();
+      assert.notEqual(await page.locator('#coords').textContent(),before,'touch D-pad did not move character');
+    }else{
+      await page.keyboard.press('ArrowRight');
+      assert.notEqual(await page.locator('#coords').textContent(),before,'tablet keyboard movement failed');
+    }
+    await page.locator('#help-btn').click();
+    assert.ok(await page.locator('#modal').isVisible(),'help modal failed at responsive viewport');
+    await page.locator('#modal-close').click();
+    const layout=await page.evaluate(()=>({
+      viewport:document.documentElement.clientWidth,
+      scrollWidth:document.documentElement.scrollWidth,
+      dpadVisible:window.getComputedStyle(document.querySelector('.touch-controls')).display!=='none'
+    }));
+    const overflow=Math.max(0,layout.scrollWidth-layout.viewport);
+    assert.ok(overflow<=2,`responsive layout overflows viewport by ${overflow}px at ${width}px`);
+    const screenshot=`qa-evidence/responsive-${width}.png`;
+    await page.screenshot({path:screenshot,fullPage:true,animations:'disabled'});
+    assert.deepEqual(errors,[],'responsive scene caused browser errors');
+    results.push({scene:`responsive-${width}`,width,height,layout,screenshot,errors});
+    await context.close();
+  }
   // v2.0: actual images from both art modes and a genuine saved Ojo del Silencio.
   const state=createGame(404),room=generateRuin(404,-1,-1,2);
   state.zone='ruin--1--1-2';state.tiles=room.tiles;state.seen=room.seen;
