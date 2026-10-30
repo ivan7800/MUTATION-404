@@ -28,6 +28,18 @@ try{
     const page=await context.newPage(),errors=[];
     page.on('pageerror',e=>errors.push(e.message));
     await page.goto(base,{waitUntil:'networkidle',timeout:45000});
+    assert.ok(await page.locator('#start-menu').isVisible(),'startup menu must open before gameplay');
+    assert.equal(await page.locator('#start-continue').isDisabled(),true,'continue must be disabled without a save');
+    await page.locator('#start-options').click();
+    assert.ok(await page.locator('#start-settings').isVisible(),'audio options panel missing');
+    await page.locator('#start-volume').fill('75');
+    assert.equal(await page.locator('#start-volume-value').textContent(),'75%');
+    await page.locator('#start-audio').click();
+    await page.waitForFunction(()=>document.querySelector('#start-audio')?.getAttribute('aria-pressed')==='true',{timeout:10000});
+    await page.locator('#start-audio').click();
+    await page.locator('#start-new').click();
+    assert.equal(await page.locator('#start-menu').isVisible(),false);
+
     const expected=mode==='webgl'?'pixi-webgl':'canvas2d';
     await page.waitForFunction(value=>document.querySelector('#viewport')?.getAttribute('data-renderer')===value,expected,{timeout:25000});
     assert.equal(await page.locator('#viewport').getAttribute('data-renderer'),expected);
@@ -67,6 +79,12 @@ try{
     const page=await context.newPage(),errors=[];
     page.on('pageerror',err=>errors.push(err.message));
     await page.goto(base,{waitUntil:'networkidle',timeout:45000});
+    assert.ok(await page.locator('#start-menu').isVisible());
+    if(eye){
+      assert.equal(await page.locator('#start-continue').isEnabled(),true);
+      await page.locator('#start-continue').click();
+    }else await page.locator('#start-new').click();
+    assert.equal(await page.locator('#start-menu').isVisible(),false);
     await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
     if(ascii)await page.locator('#art-mode-btn').click();
     const mode=await page.locator('#viewport').getAttribute('data-art-mode');
