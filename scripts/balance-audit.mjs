@@ -63,11 +63,12 @@ const entries=[];
 for(const seed of SEEDS){
  entries.push(battle(seed,'crawler','attack'));
  entries.push(battle(seed,'sentinel','fire'));
+ entries.push(battle(seed,'drone','fire'));
  entries.push(shelter(seed));
 }
 const mean=(a)=>a.reduce((x,y)=>x+y,0)/a.length;
 const summary={seeds:SEEDS.length, scenarios:{}};
-for(const kind of ['crawler','sentinel','shelter']){
+for(const kind of ['crawler','sentinel','drone','shelter']){
  const rows=entries.filter(e=>e.kind===kind),r={count:rows.length,alive:rows.filter(e=>e.alive).length,
   meanHp:Math.round(mean(rows.map(e=>e.hp))*10)/10};
  if(kind!=='shelter')Object.assign(r,{meanWaves:Math.round(mean(rows.map(e=>e.waves))*100)/100,
