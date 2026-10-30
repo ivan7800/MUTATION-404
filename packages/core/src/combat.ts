@@ -118,6 +118,15 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
     const sight=s.seed===undefined||s.tick===undefined?def.sight:Math.min(def.sight,WEATHER[weatherAt(s.seed,s.tick,biomeAt(s.seed,e.x,e.y))].radius);
     const canSee=dist<=sight&&(e.kind==='larva'?dist<=3||hasLineOfSight(s.tiles,e.x,e.y,s.player.x,s.player.y):hasLineOfSight(s.tiles,e.x,e.y,s.player.x,s.player.y));
     if(canSee){e.mode='hunting';e.lastKnown={...s.player};e.searchTurns=3;}
+    // Warden sentinels force movement with a delayed electrical trap; the
+    // environmental phase processes it on the player's next turn.
+    if(e.kind==='sentinel'&&canSee&&dist>=2&&dist<=4&&s.fields&&s.tick!==undefined&&Math.floor(s.tick/100)%6===0){
+      placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});
+      report('AVISO // El vigía de cobre marca el suelo con un arco eléctrico. Muévete antes del próximo turno.');
+      continue;
+    }
+    // Wounded shepherds retreat to scatter spores instead of fighting to death.
+    if(e.kind==='spore'&&e.hp<=4&&canSee&&dist>1)e.mode='fleeing';
     if(e.kind==='crawler'&&e.hp<=3&&canSee)e.mode='fleeing';
     if(e.mode==='hunting'&&!canSee)e.mode='searching';
     if(e.mode==='searching'){if(e.searchTurns<=0){e.mode='idle';delete e.lastKnown;}else e.searchTurns--;}
