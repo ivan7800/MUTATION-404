@@ -7,12 +7,20 @@ const main=readFileSync('apps/web/src/main.ts','utf8');
 const qa=readFileSync('scripts/qa-browser.mjs','utf8');
 
 test('original GPU tile atlas has Faro and Ojo separate palettes and cached sprites',()=>{
- assert.match(renderer,/tileTexture\(tile:Tile,eye:boolean,faro:boolean,variant:number\)/);
+ assert.match(renderer,/tileTexture\(tile:Tile,eye:boolean,faro:boolean,variant:number,region:string\)/);
  assert.match(renderer,/this\.tiles\.get\(key\)/);
  assert.match(renderer,/this\.tiles\.set\(key,texture\)/);
  assert.match(renderer,/state\.zone\.startsWith\('ruin--1--1-'\)/);
  assert.match(renderer,/state\.zone==='surface'/);
  assert.match(renderer,/this\.artMode==='pixel'/);
+});
+test('v2.9 regional tile atlas covers six biomes while preserving ASCII mode',()=>{
+ for(const biome of ['salinas','ceniza','hierro','vidrio','medula','umbral'])assert.ok(renderer.includes(biome+':{stone:'),'missing region palette '+biome);
+ assert.match(renderer,/if\(this\.artMode==='pixel'\)\{/);
+ assert.match(renderer,/this\.tileTexture\(glyph,eye,faro,Math\.floor\(terrainHash/);
+ assert.match(renderer,/const key=\x60\$\{eye\?'eye':faro\?'faro':region\}/);
+ assert.ok(qa.includes('region-v29-pixel.png'));
+ assert.ok(qa.includes('region-v29-ascii.png'));
 });
 test('pixel mode toggle is interactive without touching the core game state',()=>{
  assert.match(main,/id="art-mode-btn"/);
