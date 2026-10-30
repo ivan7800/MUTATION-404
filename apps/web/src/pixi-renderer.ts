@@ -18,6 +18,8 @@ export class PixiAsciiRenderer {
   private readonly backdrop=new Graphics();
   private readonly layers=new Container();
   private readonly sprites:Sprite[]=[];
+  private activeSprites=0;
+  private peakActiveSprites=0;
   private readonly glyphs=new Map<string,Texture>();
   private readonly tiles=new Map<string,Texture>();
   // Immutable terrain identities; compute biome/variant once per world cell and seed.
@@ -29,9 +31,10 @@ export class PixiAsciiRenderer {
   private totalBuildMs=0;
   private buildCount=0;
   /** JS build timings, not GPU frame time or FPS. */
-  get profile():{builds:number;meanBuildMs:number;lastBuildMs:number;floorDraws:number;cachedCells:number;textures:number}{
+  get profile():{builds:number;meanBuildMs:number;lastBuildMs:number;floorDraws:number;cachedCells:number;textures:number;allocatedSprites:number;activeSprites:number;peakActiveSprites:number}{
     return {builds:this.buildCount,meanBuildMs:this.buildCount?this.totalBuildMs/this.buildCount:0,
-      lastBuildMs:this.lastBuildMs,floorDraws:this.floorDraws,cachedCells:this.terrainCache.size,textures:this.tiles.size};
+      lastBuildMs:this.lastBuildMs,floorDraws:this.floorDraws,cachedCells:this.terrainCache.size,textures:this.tiles.size,
+      allocatedSprites:this.sprites.length,activeSprites:this.activeSprites,peakActiveSprites:this.peakActiveSprites};
   }
   private terrain(seed:number,x:number,y:number):{biome:ReturnType<typeof biomeAt>;variant:number}{
     if(this.terrainSeed!==seed){this.terrainCache.clear();this.terrainSeed=seed;this.floorKey='';}
@@ -301,24 +304,34 @@ export class PixiAsciiRenderer {
     return texture;
   }
   private drawCreature(i:number,kind:string,x:number,y:number,frame:0|1):number{
-    const sprite=this.sprites[i];
-    if(!sprite)return i;
+    const sprite=this.spriteAt(i);
     sprite.texture=this.creatureTexture(kind,frame);
     sprite.tint=0xffffff;sprite.alpha=1;
     sprite.x=x*this.cellW+this.cellW/2;sprite.y=y*this.cellH+this.cellH/2;
     sprite.width=this.cellW;sprite.height=this.cellH;sprite.visible=true;
     return i+1;
   }
-  private allocateSprites():void{
-    for(let i=0;i<this.viewW*this.viewH+250;i++){
+  // Pixi stage now grows only as needed. Old implementation eagerly created
+  // 1,519 Sprite objects and traversed them all on each render.
+  private allocateSprites():void{this.growSprites(64);}
+  private growSprites(count:number):void{
+    const cap=this.viewW*this.viewH+250;
+    for(let n=0;n<count&&this.sprites.length<cap;n++){
       const sprite=new Sprite(this.texture('.'));
-      sprite.anchor.set(.5);sprite.visible=false;this.layers.addChild(sprite);
+      sprite.anchor.set(.5);
+      sprite.visible=false;
+      this.layers.addChild(sprite);
       this.sprites.push(sprite);
     }
   }
-  private drawGlyph(i:number,glyph:string,x:number,y:number,color:number,opacity=1):number{
-    if(i>=this.sprites.length)return i;
+  private spriteAt(i:number):Sprite{
+    while(i>=this.sprites.length)this.growSprites(64);
     const sprite=this.sprites[i];
+    if(!sprite)throw new Error('Sprite pool exhausted');
+    return sprite;
+  }
+  private drawGlyph(i:number,glyph:string,x:number,y:number,color:number,opacity=1):number{
+    const sprite=this.spriteAt(i);
     sprite.texture=this.texture(glyph);sprite.tint=color;sprite.alpha=opacity;
     sprite.x=x*this.cellW+this.cellW/2;sprite.y=y*this.cellH+this.cellH/2;
     sprite.width=this.cellW;sprite.height=this.cellH;
@@ -364,7 +377,7 @@ export class PixiAsciiRenderer {
       const eye=eyeZone;
       const faro=state.zone==='surface'&&x>=18&&x<=47&&y>=21&&y<=43;
       if(this.artMode==='pixel'){
-        const sprite=this.sprites[used++];
+        const sprite=this.spriteAt(used++);
         sprite.texture=this.tileTexture(glyph,eye,faro,terrain.variant,biomeKey);
         sprite.tint=0xffffff;sprite.alpha=alpha;
         sprite.x=cx*this.cellW+this.cellW/2;sprite.y=cy*this.cellH+this.cellH/2;
@@ -559,7 +572,10 @@ export class PixiAsciiRenderer {
         this.backdrop.circle(cx+Math.cos(a)*r,cy+Math.sin(a)*r,Math.max(.5,2.5*(1-phase))).fill({color:n%2?0xf5d29c:0xb6a5ec,alpha:1-phase});
       }
     }
-    for(let i=used;i<this.sprites.length;i++)this.sprites[i].visible=false;
+    // Hide only objects used in the previous scene (not the entire pool).
+    for(let i=used;i<this.activeSprites;i++)this.sprites[i].visible=false;
+    this.activeSprites=used;
+    this.peakActiveSprites=Math.max(this.peakActiveSprites,used);
     this.ambience++;
     this.lastBuildMs=performance.now()-started;
     this.totalBuildMs+=this.lastBuildMs;
