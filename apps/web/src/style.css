@@ -133,3 +133,31 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .survival-strip[data-risk="critical"]{border-color:#bd676b;color:#ffe0de;background:#311d27}
 @media(max-width:620px){.survival-strip{font-size:10px;padding:9px 10px}}
 @media(prefers-reduced-motion:reduce){.survival-strip{animation:none;transition:none}}
+
+/* v2.7 full-screen title screen, mouse/keyboard friendly and responsive */
+.start-menu{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;overflow:auto;padding:26px 14px;background:radial-gradient(ellipse at 50% 29%,#204339f0 0%,#080f17f9 47%,#05080d 85%);backdrop-filter:blur(12px);color:#f2dfb7}
+.start-menu.hidden,.start-settings.hidden{display:none}
+.start-menu-card{width:min(100%,560px);max-height:min(96dvh,900px);overflow:auto;padding:clamp(20px,4vw,44px);border:1px solid #8e9f75;background:linear-gradient(157deg,#1a312ddf,#0b1822f5 69%,#161627f3);box-shadow:0 0 0 6px #080c13a1,0 25px 110px #000c,inset 0 1px #ead5a129;border-radius:12px;text-align:center}
+.start-eyebrow,.start-footer{font-size:10px;letter-spacing:.19em;color:#a5c7b2}
+.start-sigil{margin:12px auto 0;font-size:62px;line-height:1.1;color:#b6d2b8;text-shadow:0 0 30px #a4dca966}
+.start-menu-card h1{font-size:clamp(31px,5vw,48px);margin:8px 0;letter-spacing:.11em;color:#f4e8c9;line-height:1.2}
+.start-menu-card h1 em{font-style:normal;color:#efbf7d}
+.start-tagline{font-size:13px;font-weight:800;letter-spacing:.13em;color:#d9ccaa}
+.start-description{font-size:13px;line-height:1.8;color:#aebfb8;max-width:405px;margin:13px auto 22px}
+.start-actions{display:grid;gap:10px}
+.start-actions button,.start-settings button{min-height:46px;padding:12px;border:1px solid #607f70;border-radius:5px;background:#1c342f;color:#e2e9d1;font-weight:800;letter-spacing:.08em;cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .1s ease}
+.start-actions button:hover:not(:disabled),.start-settings button:hover{border-color:#e0ba79;background:#34483d}
+.start-actions button:active{transform:translateY(1px)}
+.start-actions .start-primary{border-color:#eac58b;background:linear-gradient(120deg,#87623a,#69513a);color:#fff2d3}
+.start-actions button:disabled{cursor:not-allowed;opacity:.38}
+.start-menu button:focus-visible,.start-menu input:focus-visible{outline:3px solid #f6dd9e;outline-offset:3px}
+.start-settings{margin-top:14px;padding:18px;border:1px solid #5d7b6e;background:#0b181f;border-radius:7px;text-align:left}
+.start-settings label{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:.07em;color:#d9e3ce}
+.start-settings input[type=range]{width:100%;min-height:33px;accent-color:#e9be78}
+.start-settings button{width:100%;margin-top:12px}
+.start-settings p,.start-save-info,#start-message{font-size:12px;line-height:1.7;color:#c3d0b8}
+.start-save-info{margin-top:16px;color:#d7c598}
+#start-message{min-height:18px;color:#ffcaa3}
+.start-footer{margin-top:13px;font-size:9px;line-height:1.7}
+@media(max-height:740px){.start-menu{align-items:flex-start}.start-menu-card{max-height:none}}
+@media(prefers-reduced-motion:reduce){.start-actions button,.start-settings button{transition:none}}
