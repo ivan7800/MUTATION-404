@@ -24,6 +24,7 @@ root.innerHTML=`
 <div class="field-notice"><span id="climate-note">ATMÓSFERA // CALMA</span><span id="threat-note">RIESGO // BAJO</span></div>
 <div class="toolbar"><span><kbd>@</kbd> ERRANTE <b>·</b> <kbd>s</kbd> CARROÑERO <b>·</b> <kbd>V</kbd> VIGÍA <b>·</b> <kbd>l</kbd> LARVA <b>·</b> <kbd>p</kbd> POLILLA <b>·</b> <kbd>D</kbd> CAZADOR <b>·</b> <kbd>f</kbd> PASTOR <b>·</b> <kbd>$</kbd> BOTÍN</span><span>MAPA <span id="map-pos">32,32</span></span></div>
 <div class="combatbar"><div><span class="tiny-label">OBJETIVO ACTUAL</span><strong id="target-info">SIN OBJETIVO</strong></div><div><span class="tiny-label">ARMA ACTIVA</span><strong id="weapon-info">HOJA DE DESGUACE</strong></div><div><span class="tiny-label">MUNICIÓN</span><strong id="ammo-info">12 PÚAS</strong></div></div>
+<div id="survival-strip" class="survival-strip" role="status" aria-live="off" data-risk="stable">SUPERVIVENCIA // INICIANDO INSTRUMENTOS</div>
 <div class="actionbar"><button id="mutations-btn" class="action gene">[U] MUTACIONES</button><button id="pulse-btn" class="action gene">[1] PULSO</button><button id="neural-btn" class="action gene">[2] GRITO NEURAL</button><button id="fire-btn-gene" class="action gene">[3] IGNICIÓN</button><button id="phase-btn" class="action gene">[4] PASO DE FASE</button><button id="scan-btn" class="action discovery">[R] SONDEAR</button><button id="travel-btn" class="action discovery">[V] REGIONES</button><button id="atlas-btn" class="action discovery">[M] ATLAS</button><button id="market-btn" class="action discovery">[C] COMERCIAR</button><button id="house-btn" class="action discovery">[L] EDIFICIO / SALIR</button><button id="down-btn" class="action">[N] DESCENDER</button><button id="up-btn" class="action">[P] ASCENDER</button><button id="interact-btn" class="action primary">[E] INTERACTUAR</button><button id="target-btn" class="action">[T] OBJETIVO</button><button id="attack-btn" class="action attack">[X] GOLPEAR</button><button id="fire-btn" class="action attack">[F] DISPARAR</button><button id="pickup-btn" class="action">[G] RECOGER</button><button id="heal-btn" class="action">[H] CURAR</button><button id="harvest-btn" class="action discovery">[K] RECOLECTAR</button><button id="craft-btn" class="action discovery">[O] FABRICAR</button><button id="ecology-btn" class="action discovery">[Y] ECOLOGÍA</button><button id="inventory-btn" class="action">[B] EQUIPO</button><button id="swap-btn" class="action">[Q] CAMBIAR ARMA</button><button id="journal-btn" class="action">[J] DIARIO</button><button id="wait-btn" class="action">[ESPACIO] ESPERAR</button></div>
 <div class="touch-controls"><div class="dpad"><span></span><button data-move="up" aria-label="Ir al norte">▲</button><span></span><button data-move="left" aria-label="Ir al oeste">◀</button><button data-move="down" aria-label="Ir al sur">▼</button><button data-move="right" aria-label="Ir al este">▶</button></div><p>Controles táctiles / alternativa al teclado</p></div>
 <div id="death-banner" class="death-banner hidden" role="alert">SEÑAL VITAL PERDIDA · CARGA UNA PARTIDA O INICIA UNA NUEVA</div>
@@ -86,6 +87,12 @@ function draw():void{
   $('#threat-note').dataset.level=tactical.level;
   write('#research-count',`${state.biomeNotes.length} / 6`);
   write('#ecology-pressure',`${state.ecology.pressure[state.zone]??0} / 5`);
+  const kits=stackCount(state.inventory,'medkit'),ammo=stackCount(state.inventory,'ammo');
+  const criticalHp=state.stats.hp<=Math.max(8,Math.floor(state.stats.maxHp*.25));
+  const warnHp=state.stats.hp<=Math.floor(state.stats.maxHp*.5);
+  const risk=criticalHp?'critical':warnHp||kits===0?'warning':'stable';
+  $('#survival-strip').dataset.risk=risk;
+  write('#survival-strip',`SUPERVIVENCIA // PV ${state.stats.hp}/${state.stats.maxHp} · AMPOLLas ${kits} · PÚAS ${ammo} · CONCENTRACIÓN ${state.stats.focus}/${state.stats.maxFocus}${criticalHp?' · ¡SALUD CRÍTICA!':warnHp?' · BUSCA COBERTURA O CURACIÓN':''}`);
   write('#exposure-text',`${state.exposure}%`);
   $<HTMLElement>('#exposure-bar').style.width=`${state.exposure}%`;
   $<HTMLElement>('#exposure-bar').classList.toggle('critical',state.exposure>=65);
