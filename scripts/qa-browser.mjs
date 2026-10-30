@@ -139,7 +139,7 @@ try{
   }
   refreshVisibility(endState);
   const endingContext=await browser.newContext({viewport:{width:1440,height:900}});
-  await endingContext.addInitScript(save=>localStorage.setItem('mutation404.v10.save',save),serialize(endState));
+  await endingContext.addInitScript(save=>{if(!localStorage.getItem('mutation404.v10.save'))localStorage.setItem('mutation404.v10.save',save);},serialize(endState));
   const endingPage=await endingContext.newPage(),endingErrors=[];
   endingPage.on('pageerror',err=>endingErrors.push(err.message));
   await endingPage.goto(base,{waitUntil:'networkidle',timeout:45000});
@@ -151,6 +151,8 @@ try{
   assert.match(await endingPage.locator('#modal-title').textContent(),/FINAL — EL JURAMENTO DEL FARO/);
   assert.match(await endingPage.locator('#modal-content').textContent(),/FIN DE LA CAMPAÑA/);
   await endingPage.screenshot({path:'qa-evidence/final-campana-v28.png',fullPage:true,animations:'disabled'});
+  const persisted=await endingPage.evaluate(()=>JSON.parse(localStorage.getItem('mutation404.v10.save')||'{}'));
+  assert.ok(persisted.events?.includes('campaign:ending:bind'),'ending must be saved before reload');
   await endingPage.locator('#modal-close').click();
   assert.match(await endingPage.locator('#quest-state').textContent(),/CAMPAÑA COMPLETA/);
   await endingPage.reload({waitUntil:'networkidle'});
