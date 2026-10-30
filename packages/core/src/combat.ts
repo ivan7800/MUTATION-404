@@ -118,6 +118,16 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
     const sight=s.seed===undefined||s.tick===undefined?def.sight:Math.min(def.sight,WEATHER[weatherAt(s.seed,s.tick,biomeAt(s.seed,e.x,e.y))].radius);
     const canSee=dist<=sight&&(e.kind==='larva'?dist<=3||hasLineOfSight(s.tiles,e.x,e.y,s.player.x,s.player.y):hasLineOfSight(s.tiles,e.x,e.y,s.player.x,s.player.y));
     if(canSee){e.mode='hunting';e.lastKnown={...s.player};e.searchTurns=3;}
+    // Unique elite drones issue a visible two-cell electrical warning.
+    // No save-schema extension: elite identity comes from its persistent id.
+    if(e.id.startsWith('elite-')&&canSee&&dist>=2&&dist<=6&&s.fields&&s.tick!==undefined&&Math.floor(s.tick/100)%4===0){
+      const dx=Math.sign(s.player.x-e.x),dy=Math.sign(s.player.y-e.y);
+      placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});
+      const tx=s.player.x+dx,ty=s.player.y+dy;
+      if(within(tx,ty)&&passable(s.tiles[index(tx,ty)]))placeField(s.fields,{x:tx,y:ty,kind:'electric',ttl:3});
+      report('ÉLITE // El custodio de Nácar sobrecarga dos casillas: sal del área antes del siguiente turno.');
+      continue;
+    }
     // Warden sentinels force movement with a delayed electrical trap; the
     // environmental phase processes it on the player's next turn.
     if(e.kind==='sentinel'&&canSee&&dist>=2&&dist<=4&&s.fields&&s.tick!==undefined&&Math.floor(s.tick/100)%6===0){
