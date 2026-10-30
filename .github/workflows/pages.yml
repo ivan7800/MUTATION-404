@@ -8,7 +8,6 @@ on:
 permissions:
   contents: read
   pages: write
-  issues: write
   id-token: write
 
 concurrency:
@@ -27,15 +26,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Type check
-        id: types
-        run: npm run typecheck > type-errors.txt 2>&1 || { cat type-errors.txt; exit 1; }
-      - name: Report TypeScript diagnostics
-        if: failure() && steps.types.conclusion == 'failure'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          { echo 'Temporary v2.0 TypeScript diagnostic'; echo; echo '```'; cat type-errors.txt; echo '```'; } > type-diagnostic.md
-          gh issue create --title 'Temporary v2.0 TypeScript diagnostic' --body-file type-diagnostic.md
+        run: npm run typecheck
       - name: Core tests
         run: npm run test:core
       - name: Build static web release
