@@ -5,3 +5,9 @@ html=html.replace('href="/src/style.css"','href="./style.css"').replace('src="/s
 await writeFile('play/index.html',html);
 await copyFile('apps/web/src/style.css','play/style.css');
 console.log('Build offline listo en play/. Se sirve con node scripts/server.mjs');
+
+// Bundle PixiJS and dynamic WebGL chunks into the offline Pages release.
+// Keep legacy play/js for existing smoke tests and standalone Canvas fallback.
+const {build}=await import('vite');
+await build({configFile:'apps/web/vite.config.ts',base:'./',build:{outDir:'../../play',emptyOutDir:false}});
+console.log('PixiJS/WebGL assets empaquetados en play/assets/.');
