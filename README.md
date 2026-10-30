@@ -1,3 +1,21 @@
+# MUTATION 404 v1.5 — El despertar de Nácar
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Nuevas interacciones sistémicas
+
+- **Ocho cámaras de resonancia:** en el segundo estrato de cada ruina regional, encuentra la señal `?` en (22,12), junto a la reliquia. Pulsa **E** para elegir entre estabilizar con un condensador (reduce exposición y recupera concentración) o absorber (otorga un punto genético, aumenta la exposición y provoca un peligro ambiental). La elección se recuerda en la partida y no se puede repetir para acumular recompensas.
+- **Combustión de esporas:** Ignición aplicada a una criatura situada en una nube fúngica consume esa nube y provoca daño adicional. La acción sigue consumiendo concentración y un turno.
+- **Compatibilidad:** las decisiones se guardan mediante el registro de eventos actual. Las partidas anteriores no requieren borrarse.
+
+## Verificación
+
+Ejecutar `npm run test:core`, `npm run typecheck`, `npm run build:offline`. GitHub Actions ejecuta estas comprobaciones antes del despliegue. La evaluación visual y de balance en una partida real continúa pendiente.
+
+**Renderizado:** Canvas 2D. No se ha integrado PixiJS/WebGL2.
+
+---
+
 # MUTATION 404 v1.4 — Nácar Vivo
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
