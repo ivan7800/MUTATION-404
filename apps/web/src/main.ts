@@ -77,7 +77,7 @@ function savedRaw():string|null{
   return null;
 }
 function safeVolume():number{
-  try{const n=Number(localStorage.getItem(AUDIO_SETTINGS_KEY));return Number.isFinite(n)&&n>=0&&n<=1?n:.55;}catch{return .55;}
+  try{const raw=localStorage.getItem(AUDIO_SETTINGS_KEY);if(raw===null)return .55;const n=Number(raw);return Number.isFinite(n)&&n>=0&&n<=1?n:.55;}catch{return .55;}
 }
 audio.setVolume(safeVolume());
 
