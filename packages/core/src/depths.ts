@@ -50,6 +50,9 @@ export function generateRuin(seed:number,x:number,y:number,depth:1|2):ZoneMemory
  generated.tiles[index(10,10)]='+';
  generated.tiles[index(14,10)]=depth===1?'T':'o';
  generated.tiles[index(20,12)]='o';
+ // A second, optional chamber contains one persistent world-changing choice.
+ generated.tiles[index(21,12)]=':';
+ generated.tiles[index(22,12)]='?';
  // Distinct hazards are persistent per zone, not reset when revisited.
  generated.tiles[index(25,12)]=':';
  generated.fields.push({x:25,y:12,kind:theme.hazard,ttl:35});
