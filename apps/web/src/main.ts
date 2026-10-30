@@ -10,7 +10,7 @@ const SAVE_KEY='mutation404.v10.save',V09_KEY='mutation404.v09.save',V08_KEY='mu
 const root=document.querySelector<HTMLElement>('#app');if(!root)throw new Error('Falta #app');
 root.innerHTML=`
 <div class="shell">
-<header class="topbar"><div class="brand"><span class="brand-mark">◈</span><div><div class="brand-title">MUTATION <em>404</em></div><div class="brand-sub">NÁCAR // ARCHIVO 11 — ECOS DE NÁCAR</div></div></div><div class="top-controls"><span class="live"><span class="live-dot"></span>SEÑAL INESTABLE</span><button class="icon-btn" id="audio-btn" aria-pressed="false">♫ ACTIVAR SONIDO</button><button class="icon-btn" id="help-btn">? AYUDA</button></div></header>
+<header class="topbar"><div class="brand"><span class="brand-mark">◈</span><div><div class="brand-title">MUTATION <em>404</em></div><div class="brand-sub">NÁCAR // ARCHIVO 11 — ECOS DE NÁCAR</div></div></div><div class="top-controls"><span class="live"><span class="live-dot"></span>SEÑAL INESTABLE</span><button class="icon-btn" id="menu-btn">☰ MENÚ</button><button class="icon-btn" id="audio-btn" aria-pressed="false">♫ ACTIVAR SONIDO</button><button class="icon-btn" id="help-btn">? AYUDA</button></div></header>
 <div class="hero-strip"><span><span id="biome-strip">REGIÓN / SALINAS DE VÉRTICE</span></span><span id="clock">07:00</span><span id="coords">X:32 Y:32</span><span class="strip-accent" id="exploration">EXPLORACIÓN 0%</span></div>
 <main class="layout">
 <section class="game-column" aria-label="Área de juego">
@@ -307,6 +307,7 @@ window.addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.target instanceof HTMLInputElement)return;
   const key=e.key.toLowerCase();
   if(!gameStarted)return;
+  if(!modalMode&&key==='escape'){e.preventDefault();$('#menu-btn').click();return;}
   if(modalMode){
     if(key==='escape'){e.preventDefault();closeModal();return;}
     if(/^[1-9]$/.test(key)){
@@ -389,6 +390,14 @@ function confirmNewGame():void{
   state=createGame(404);stepCount=0;
   beginGame();
 }
+$('#menu-btn').addEventListener('click',()=>{
+  if(gameStarted&&state.stats.hp>0)save(true);
+  gameStarted=false;
+  renderer.pauseAmbience();
+  updateStartMenu();
+  $('#start-menu').classList.remove('hidden');
+  $<HTMLButtonElement>(savedRaw()?'#start-continue':'#start-new').focus();
+});
 $('#start-new').addEventListener('click',confirmNewGame);
 $('#start-continue').addEventListener('click',()=>{
   const raw=savedRaw();if(!raw){startStatus('No hay una partida guardada.');return;}
