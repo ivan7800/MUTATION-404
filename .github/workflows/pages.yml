@@ -29,6 +29,8 @@ jobs:
         run: npm run typecheck
       - name: Core tests
         run: npm run test:core
+      - name: Deterministic balance and resource telemetry
+        run: node scripts/balance-audit.mjs
       - name: Build static web release
         run: npm run build:offline
       - name: Verify Pages entry point
@@ -46,6 +48,13 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: node scripts/qa-browser.mjs
+      - name: Upload combat balance telemetry
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-404-balance-audit
+          path: qa-evidence/balance-report.json
+          if-no-files-found: ignore
       - name: Store visual screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
