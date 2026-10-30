@@ -14,11 +14,35 @@ import type {AsciiRenderer} from './renderer.js';
 export class PixiAsciiRenderer {
   private readonly app=new Application();
   private readonly view= new Container();
+  private readonly terrainFloor=new Graphics();
   private readonly backdrop=new Graphics();
   private readonly layers=new Container();
   private readonly sprites:Sprite[]=[];
   private readonly glyphs=new Map<string,Texture>();
   private readonly tiles=new Map<string,Texture>();
+  // Immutable terrain identities; compute biome/variant once per world cell and seed.
+  private terrainSeed:number|null=null;
+  private readonly terrainCache=new Map<number,{biome:ReturnType<typeof biomeAt>;variant:number}>();
+  private floorKey='';
+  private floorDraws=0;
+  private lastBuildMs=0;
+  private totalBuildMs=0;
+  private buildCount=0;
+  /** JS build timings, not GPU frame time or FPS. */
+  get profile():{builds:number;meanBuildMs:number;lastBuildMs:number;floorDraws:number;cachedCells:number;textures:number}{
+    return {builds:this.buildCount,meanBuildMs:this.buildCount?this.totalBuildMs/this.buildCount:0,
+      lastBuildMs:this.lastBuildMs,floorDraws:this.floorDraws,cachedCells:this.terrainCache.size,textures:this.tiles.size};
+  }
+  private terrain(seed:number,x:number,y:number):{biome:ReturnType<typeof biomeAt>;variant:number}{
+    if(this.terrainSeed!==seed){this.terrainCache.clear();this.terrainSeed=seed;this.floorKey='';}
+    const at=index(x,y);
+    let cached=this.terrainCache.get(at);
+    if(!cached){
+      cached={biome:biomeAt(seed,x,y),variant:Math.floor(terrainHash(seed+917,x,y)*3)};
+      this.terrainCache.set(at,cached);
+    }
+    return cached;
+  }
   private artMode:'pixel'|'ascii'='pixel';
   get mode(): 'pixel'|'ascii' {return this.artMode;}
   toggleArt(): 'pixel'|'ascii' {
@@ -55,7 +79,7 @@ export class PixiAsciiRenderer {
     result.app.canvas.tabIndex=0;
     result.app.canvas.setAttribute('aria-label','Mapa WebGL ASCII interactivo. Flechas/WASD para moverse; E para interactuar; X para atacar.');
     result.app.canvas.dataset.renderer='pixi-webgl';
-    result.view.addChild(result.backdrop,result.layers);
+    result.view.addChild(result.terrainFloor,result.backdrop,result.layers);
     result.app.stage.addChild(result.view);
     result.mount.appendChild(result.app.canvas);
     // Hide, but never destroy, the fallback before the WebGL view is ready.
@@ -297,32 +321,44 @@ export class PixiAsciiRenderer {
   }
   private color(hex:string):number{return Number.parseInt(hex.replace('#',''),16);}
   draw(state:GameState):void{
+    const started=performance.now();
     this.state=state;
     const ox=Math.max(0,Math.min(WIDTH-this.viewW,state.player.x-Math.floor(this.viewW/2)));
     const oy=Math.max(0,Math.min(HEIGHT-this.viewH,state.player.y-Math.floor(this.viewH/2)));
     const night=Math.floor(state.tick/6000)%4>=2;
     this.backdrop.clear();
-    this.backdrop.rect(0,0,this.viewW*this.cellW,this.viewH*this.cellH).fill(0x080e17);
+    const surfaceZone=coordsForZone(state.zone)!==null;
+    const eyeZone=state.zone.startsWith('ruin--1--1-');
+    const floorKey=`${state.seed}:${state.zone}:${state.tick}:${state.player.x},${state.player.y}:${this.cellW},${this.cellH}:${surfaceZone}:${night}`;
+    const floorDirty=this.floorKey!==floorKey;
+    if(floorDirty){
+      this.floorKey=floorKey;
+      this.floorDraws++;
+      this.terrainFloor.clear();
+      this.terrainFloor.rect(0,0,this.viewW*this.cellW,this.viewH*this.cellH).fill(0x080e17);
+    }
     let used=0;
     for(let cy=0;cy<this.viewH;cy++)for(let cx=0;cx<this.viewW;cx++){
       const x=ox+cx,y=oy+cy,at=index(x,y);
       if(!state.seen[at])continue;
       const glyph=state.tiles[at] as Tile;
       const visible=state.visible[at]===1;
-      const biomeKey=biomeAt(state.seed,x,y),biome=BIOMES[biomeKey];
+      const terrain=this.terrain(state.seed,x,y),biomeKey=terrain.biome,biome=BIOMES[biomeKey];
       const dist=Math.hypot(x-state.player.x,y-state.player.y);
       const radius=night?7:12;
       const dim=visible?Math.min(night?.62:.28,Math.max(0,(dist-radius*.35)/radius)*(night?.55:.28)):0;
       const alpha=visible?Math.max(.32,(night?.80:1)-dim):.22;
-      const groundColor=visible?(coordsForZone(state.zone)?biome.shadow:'#101722'):'#06090d';
-      this.backdrop.rect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH).fill({color:this.color(groundColor),alpha:visible?1:.55});
-      const palette=visible&&coordsForZone(state.zone)&&['.',',','*'].includes(glyph)?biome.palette:
+      if(floorDirty){
+        const groundColor=visible?(surfaceZone?biome.shadow:'#101722'):'#06090d';
+        this.terrainFloor.rect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH).fill({color:this.color(groundColor),alpha:visible?1:.55});
+      }
+      const palette=visible&&surfaceZone&&['.',',','*'].includes(glyph)?biome.palette:
         glyph==='#'?'#697a75':glyph==='T'?'#ffd085':glyph==='o'?'#d5b1f2':glyph==='?'?'#f0a6db':glyph==='!'?'#fd7892':glyph==='~'?'#75d3e3':glyph==='+'?'#f5ce8b':glyph==='&'?'#a3e0a3':glyph==='%'?'#8ac8d3':glyph==='='?'#b9d4cf':'#c5bbaa';
-      const eye=state.zone.startsWith('ruin--1--1-');
+      const eye=eyeZone;
       const faro=state.zone==='surface'&&x>=18&&x<=47&&y>=21&&y<=43;
       if(this.artMode==='pixel'){
         const sprite=this.sprites[used++];
-        sprite.texture=this.tileTexture(glyph,eye,faro,Math.floor(terrainHash(state.seed+917,x,y)*3),biomeKey);
+        sprite.texture=this.tileTexture(glyph,eye,faro,terrain.variant,biomeKey);
         sprite.tint=0xffffff;sprite.alpha=alpha;
         sprite.x=cx*this.cellW+this.cellW/2;sprite.y=cy*this.cellH+this.cellH/2;
         sprite.width=this.cellW;sprite.height=this.cellH;sprite.visible=true;
@@ -518,10 +554,14 @@ export class PixiAsciiRenderer {
     }
     for(let i=used;i<this.sprites.length;i++)this.sprites[i].visible=false;
     this.ambience++;
+    this.lastBuildMs=performance.now()-started;
+    this.totalBuildMs+=this.lastBuildMs;
+    this.buildCount++;
   }
   zoom(dir:number):void{
     this.fontSize=Math.max(13,Math.min(25,this.fontSize+dir));
     this.cellW=Math.round(this.fontSize*.83);this.cellH=this.fontSize+5;
+    this.floorKey='';
     this.app.renderer.resize(this.viewW*this.cellW,this.viewH*this.cellH);
     if(this.state)this.draw(this.state);
   }
