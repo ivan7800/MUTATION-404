@@ -2,6 +2,8 @@ import {chromium} from 'playwright-core';
 import {spawn} from 'node:child_process';
 import {mkdir,writeFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import {createGame,serialize,refreshVisibility} from '../dist/core/core/src/game.js';
+import {generateRuin} from '../dist/core/core/src/depths.js';
 const PORT=8877;
 const base=`http://127.0.0.1:${PORT}/`;
 const server=spawn(process.execPath,['scripts/server.mjs','--no-open'],{env:{...process.env,PORT:String(PORT)},stdio:'pipe'});
@@ -46,6 +48,31 @@ try{
     assert.deepEqual(errors,[],'unhandled browser exceptions');
     const info={mode,renderer:expected,before,after,errors,canvasCount:await page.locator('#viewport canvas').count(),screenshot:png};
     results.push(info);
+    await context.close();
+  }
+  // v2.0: actual images from both art modes and a genuine saved Ojo del Silencio.
+  const state=createGame(404),room=generateRuin(404,-1,-1,2);
+  state.zone='ruin--1--1-2';state.tiles=room.tiles;state.seen=room.seen;
+  state.fields=room.fields;state.ground=room.ground;state.enemies=room.enemies;
+  state.player={x:19,y:12};refreshVisibility(state);
+  const eyeSave=serialize(state);
+  for(const scene of ['faro-pixel','faro-ascii','ojo-pixel','ojo-ascii']){
+    const eye=scene.startsWith('ojo'),ascii=scene.endsWith('ascii');
+    const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
+    if(eye)await context.addInitScript(save=>localStorage.setItem('mutation404.v10.save',save),eyeSave);
+    const page=await context.newPage(),errors=[];
+    page.on('pageerror',err=>errors.push(err.message));
+    await page.goto(base,{waitUntil:'networkidle',timeout:45000});
+    await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
+    if(ascii)await page.locator('#art-mode-btn').click();
+    const mode=await page.locator('#viewport').getAttribute('data-art-mode');
+    assert.equal(mode,ascii?'ascii':'pixel');
+    assert.equal(await page.locator('#art-mode-btn').getAttribute('aria-pressed'),String(!ascii));
+    if(eye)assert.match(await page.locator('#location').textContent(),/Ojo del Silencio/i);
+    const screenshot=`qa-evidence/${scene}.png`;
+    await page.screenshot({path:screenshot,fullPage:true,animations:'disabled'});
+    assert.deepEqual(errors,[],'scene caused a browser exception');
+    results.push({scene,mode,zone:eye?'Ojo del Silencio':'Faro Ciego',screenshot,errors});
     await context.close();
   }
   await writeFile('qa-evidence/report.json',JSON.stringify({status:'passed',browser:browserExecutable,results},null,2));
