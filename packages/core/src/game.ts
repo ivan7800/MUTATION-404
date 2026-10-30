@@ -573,6 +573,23 @@ export function dispatch(s:GameState, command:Command):ActionResult {
       }
       return reply(true,0,'La resonancia ya ha sido resuelta.');
     }
+    if(r&&r.depth===2&&manhattan(s.player,{x:26,y:12})<=1){
+      const key=`elite-cache:${s.zone}`;
+      if(s.events.includes(key)){
+        message(s,'ARCHIVO // El registro del custodio ya está recuperado.');
+        return reply(true,0,'Registro ya recuperado.');
+      }
+      if(s.enemies.some(e=>e.id===`elite-${r.x}-${r.y}-2`&&e.hp>0)){
+        message(s,'SEGURIDAD // El custodio de Nácar protege el archivo. Elimina al guardián para recuperarlo.');
+        return reply(false,0,'El custodio todavía vigila el archivo.');
+      }
+      s.events.push(key);
+      s.stats.credits+=15;
+      addStack(s.inventory,'capacitor',1);
+      message(s,`ARCHIVO ÚNICO // ${themeForRuin(r.x,r.y).reward}: +15 créditos y 1 condensador.`);
+      advance(s,100);
+      return reply(true,100,'Archivo del custodio recuperado.');
+    }
     const citizen=nearbyCitizen(s);
     if(citizen){talkToCitizen(s,citizen);return reply(true,0,`Conversando con ${citizen.name}.`);}
     if(exteriorForInterior(s.zone))return dispatch(s,{type:'leave-settlement'});
