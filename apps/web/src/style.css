@@ -161,3 +161,10 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .start-footer{margin-top:13px;font-size:9px;line-height:1.7}
 @media(max-height:740px){.start-menu{align-items:flex-start}.start-menu-card{max-height:none}}
 @media(prefers-reduced-motion:reduce){.start-actions button,.start-settings button{transition:none}}
+
+/* v2.8 campaign completion and long-form narrative credits */
+.epilogue-credits{padding:20px 14px;text-align:center;border:1px solid #c4a46b;background:radial-gradient(ellipse at top,#3c332a,#121820 70%);letter-spacing:.24em;line-height:2.2;color:#f1dbad;font-weight:800}
+.mission-card #quest-text{line-height:1.75}
+.mission-card #quest-state{letter-spacing:.02em;line-height:1.6}
+#modal-content h3{margin-top:20px;color:#e7d09b}
+#modal-content li{line-height:1.7;margin-bottom:5px}
