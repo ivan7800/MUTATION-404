@@ -33,6 +33,8 @@ export class PixiAsciiRenderer {
   private lastAmbient=0;
   private ambience=0;
   private effectUntil=0;
+  private readonly flashes=new Map<string,{until:number;heavy:boolean}>();
+  private readonly echoes:{x:number;y:number;until:number}[]=[];
   private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
   private reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private readonly viewW=47;
@@ -59,6 +61,20 @@ export class PixiAsciiRenderer {
     return result;
   }
 
+  combatFeedback(previous:ReadonlyMap<string,{hp:number;x:number;y:number}>,state:GameState):void{
+    if(this.reducedMotion)return;
+    const now=performance.now(),current=new Set(state.enemies.map(e=>e.id));
+    for(const enemy of state.enemies){
+      const before=previous.get(enemy.id);
+      if(before&&enemy.hp<before.hp)this.flashes.set(enemy.id,{until:now+320,heavy:before.hp-enemy.hp>=5});
+    }
+    for(const [id,old] of previous)if(!current.has(id)||state.enemies.some(e=>e.id===id&&e.hp<=0)){
+      this.echoes.push({x:old.x,y:old.y,until:now+450});
+      this.flashes.delete(id);
+    }
+    if(this.echoes.length>20)this.echoes.splice(0,this.echoes.length-20);
+    this.draw(state);
+  }
   private texture(character:string):Texture{
     let texture=this.glyphs.get(character);
     if(texture)return texture;
@@ -274,6 +290,12 @@ export class PixiAsciiRenderer {
       const x=enemy.x-ox,y=enemy.y-oy;if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
       const def=ENEMY_DEFS[enemy.kind],elite=enemy.id.startsWith('elite-');
       if(state.targetId===enemy.id||elite)this.backdrop.rect(x*this.cellW,y*this.cellH,this.cellW,this.cellH).stroke({width:1.5,color:elite?0xef92fc:0xffcb72,alpha:.9});
+      const flash=this.flashes.get(enemy.id);
+      if(flash&&flash.until>performance.now()){
+        const progress=1-(flash.until-performance.now())/320;
+        this.backdrop.rect(x*this.cellW,y*this.cellH,this.cellW,this.cellH).fill({color:flash.heavy?0xffc477:0xff6474,alpha:Math.max(0,(1-progress)*.68)});
+        this.backdrop.circle((x+.5)*this.cellW,(y+.5)*this.cellH,3+progress*16).stroke({color:flash.heavy?0xffdd99:0xff8999,width:2,alpha:1-progress});
+      }else if(flash)this.flashes.delete(enemy.id);
       const pose=(this.reducedMotion?0:Math.floor(this.ambience/6+enemy.x+enemy.y)%2) as 0|1;
       used=this.artMode==='pixel'?this.drawCreature(used,elite?'elite':enemy.kind,x,y,pose):this.drawGlyph(used,elite?'◆':def.glyph,x,y,elite?0xecb9ff:this.color(def.color));
       const health=Math.max(0,Math.min(1,enemy.hp/def.hp));
@@ -292,6 +314,24 @@ export class PixiAsciiRenderer {
     if(timeLeft>0&&!this.reducedMotion){
       const phase=1-timeLeft/300,color=this.effectKind==='mutation'?0xbda5ff:this.effectKind==='damage'?0xff6b74:this.effectKind==='attack'?0xffcb81:0x8de3dc;
       this.backdrop.circle(px*this.cellW+this.cellW/2,py*this.cellH+this.cellH/2,7+phase*80).stroke({color,width:2,alpha:1-phase});
+    }
+    // Visible tactical telegraph for charged floor cells (including reduced-motion mode).
+    for(const field of state.fields){
+      if(field.kind!=='electric'||state.visible[index(field.x,field.y)]!==1)continue;
+      const x=field.x-ox,y=field.y-oy;
+      if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
+      const alpha=this.reducedMotion?.9:.55+.25*Math.sin(performance.now()/95+x);
+      this.backdrop.rect(x*this.cellW+1,y*this.cellH+1,this.cellW-2,this.cellH-2).stroke({color:0x8df8e8,width:2,alpha});
+    }
+    const currentTime=performance.now();
+    for(let i=this.echoes.length-1;i>=0;i--){
+      const e=this.echoes[i],remaining=e.until-currentTime;
+      if(remaining<=0){this.echoes.splice(i,1);continue;}
+      const phase=1-remaining/450,cx=(e.x-ox+.5)*this.cellW,cy=(e.y-oy+.5)*this.cellH;
+      for(let n=0;n<8;n++){
+        const a=n*Math.PI/4+phase*.5,r=3+phase*20;
+        this.backdrop.circle(cx+Math.cos(a)*r,cy+Math.sin(a)*r,Math.max(.5,2.5*(1-phase))).fill({color:n%2?0xf5d29c:0xb6a5ec,alpha:1-phase});
+      }
     }
     for(let i=used;i<this.sprites.length;i++)this.sprites[i].visible=false;
     this.ambience++;
@@ -316,7 +356,7 @@ export class PixiAsciiRenderer {
       if(now-this.lastAmbient>=125){
         this.lastAmbient=now;
         const biome=biomeAt(this.state.seed,this.state.player.x,this.state.player.y);
-        if(this.artMode==='pixel'||this.state.fields.length>0||weatherAt(this.state.seed,this.state.tick,biome)!=='calma'||this.effectUntil>now)this.draw(this.state);
+        if(this.artMode==='pixel'||this.flashes.size>0||this.echoes.length>0||this.state.fields.length>0||weatherAt(this.state.seed,this.state.tick,biome)!=='calma'||this.effectUntil>now)this.draw(this.state);
       }
       this.ambientFrame=requestAnimationFrame(loop);
     };
