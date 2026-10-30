@@ -22,6 +22,13 @@ test('v2.9 regional tile atlas covers six biomes while preserving ASCII mode',()
  assert.ok(qa.includes('region-v29-pixel.png'));
  assert.ok(qa.includes('region-v29-ascii.png'));
 });
+test('v2.9 final custodian has its own texture, ASCII glyph, and correct HP denominator',()=>{
+ assert.match(renderer,/nacar:\['#f3d9a8'/);
+ assert.match(renderer,/enemy\.id==='campaign-heart-custodian'/);
+ assert.match(renderer,/nacar\?'nacar':elite\?'elite'/);
+ assert.match(renderer,/nacar\?'✺'/);
+ assert.match(renderer,/enemy\.hp\/\(nacar\?def\.hp\*3:def\.hp\)/);
+});
 test('pixel mode toggle is interactive without touching the core game state',()=>{
  assert.match(main,/id="art-mode-btn"/);
  assert.match(main,/#art-mode-btn'\)\.addEventListener\('click'/);

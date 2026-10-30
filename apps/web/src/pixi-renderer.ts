@@ -195,13 +195,29 @@ export class PixiAsciiRenderer {
       moth:['#c6a0cf','#4a385c','#f0d6e7'],
       larva:['#d2ae80','#755a45','#ebdac0'],
       elite:['#e1b4fa','#5b447e','#91f0ea'],
+      nacar:['#f3d9a8','#533b70','#92f9ef'],
       npc:['#d6be90','#647877','#ab9c78']
     };
     const [skin,armor,accent]=palette[kind]??palette.npc;
     const bounce=frame===1?2:0;
     // Shadow, feet and hinged legs establish a readable silhouette at tiny scales.
     p(5,42,22,3,'#0b1520');
-    if(kind==='moth'){
+    if(kind==='nacar'){
+      // An original, unique silhouette for the campaign finale: eight memory spines
+      // around a glass heart. Two poses share one texture cache and no new assets.
+      p(8,40,16,3,'#172735');
+      for(let i=0;i<4;i++){
+        const yy=8+i*8+bounce;
+        p(2,yy,7,4,i%2?armor:accent);
+        p(23,yy,7,4,i%2?armor:accent);
+      }
+      p(9,10+bounce,14,28,armor);
+      p(12,6+bounce,8,6,skin);
+      p(10,17+bounce,12,16,accent);
+      p(13,20+bounce,6,9,'#162735');
+      p(14,22+bounce,4,5,skin);
+      p(6,35+bounce,20,3,skin);
+    }else if(kind==='moth'){
       p(2,13+bounce,12,19,armor);p(18,13+bounce,12,19,armor);
       p(4,15+bounce,9,5,skin);p(19,15+bounce,9,5,skin);
       p(12,15+bounce,8,23,skin);p(13,11+bounce,6,6,accent);
@@ -332,7 +348,7 @@ export class PixiAsciiRenderer {
     for(const enemy of state.enemies){
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
       const x=enemy.x-ox,y=enemy.y-oy;if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
-      const def=ENEMY_DEFS[enemy.kind],elite=enemy.id.startsWith('elite-');
+      const def=ENEMY_DEFS[enemy.kind],nacar=enemy.id==='campaign-heart-custodian',elite=enemy.id.startsWith('elite-')||nacar;
       if(state.targetId===enemy.id||elite)this.backdrop.rect(x*this.cellW,y*this.cellH,this.cellW,this.cellH).stroke({width:1.5,color:elite?0xef92fc:0xffcb72,alpha:.9});
       const flash=this.flashes.get(enemy.id);
       if(flash&&flash.until>performance.now()){
@@ -341,8 +357,8 @@ export class PixiAsciiRenderer {
         this.backdrop.circle((x+.5)*this.cellW,(y+.5)*this.cellH,3+progress*16).stroke({color:flash.heavy?0xffdd99:0xff8999,width:2,alpha:1-progress});
       }else if(flash)this.flashes.delete(enemy.id);
       const pose=(this.reducedMotion?0:Math.floor(this.ambience/6+enemy.x+enemy.y)%2) as 0|1;
-      used=this.artMode==='pixel'?this.drawCreature(used,elite?'elite':enemy.kind,x,y,pose):this.drawGlyph(used,elite?'◆':def.glyph,x,y,elite?0xecb9ff:this.color(def.color));
-      const health=Math.max(0,Math.min(1,enemy.hp/def.hp));
+      used=this.artMode==='pixel'?this.drawCreature(used,nacar?'nacar':elite?'elite':enemy.kind,x,y,pose):this.drawGlyph(used,nacar?'✺':elite?'◆':def.glyph,x,y,nacar?0x92f9ef:elite?0xecb9ff:this.color(def.color));
+      const health=Math.max(0,Math.min(1,enemy.hp/(nacar?def.hp*3:def.hp)));
       if(health<1){this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,this.cellW-2,2).fill(0x492c33);this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,(this.cellW-2)*health,2).fill(health>.45?0xdcbf83:0xee7373);}
     }
     const px=state.player.x-ox,py=state.player.y-oy;
