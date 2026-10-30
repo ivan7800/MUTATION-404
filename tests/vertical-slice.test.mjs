@@ -26,7 +26,7 @@ test('original GPU tile atlas has Faro and Ojo separate palettes and cached spri
 test('v2.9 regional tile atlas covers six biomes while preserving ASCII mode',()=>{
  for(const biome of ['salinas','ceniza','hierro','vidrio','medula','umbral'])assert.ok(renderer.includes(biome+':{stone:'),'missing region palette '+biome);
  assert.match(renderer,/if\(this\.artMode==='pixel'\)\{/);
- assert.match(renderer,/this\.tileTexture\(glyph,eye,faro,Math\.floor\(terrainHash/);
+ assert.match(renderer,/this\.tileTexture\(glyph,eye,faro,terrain\.variant,biomeKey\)/);
  assert.match(renderer,/const key=\x60\$\{eye\?'eye':faro\?'faro':region\}/);
  assert.ok(qa.includes('region-v29-pixel.png'));
  assert.ok(qa.includes('region-v29-ascii.png'));
