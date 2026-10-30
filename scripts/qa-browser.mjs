@@ -72,6 +72,7 @@ try{
     assert.equal(await page.locator('#art-mode-btn').getAttribute('aria-pressed'),String(!ascii));
     if(eye){
       assert.match(await page.locator('#location').textContent(),/Ojo del Silencio/i);
+      assert.match(await page.locator('#biome-description').textContent(),/Las paredes repiten pensamientos/i);
       assert.equal(await page.locator('#threat-note').getAttribute('data-level'),'contact');
       assert.match(await page.locator('#threat-note').textContent(),/PELIGRO INMEDIATO/);
     }
