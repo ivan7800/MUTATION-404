@@ -73,7 +73,7 @@ test('Nácar phase hazards are deterministic, signalled and compatible with save
  const g=s.enemies.find(e=>e.id===FINAL_GUARDIAN_ID);
  assert.ok(g);
  // Isolate the arena to test only phase emission, not the normal drone attack.
- g.stunned=20;
+ g.stunned=10;
  s.tick=300;
  assert.equal(dispatch(s,{type:'wait'}).accepted,true);
  assert.ok(s.fields.some(f=>f.kind==='electric'));
