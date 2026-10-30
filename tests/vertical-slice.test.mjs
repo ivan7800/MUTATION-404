@@ -55,7 +55,7 @@ test('v2.3 distinct audiovisual mutation feedback is tied to accepted cast comma
  }
  assert.match(audio,/if\(!this\.enabled\|\|!this\.context\)return/);
  assert.match(renderer,/mutationFeedback\(state:GameState/);
- assert.match(main,/audio\.mutationCue\(command\.mutation\)/);
- assert.match(main,/renderer\.mutationFeedback\(state,command\.mutation\)/);
+ assert.match(main,/audio\.mutationCue\(m\)/);
+ assert.match(main,/renderer\.mutationFeedback\(state,m\)/);
  assert.match(renderer,/this\.reducedMotion\)return/);
 });
