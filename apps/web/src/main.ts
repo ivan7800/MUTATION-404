@@ -38,11 +38,49 @@ root.innerHTML=`
 <div class="side-card"><div class="section-title">SISTEMA <span>v1.0</span></div><div class="system-actions"><button id="save-btn">GUARDAR</button><button id="load-btn">CARGAR</button><button id="new-btn">NUEVA PARTIDA</button></div><div class="save-status" id="save-status">Autoguardado local activado.</div></div></aside></main>
 <footer><span>FARO CIEGO / NACAR_404</span><span>W13 — ECOS DE NÁCAR</span><span>JUGABLE SIN CONEXIÓN EXTERNA</span></footer>
 </div>
+<div id="start-menu" class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
+  <div class="start-menu-card">
+    <div class="start-eyebrow">TRANSMISIÓN // ARCHIVO 404 · VERSIÓN 2.7</div>
+    <div class="start-sigil" aria-hidden="true">◈</div>
+    <h1 id="start-title">MUTATION <em>404</em></h1>
+    <p class="start-tagline">NÁCAR TE RECUERDA. TÚ TODAVÍA NO.</p>
+    <p class="start-description">Un mundo que cambia, cuerpos que mutan y ruinas que jamás deberían haber despertado.</p>
+    <div id="start-actions" class="start-actions">
+      <button id="start-continue" class="start-primary" type="button">CONTINUAR PARTIDA</button>
+      <button id="start-new" type="button">NUEVA PARTIDA</button>
+      <button id="start-load" type="button">CARGAR PARTIDA GUARDADA</button>
+      <button id="start-import" type="button">IMPORTAR GUARDADO (.JSON)</button>
+      <button id="start-options" type="button" aria-expanded="false">OPCIONES</button>
+    </div>
+    <input id="start-file" class="hidden" type="file" accept=".json,application/json" aria-label="Archivo de partida guardada"/>
+    <div id="start-settings" class="start-settings hidden">
+      <label for="start-volume">VOLUMEN DEL JUEGO <output id="start-volume-value">55%</output></label>
+      <input id="start-volume" type="range" min="0" max="100" step="5" value="55"/>
+      <button id="start-audio" type="button" aria-pressed="false">♫ ACTIVAR SONIDO Y PROBAR</button>
+      <p id="start-audio-status">El navegador requiere que actives el sonido. La música y los efectos no se reproducen automáticamente.</p>
+    </div>
+    <p id="start-save-info" class="start-save-info">Buscando datos guardados…</p>
+    <p id="start-message" role="status" aria-live="polite"></p>
+    <div class="start-footer">WASD / FLECHAS PARA EXPLORAR · Z PARA ALTERNAR PÍXEL / ASCII</div>
+  </div>
+</div>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-header"><span id="modal-caption">TRANSMISIÓN LOCAL</span><button id="modal-close" aria-label="Cerrar diálogo">✕</button></div><h2 id="modal-title">Registro</h2><div id="modal-content"></div><div id="modal-options"></div></div></div>`;
 const $=<T extends HTMLElement>(selector:string):T=>{const el=document.querySelector<T>(selector);if(!el)throw new Error(`Elemento ${selector} ausente`);return el;};
 let renderer:AsciiRenderer|PixiAsciiRenderer=new AsciiRenderer($<HTMLDivElement>('#viewport'));
 $<HTMLElement>('#viewport').dataset.renderer='canvas2d';
 const audio=new AtmosphereAudio();
+const AUDIO_SETTINGS_KEY='mutation404.audio.v27';
+let gameStarted=false;
+const saveKeys=[SAVE_KEY,V09_KEY,V08_KEY,V07_KEY,LAST_KEY,OLDER_KEY,OLD_KEY,PREVIOUS_KEY,LEGACY_KEY,FIRST_KEY] as const;
+function savedRaw():string|null{
+  for(const key of saveKeys){try{const raw=localStorage.getItem(key);if(raw)return raw;}catch{return null;}}
+  return null;
+}
+function safeVolume():number{
+  try{const n=Number(localStorage.getItem(AUDIO_SETTINGS_KEY));return Number.isFinite(n)&&n>=0&&n<=1?n:.55;}catch{return .55;}
+}
+audio.setVolume(safeVolume());
+
 let state:GameState=createGame(404);
 let modalMode:'dialogue'|'journal'|'help'|'inventory'|'atlas'|'mutations'|'market'|'regional-market'|'craft'|'ecology'|null=null;
 let stepCount=0;
@@ -163,7 +201,7 @@ function closeModal():void{
 function actFromModal(command:Command):void{closeModal();act(command);}
 function handleDialogue():void{const d=state.dialogue;if(d)showModal(d.speaker,`<p>${escapeHtml(d.text)}</p>`,d.options,'dialogue');}
 function act(command:Command):void{
-  if(modalMode)return;
+  if(!gameStarted||modalMode)return;
   const beforeHp=state.stats.hp;
   const beforeEnemies=new Map(state.enemies.filter(e=>e.hp>0).map(e=>[e.id,{hp:e.hp,x:e.x,y:e.y}]));
   const beforeFields=state.fields.map(field=>({...field}));
@@ -268,6 +306,7 @@ let lastMove=0;
 window.addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.target instanceof HTMLInputElement)return;
   const key=e.key.toLowerCase();
+  if(!gameStarted)return;
   if(modalMode){
     if(key==='escape'){e.preventDefault();closeModal();return;}
     if(/^[1-9]$/.test(key)){
@@ -306,7 +345,7 @@ $('#house-btn').addEventListener('click',()=>act({type:exteriorForInterior(state
 $('#down-btn').addEventListener('click',()=>act({type:'descend'}));$('#up-btn').addEventListener('click',()=>act({type:'ascend'}));
 $('#mutations-btn').addEventListener('click',mutations);$('#mutations-side-btn').addEventListener('click',mutations);
 for(const [selector,mutation] of [['#pulse-btn','kinetic-pulse'],['#neural-btn','neural-shock'],['#fire-btn-gene','pyrokinesis'],['#phase-btn','phase-step']] as const)$(selector).addEventListener('click',()=>act({type:'cast',mutation}));
-$('#audio-btn').addEventListener('click',async()=>{const active=await audio.toggle();write('#audio-btn',active?'♫ SILENCIAR':'♫ ACTIVAR SONIDO');$('#audio-btn').setAttribute('aria-pressed',String(active));const biome=biomeAt(state.seed,state.player.x,state.player.y);audio.update(biome,weatherAt(state.seed,state.tick,biome));});
+$('#audio-btn').addEventListener('click',()=>{void toggleGameAudio();});
 $('#harvest-btn').addEventListener('click',()=>act({type:'harvest'}));$('#craft-btn').addEventListener('click',crafting);$('#ecology-btn').addEventListener('click',ecologyPanel);
 $('#inventory-btn').addEventListener('click',inventory);$('#journal-btn').addEventListener('click',journal);$('#help-btn').addEventListener('click',help);
 $('#modal-close').addEventListener('click',closeModal);
@@ -323,14 +362,88 @@ $('#art-mode-btn').addEventListener('click',()=>{
   draw();
 });
 $('#zoom-in').addEventListener('click',()=>{renderer.zoom(2);draw();});$('#zoom-out').addEventListener('click',()=>{renderer.zoom(-2);draw();});
+function startStatus(text:string):void{write('#start-message',text);}
+function updateStartMenu():void{
+  const available=!!savedRaw();
+  $<HTMLButtonElement>('#start-continue').disabled=!available;
+  $<HTMLButtonElement>('#start-load').disabled=!available;
+  write('#start-save-info',available?'ARCHIVO LOCAL DETECTADO // Puedes continuar tu partida.':'SIN GUARDADO LOCAL // Empieza una nueva partida o importa un archivo.');
+  write('#start-audio',audio.active?'♫ SILENCIAR SONIDO':'♫ ACTIVAR SONIDO Y PROBAR');
+  $('#start-audio').setAttribute('aria-pressed',String(audio.active));
+}
+function beginGame():void{
+  gameStarted=true;
+  $('#start-menu').classList.add('hidden');
+  draw();renderer.startAmbience();renderer.focus();
+}
+function loadRaw(raw:string):void{
+  // Deserialize before assigning state: corrupt imports never destroy the current session.
+  const restored=deserialize(raw);
+  state=restored;
+  stepCount=0;
+  state.log.push('SISTEMA // Partida restaurada correctamente.');
+  beginGame();
+}
+function confirmNewGame():void{
+  if(savedRaw()&&!confirm('Hay una partida guardada. Una nueva partida podría sobrescribirla al guardar. ¿Continuar?'))return;
+  state=createGame(404);stepCount=0;
+  beginGame();
+}
+$('#start-new').addEventListener('click',confirmNewGame);
+$('#start-continue').addEventListener('click',()=>{
+  const raw=savedRaw();if(!raw){startStatus('No hay una partida guardada.');return;}
+  try{loadRaw(raw);}catch(error){startStatus('Error de guardado: '+(error instanceof Error?error.message:String(error)));}
+});
+$('#start-load').addEventListener('click',()=>$('#start-continue').click());
+$('#start-import').addEventListener('click',()=>$<HTMLInputElement>('#start-file').click());
+$<HTMLInputElement>('#start-file').addEventListener('change',async()=>{
+  const input=$<HTMLInputElement>('#start-file'),file=input.files?.[0];
+  if(!file)return;
+  try{
+    if(file.size>4*1024*1024)throw new Error('El guardado supera 4 MB.');
+    const raw=await file.text();
+    // Import is a non-destructive preview until the game is successfully restored.
+    loadRaw(raw);
+    try{localStorage.setItem(SAVE_KEY,raw);}catch{state.log.push('AVISO // Partida importada, pero el navegador no permite almacenarla.');}
+  }catch(error){startStatus('No se pudo importar: '+(error instanceof Error?error.message:String(error)));}
+  finally{input.value='';}
+});
+$('#start-options').addEventListener('click',()=>{
+  const panel=$('#start-settings');
+  const isOpen=panel.classList.toggle('hidden')===false;
+  $('#start-options').setAttribute('aria-expanded',String(isOpen));
+});
+$<HTMLInputElement>('#start-volume').value=String(Math.round(audio.level*100));
+write('#start-volume-value',String(Math.round(audio.level*100))+'%');
+$<HTMLInputElement>('#start-volume').addEventListener('input',()=>{
+  const n=Number($<HTMLInputElement>('#start-volume').value)/100;
+  audio.setVolume(n);write('#start-volume-value',String(Math.round(n*100))+'%');
+  try{localStorage.setItem(AUDIO_SETTINGS_KEY,String(n));}catch{}
+});
+function updateAudioButtons(active:boolean):void{
+  write('#audio-btn',active?'♫ SILENCIAR':'♫ ACTIVAR SONIDO');
+  $('#audio-btn').setAttribute('aria-pressed',String(active));
+  write('#start-audio',active?'♫ SILENCIAR SONIDO':'♫ ACTIVAR SONIDO Y PROBAR');
+  $('#start-audio').setAttribute('aria-pressed',String(active));
+  write('#start-audio-status',active?'SONIDO ACTIVADO // Ambiente y efectos disponibles. Pulsa de nuevo para silenciar.':'SONIDO DESACTIVADO // Pulsa para activarlo y escuchar una prueba.');
+}
+async function toggleGameAudio():Promise<void>{
+  const active=await audio.toggle();updateAudioButtons(active);
+  if(!active)startStatus('Si no se oye nada, revisa el volumen del sistema y los permisos de audio del navegador.');
+  const biome=biomeAt(state.seed,state.player.x,state.player.y);
+  audio.update(biome,weatherAt(state.seed,state.tick,biome));
+}
+$('#start-audio').addEventListener('click',()=>{void toggleGameAudio();});
+updateStartMenu();
+
 $('#save-btn').addEventListener('click',()=>{save();draw();});
 $('#load-btn').addEventListener('click',()=>{
-  try{const raw=localStorage.getItem(SAVE_KEY)??localStorage.getItem(V09_KEY)??localStorage.getItem(V08_KEY)??localStorage.getItem(V07_KEY)??localStorage.getItem(LAST_KEY)??localStorage.getItem(OLDER_KEY)??localStorage.getItem(OLD_KEY)??localStorage.getItem(PREVIOUS_KEY)??localStorage.getItem(LEGACY_KEY)??localStorage.getItem(FIRST_KEY);if(!raw)throw new Error('Todavía no hay ninguna partida guardada.');state=deserialize(raw);state.log.push('SISTEMA // Partida restaurada.');draw();}
+  try{const raw=savedRaw();if(!raw)throw new Error('Todavía no hay ninguna partida guardada.');loadRaw(raw);}
   catch(err){state.log.push(`ERROR // ${err instanceof Error?err.message:'No se pudo cargar.'}`);draw();}
 });
 $('#new-btn').addEventListener('click',()=>{
-  if(!confirm('¿Crear una nueva partida? Guarda antes si quieres conservar tu progreso.'))return;
-  state=createGame((state.seed+1)>>>0);stepCount=0;draw();
+  if(!confirm('¿Crear una nueva partida? Conserva un guardado antes de sobrescribirlo.'))return;
+  state=createGame((state.seed+1)>>>0);stepCount=0;gameStarted=true;draw();
 });
 for(const btn of Array.from(document.querySelectorAll<HTMLButtonElement>('[data-move]'))){
   btn.addEventListener('click',()=>{
@@ -341,21 +454,18 @@ for(const btn of Array.from(document.querySelectorAll<HTMLButtonElement>('[data-
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
     renderer.pauseAmbience();
-    if(state.stats.hp>0)save(true);
+    if(gameStarted&&state.stats.hp>0)save(true);
   }else{
     renderer.startAmbience();
     draw();
   }
 });
-window.addEventListener('pagehide',()=>{if(state.stats.hp>0)save(true);});
-try{
-  const saved=localStorage.getItem(SAVE_KEY)??localStorage.getItem(V09_KEY)??localStorage.getItem(V08_KEY)??localStorage.getItem(V07_KEY)??localStorage.getItem(LAST_KEY)??localStorage.getItem(OLDER_KEY)??localStorage.getItem(OLD_KEY)??localStorage.getItem(PREVIOUS_KEY)??localStorage.getItem(LEGACY_KEY)??localStorage.getItem(FIRST_KEY);
-  if(saved){const old=JSON.parse(saved) as {version?:number};state=deserialize(saved);
-    state.log.push((old.version??0)<9?'SISTEMA // Partida anterior migrada: mundo, misión y progreso conservados.':'SISTEMA // Sesión recuperada.');
-    if((old.version??0)<10)save(true);
-  }
-}catch{state.log.push('ADVERTENCIA // Guardado previo incompatible o dañado.');}
-draw();renderer.startAmbience();renderer.focus();
+window.addEventListener('pagehide',()=>{if(gameStarted&&state.stats.hp>0)save(true);});
+// The main menu always opens first. We never overwrite the player's saved game at boot.
+draw();
+renderer.pauseAmbience();
+updateStartMenu();
+$<HTMLButtonElement>(savedRaw()?'#start-continue':'#start-new').focus();
 // WebGL upgrade is asynchronous: controls and Canvas 2D work immediately.
 // A WebGL failure never blocks input, saves or the offline release.
 void import('./pixi-renderer.js').then(async ({PixiAsciiRenderer})=>{
@@ -366,7 +476,7 @@ void import('./pixi-renderer.js').then(async ({PixiAsciiRenderer})=>{
   $('#viewport').dataset.artMode='pixel';
   $('#art-mode-btn').setAttribute('aria-pressed','true');
   state.log.push('GRÁFICOS // Renderizado PixiJS WebGL activado.');
-  draw();renderer.startAmbience();renderer.focus();
+  draw();if(gameStarted){renderer.startAmbience();renderer.focus();}
 }).catch(error=>{
   $('#viewport').dataset.renderer='canvas2d';
   $('#viewport').dataset.artMode='ascii';
