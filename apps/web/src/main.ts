@@ -1,6 +1,7 @@
 import { createGame, deserialize, dispatch, RECIPES, RESOURCE_INFO, MUTATIONS, biomeAt, BIOMES, weatherAt, WEATHER, ENEMY_DEFS, formatClock, HEIGHT, ITEM_DEFS, LANDMARKS, MARKET, ZONE_NAMES, ruinName, SECTORS, coordsForZone, sectorName, serialize, stackCount, WIDTH, xpNeeded, TASKS, GOODS, priceFor, settlementCitizens, exteriorForInterior, type Command, type GameState, type ItemId, type MutationId } from '../../../packages/core/src/game.js';
 import { index } from '../../../packages/core/src/world.js';
 import { AsciiRenderer } from './renderer.js';
+import type { PixiAsciiRenderer } from './pixi-renderer.js';
 import { AtmosphereAudio } from './audio.js';
 
 const SAVE_KEY='mutation404.v10.save',V09_KEY='mutation404.v09.save',V08_KEY='mutation404.v08.save',V07_KEY='mutation404.v07.save',LAST_KEY='mutation404.v06.save',OLDER_KEY='mutation404.v05.save',OLD_KEY='mutation404.v04.save',PREVIOUS_KEY='mutation404.v03.save',LEGACY_KEY='mutation404.v02.save',FIRST_KEY='mutation404.v01.save';
@@ -36,7 +37,8 @@ root.innerHTML=`
 </div>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-header"><span id="modal-caption">TRANSMISIÓN LOCAL</span><button id="modal-close" aria-label="Cerrar diálogo">✕</button></div><h2 id="modal-title">Registro</h2><div id="modal-content"></div><div id="modal-options"></div></div></div>`;
 const $=<T extends HTMLElement>(selector:string):T=>{const el=document.querySelector<T>(selector);if(!el)throw new Error(`Elemento ${selector} ausente`);return el;};
-const renderer=new AsciiRenderer($<HTMLDivElement>('#viewport'));
+let renderer:AsciiRenderer|PixiAsciiRenderer=new AsciiRenderer($<HTMLDivElement>('#viewport'));
+$<HTMLElement>('#viewport').dataset.renderer='canvas2d';
 const audio=new AtmosphereAudio();
 let state:GameState=createGame(404);
 let modalMode:'dialogue'|'journal'|'help'|'inventory'|'atlas'|'mutations'|'market'|'regional-market'|'craft'|'ecology'|null=null;
@@ -315,3 +317,18 @@ try{
   }
 }catch{state.log.push('ADVERTENCIA // Guardado previo incompatible o dañado.');}
 draw();renderer.startAmbience();renderer.focus();
+// WebGL upgrade is asynchronous: controls and Canvas 2D work immediately.
+// A WebGL failure never blocks input, saves or the offline release.
+void import('./pixi-renderer.js').then(async ({PixiAsciiRenderer})=>{
+  const candidate=await PixiAsciiRenderer.create($<HTMLDivElement>('#viewport'),renderer as AsciiRenderer);
+  renderer.pauseAmbience();
+  renderer=candidate;
+  $('#viewport').dataset.renderer='pixi-webgl';
+  state.log.push('GRÁFICOS // Renderizado PixiJS WebGL activado.');
+  draw();renderer.startAmbience();renderer.focus();
+}).catch(error=>{
+  $('#viewport').dataset.renderer='canvas2d';
+  state.log.push('GRÁFICOS // WebGL no disponible; motor Canvas 2D operativo.');
+  console.warn('PixiJS WebGL fallback:',error);
+  draw();
+});
