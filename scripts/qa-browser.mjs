@@ -59,6 +59,12 @@ try{
     assert.ok(await page.locator('#modal').isVisible(),'help modal did not open');
     await page.locator('#modal-close').click();
     await page.locator('#save-btn').click();
+    await page.locator('#menu-btn').click();
+    assert.ok(await page.locator('#start-menu').isVisible(),'menu button must pause into title screen');
+    assert.equal(await page.locator('#start-continue').isEnabled(),true,'save must enable continue');
+    await page.locator('#start-continue').click();
+    assert.equal(await page.locator('#start-menu').isVisible(),false,'continue must resume gameplay');
+    assert.equal(await page.locator('#coords').textContent(),after,'continue must restore last saved player coordinates');
     await page.locator('#load-btn').click();
     const png=`qa-evidence/${mode}.png`;
     await page.screenshot({path:png,fullPage:true,animations:'disabled'});
