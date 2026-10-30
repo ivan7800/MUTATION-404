@@ -169,7 +169,7 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
     let to:Point|undefined;
     if(e.mode==='fleeing'){
       // Exhausted wounded enemies pause every other turn: melee pursuit remains possible.
-      if(s.tick!==undefined&&Math.floor(s.tick/100)%2===1)continue;
+      if(e.kind==='crawler'&&s.tick!==undefined&&Math.floor(s.tick/100)%2===1)continue;
       const candidates:[[number,number],[number,number],[number,number],[number,number]]=[[0,-1],[1,0],[0,1],[-1,0]];
       to=candidates.map(([dx,dy])=>({x:e.x+dx,y:e.y+dy})).filter(p=>within(p.x,p.y)&&passable(s.tiles[index(p.x,p.y)])&&!(protectFaro&&inFaro(p))&&!blocked.has(`${p.x},${p.y}`)&&!hazards.has(`${p.x},${p.y}`)).sort((a,b)=>manhattan(b,s.player)-manhattan(a,s.player))[0];
     } else if((e.mode==='hunting'||e.mode==='searching')&&e.lastKnown){
