@@ -1,3 +1,25 @@
+# MUTATION 404 v2.0 — EL RENACIMIENTO DE NÁCAR
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Vertical slice artística funcional
+- **Faro Ciego:** nuevas losetas originales de estilo 16 bits con piedra, caminos, suelo salino, plantas, terminales y detalles minerales.
+- **El Ojo del Silencio:** atlas propio de tonos azul-violáceos con muros, corredores, símbolos de memoria, compuertas y artefactos.
+- **Dos modos:** botón **PÍXEL / ASCII** (atajo **Z**) para alternar sin reiniciar partida.
+- **PixiJS WebGL real:** texturas de losetas generadas una sola vez y reutilizadas como sprites GPU. Continúa el respaldo Canvas para navegadores sin WebGL.
+- Los mapas, colisiones, inventario, enemigos, misiones, progresión y guardados mantienen su lógica original; se ha cambiado la representación gráfica, no el mundo.
+
+## Auditoría verificable
+El workflow compila, verifica TypeScript y pruebas de motor, y ejecuta Chromium real tanto en WebGL como en Canvas de respaldo. La matriz v2.0 captura cuatro vistas adicionales: Faro Ciego y El Ojo del Silencio en ambos modos. Se publican capturas e informe JSON en el artefacto `mutation-404-browser-qa` de Actions.
+
+**Limitaciones:** es una **vertical slice**, no una sustitución de todo el atlas del juego. Hay escenarios fuera de estas dos zonas que siguen en ASCII; falta revisar las capturas editorialmente, medir FPS en GPU físicas y probar una campaña completa antes de afirmar 9,5/10.
+
+## Desarrollo
+`npm run typecheck && npm run test:core && npm run build:offline`.
+La carpeta `play/` es la aplicación lista para GitHub Pages y para el lanzador local.
+
+---
+
 # MUTATION 404 v1.9 — Nácar WebGL
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
