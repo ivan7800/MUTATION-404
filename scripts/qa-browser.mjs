@@ -32,6 +32,8 @@ try{
     await page.waitForFunction(value=>document.querySelector('#viewport')?.getAttribute('data-renderer')===value,expected,{timeout:25000});
     assert.equal(await page.locator('#viewport').getAttribute('data-renderer'),expected);
     assert.ok(await page.locator('#viewport canvas:visible').count()>0,'visible world canvas missing');
+    assert.match(await page.locator('#survival-strip').textContent(),/PV .*AMPOLLAS .*PÚAS/);
+    assert.equal(await page.locator('#survival-strip').getAttribute('data-risk'),'stable');
     const before=await page.locator('#coords').textContent();
     await page.keyboard.press('ArrowRight');
     const after=await page.locator('#coords').textContent();
