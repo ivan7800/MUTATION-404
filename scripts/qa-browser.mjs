@@ -54,7 +54,9 @@ try{
   const state=createGame(404),room=generateRuin(404,-1,-1,2);
   state.zone='ruin--1--1-2';state.tiles=room.tiles;state.seen=room.seen;
   state.fields=room.fields;state.ground=room.ground;state.enemies=room.enemies;
-  state.player={x:19,y:12};refreshVisibility(state);
+  state.player={x:19,y:12};
+  state.fields.push({x:19,y:12,kind:'spores',ttl:10},{x:20,y:12,kind:'fire',ttl:10});
+  refreshVisibility(state);
   const eyeSave=serialize(state);
   for(const scene of ['faro-pixel','faro-ascii','ojo-pixel','ojo-ascii']){
     const eye=scene.startsWith('ojo'),ascii=scene.endsWith('ascii');
@@ -68,7 +70,11 @@ try{
     const mode=await page.locator('#viewport').getAttribute('data-art-mode');
     assert.equal(mode,ascii?'ascii':'pixel');
     assert.equal(await page.locator('#art-mode-btn').getAttribute('aria-pressed'),String(!ascii));
-    if(eye)assert.match(await page.locator('#location').textContent(),/Ojo del Silencio/i);
+    if(eye){
+      assert.match(await page.locator('#location').textContent(),/Ojo del Silencio/i);
+      assert.equal(await page.locator('#threat-note').getAttribute('data-level'),'contact');
+      assert.match(await page.locator('#threat-note').textContent(),/PELIGRO INMEDIATO/);
+    }
     // Browser-side frame cadence sample; diagnostic only, not a GPU benchmark.
     const frameStats=await page.evaluate(()=>new Promise(resolve=>{
       const samples=[];let prev=0;
