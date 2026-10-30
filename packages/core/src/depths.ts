@@ -65,6 +65,7 @@ export function generateRuin(seed:number,x:number,y:number,depth:1|2):ZoneMemory
  if(depth===2){
    for(let xx=22;xx<=32;xx++)generated.tiles[index(xx,12)]=':';
    for(let yy=9;yy<=16;yy++)for(let xx=27;xx<=33;xx++)generated.tiles[index(xx,yy)]='.';
+   generated.tiles[index(22,12)]='?'; // preserve existing resonance after corridor carving
    generated.tiles[index(26,12)]='o';
    generated.enemies=generated.enemies.filter(e=>!(e.x>=25&&e.x<=34&&e.y>=8&&e.y<=17));
    generated.enemies.push({id:`elite-${x}-${y}-${depth}`,kind:'drone',x:30,y:12,hp:ENEMY_DEFS.drone.hp,mode:'idle',searchTurns:0});
