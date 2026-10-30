@@ -69,10 +69,21 @@ try{
     assert.equal(mode,ascii?'ascii':'pixel');
     assert.equal(await page.locator('#art-mode-btn').getAttribute('aria-pressed'),String(!ascii));
     if(eye)assert.match(await page.locator('#location').textContent(),/Ojo del Silencio/i);
+    // Browser-side frame cadence sample; diagnostic only, not a GPU benchmark.
+    const frameStats=await page.evaluate(()=>new Promise(resolve=>{
+      const samples=[];let prev=0;
+      const step=(t)=>{if(prev)samples.push(t-prev);prev=t;
+        if(samples.length>=24){
+          const sorted=samples.slice().sort((a,b)=>a-b);
+          resolve({sampleCount:samples.length,meanFrameMs:Math.round(samples.reduce((a,b)=>a+b,0)/samples.length*10)/10,p95FrameMs:Math.round(sorted[Math.floor(sorted.length*.95)]*10)/10});
+        }else requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }));
     const screenshot=`qa-evidence/${scene}.png`;
     await page.screenshot({path:screenshot,fullPage:true,animations:'disabled'});
     assert.deepEqual(errors,[],'scene caused a browser exception');
-    results.push({scene,mode,zone:eye?'Ojo del Silencio':'Faro Ciego',screenshot,errors});
+    results.push({scene,mode,zone:eye?'Ojo del Silencio':'Faro Ciego',screenshot,frameStats,errors});
     await context.close();
   }
   await writeFile('qa-evidence/report.json',JSON.stringify({status:'passed',browser:browserExecutable,results},null,2));
