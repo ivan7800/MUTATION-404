@@ -92,3 +92,19 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 @media(max-width:800px){.shell{padding-inline:12px}.layout{gap:12px}.top-controls{gap:8px}.brand{gap:10px}.hero-strip{letter-spacing:.06em}.viewport{min-height:330px}.toolbar{overflow-wrap:anywhere}.actionbar{gap:6px}}
 @media(max-width:440px){.topbar{flex-wrap:wrap;padding-block:10px}.top-controls{width:100%;justify-content:flex-end}.panel-heading{flex-wrap:wrap}.action{min-height:44px}.modal-card{max-height:87dvh}}
 @media(prefers-reduced-motion:reduce){.action,.icon-btn,.system-actions button,.zoom button,.modal-option{transition:none}.world-canvas{filter:none}}
+
+/* v1.8 — Nácar atmosférico: clearer navigation and legible environmental console */
+:root{--signal-light:#f0dcad;--quiet-text:#bdd0c5}
+.viewport{background:radial-gradient(ellipse at center,#132c2a 0%,#060d13 80%);border:1px solid #8caa8d;scrollbar-color:#66887d #071414}
+.world-canvas{outline-offset:3px;box-shadow:0 0 0 1px #5b8776,0 0 35px #6daf8530,0 20px 60px #0009}
+.panel-heading h1{text-wrap:balance}
+.action{min-height:42px;line-height:1.35}
+.action.gene{border-color:#8674ad}
+.action.discovery{border-color:#4e8791}
+.eventpanel{border-left:3px solid #b79f69}
+#log p.latest{color:var(--signal-light);border-left-color:#ebce8c}
+.stat,.pairs{color:var(--quiet-text)}
+.biome-story{border-left:3px solid var(--biome-accent)}
+.modal-card{scrollbar-color:#657f6c #091518}
+@media(max-width:620px){.toolbar{line-height:1.75}.actionbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.action{width:100%;font-size:10px;min-height:46px}.viewport{scrollbar-width:thin}}
+@media(prefers-reduced-motion:reduce){.world-canvas{filter:none;box-shadow:0 0 0 1px #5b8776}.viewport:before{display:none}}
