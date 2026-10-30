@@ -1,3 +1,22 @@
+# MUTATION 404 v2.1 — Criaturas y mundo vivo
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Implementado
+- Sprites **originales** de dos poses, en texturas GPU PixiJS reutilizables, para protagonista, habitantes y seis tipos de criaturas (crawler, sentinel, drone, spore, moth y larva), además de custodios de élite.
+- Siluetas diferenciadas, colores propios por especie, movimiento visual sencillo y detalles para reconocerlas mejor.
+- El botón **PÍXEL / ASCII** (atajo **Z**) conserva la representación por caracteres, sin cambiar el estado del juego.
+- Los sprites se almacenan en la caché del atlas. El sistema de movimiento reducido utiliza una pose fija.
+- La matriz visual Chromium captura Faro Ciego y El Ojo del Silencio en ambos modos y añade muestras del tiempo entre fotogramas (media y percentil 95) al informe de QA.
+
+## Límites
+Esta actualización es un **primer atlas de sprites programados**, no animaciones de ataque, daño y muerte fotograma a fotograma ni una producción artística 9,5/10. El muestreo RAF es una medida orientativa del navegador, no una comparación de GPU físicas ni FPS reales de cada dispositivo. El código del motor y el esquema de guardados no cambian.
+
+## Verificación
+GitHub Actions: TypeScript, pruebas de núcleo, compilación estática, Chromium con WebGL y respaldo Canvas, captura de escenas y guardado/carga. Los artefactos se consultan en la pestaña Actions.
+
+---
+
 # MUTATION 404 v2.0 — EL RENACIMIENTO DE NÁCAR
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
