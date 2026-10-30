@@ -1,3 +1,24 @@
+# MUTATION 404 v2.4 — EL MUNDO QUE RESPONDE
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Qué cambia
+- El panel de riesgo da prioridad a **contacto con anomalía**, campos cercanos y enemigos visibles. El análisis no revela criaturas ni peligros fuera de la visión del jugador.
+- **Fuego, electricidad y esporas** usan contornos cromáticos diferentes, incluso con reducción de movimiento activa; los peligros directamente bajo el jugador reciben un segundo marco.
+- Cuando aparece un campo nuevo tras una acción aceptada, el motor PixiJS muestra una onda breve sobre esa posición visible. Se compara el estado ambiental antes y después del turno sin modificar la simulación, la persistencia o los resultados de combate.
+- Se preserva el modo Píxel/ASCII (Z), los efectos de mutaciones y el respaldo Canvas 2D.
+
+## QA adicional
+- Prueba de regresión del análisis de amenaza limitado a zonas visibles.
+- Una partida real de El Ojo del Silencio incorpora fuego y esporas cercanos durante la matriz Chromium; se comprueba que la advertencia cambie a **PELIGRO INMEDIATO** en ambos modos visuales.
+- Capturas de Faro Ciego y El Ojo del Silencio, monitorización de errores JavaScript, comandos básicos, guardado/carga y muestras orientativas del intervalo entre frames.
+- GitHub Actions bloquea la publicación ante errores de tipos, pruebas, compilación o navegador.
+
+## Alcance real
+Es una actualización de feedback audiovisual y legibilidad táctica. No añade nuevos biomas ni IA y **no equivale a una partida completa auditada**. Las muestras RAF no sustituyen una evaluación de latencia de entrada, GPU real, temperaturas y jugabilidad prolongada. Los datos guardados mantienen el esquema existente.
+
+---
+
 # MUTATION 404 v2.3 — NÁCAR INMERSIVO
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
