@@ -84,5 +84,11 @@ for(const kind of ['crawler','sentinel','drone','shelter']){
 await mkdir('qa-evidence',{recursive:true});
 await writeFile('qa-evidence/balance-report.json',JSON.stringify({description:'Deterministic isolated combat scenarios; not a full-game playtest',summary,entries},null,2));
 console.log('BALANCE METRICS',JSON.stringify(summary,null,2));
+// Broad balance guardrails, derived from the v2.6 measured baseline (24 seeds).
+// Deliberately loose enough to permit future tuning without silently reintroducing
+// the uncatchable-crawler bug or breaking the basic survival loop.
+if(summary.scenarios.crawler.meanWaves<4||summary.scenarios.crawler.blocked>0)throw Error('Melee pursuit regression: wounded crawlers cannot be caught consistently');
+if(summary.scenarios.sentinel.meanWaves<4)throw Error('Ranged fallback regression: sentinel scenario fails before four waves');
+if(summary.scenarios.drone.meanWaves<4||summary.scenarios.drone.alive<16)throw Error('Mechanical combat exceeds survival baseline guardrails');
 if(summary.scenarios.shelter.meanExposure!==0||summary.scenarios.shelter.alive!==SEEDS.length)throw Error('Sanctuary recovery regression');
 if(entries.some(r=>!Number.isFinite(r.hp)||r.hp<0))throw Error('Invalid HP in balance simulation');
