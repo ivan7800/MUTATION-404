@@ -1,7 +1,7 @@
 import {Application, Container, Graphics, Sprite, Texture} from 'pixi.js';
-import {nacarPhase} from '../../../packages/core/src/campaign.js';
+import {nacarPhase,nacarStrikeOffsets} from '../../../packages/core/src/campaign.js';
 import {ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, weatherAt, WEATHER, WIDTH, settlementCitizens, type GameState, type Tile} from '../../../packages/core/src/game.js';
-import {index} from '../../../packages/core/src/world.js';
+import {index,passable,within} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
@@ -321,6 +321,23 @@ export class PixiAsciiRenderer {
       if(visible&&(glyph==='o'||glyph==='T'||glyph==='?')){
         const shimmer=this.reducedMotion?0.13:0.12+0.06*Math.sin(this.ambience*.3+x);
         this.backdrop.rect(cx*this.cellW+2,cy*this.cellH+2,this.cellW-4,2).fill({color:0xffd8a4,alpha:shimmer});
+      }
+    }
+    // Gameplay warning one turn before the deterministic 400-tick strike.
+    // Uses the SAME offsets as pulseNacar; does not mutate world state or RNG.
+    const guardian=state.zone==='zero-3'?state.enemies.find(e=>e.id==='campaign-heart-custodian'&&e.hp>0):null;
+    if(guardian&&state.tick%400===300){
+      const phase=nacarPhase(guardian.hp,ENEMY_DEFS.drone.hp*3);
+      const warningColor=phase===1?0x8fe8f2:phase===2?0xb9e78c:0xff9b71;
+      for(const [dx,dy] of nacarStrikeOffsets(state.tick+100)){
+        const tx=state.player.x+dx,ty=state.player.y+dy;
+        if(!within(tx,ty)||!passable(state.tiles[index(tx,ty)])||state.visible[index(tx,ty)]!==1)continue;
+        const cx=tx-ox,cy=ty-oy;
+        if(cx<0||cy<0||cx>=this.viewW||cy>=this.viewH)continue;
+        const alpha=this.reducedMotion?.85:.58+.25*Math.sin(this.ambience*.55);
+        this.backdrop.rect(cx*this.cellW+1,cy*this.cellH+1,this.cellW-2,this.cellH-2).fill({color:warningColor,alpha:.18});
+        this.backdrop.rect(cx*this.cellW+2,cy*this.cellH+2,this.cellW-4,this.cellH-4).stroke({color:warningColor,width:2,alpha});
+        this.backdrop.moveTo(cx*this.cellW+3,cy*this.cellH+3).lineTo((cx+1)*this.cellW-3,(cy+1)*this.cellH-3).stroke({color:warningColor,width:1,alpha});
       }
     }
     for(const field of state.fields){

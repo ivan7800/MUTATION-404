@@ -145,6 +145,41 @@ try{
   assert.deepEqual(regionErrors,[],'regional art mode caused a browser exception');
   results.push({scene:'regional-v29',pixel:'qa-evidence/region-v29-pixel.png',ascii:'qa-evidence/region-v29-ascii.png',errors:regionErrors});
   await regionContext.close();
+  // v2.9: an actual living boss at every phase, plus a pre-impact tell.
+  // Each save is real and loaded via the normal Continue button.
+  for(const [phase,hp] of [[1,45],[2,25],[3,5]]){
+    const bossState=createGame(404),room=generateDepth(404,3);
+    bossState.zone='zero-3';
+    bossState.tiles=room.tiles;bossState.seen=room.seen;bossState.player={x:14,y:10};
+    bossState.enemies=[{id:'campaign-heart-custodian',kind:'drone',x:19,y:12,hp,mode:'hunting',lastKnown:{x:14,y:10},searchTurns:6}];
+    bossState.fields=[];bossState.ground=[];bossState.tick=300;
+    bossState.quest={status:'completed',outcome:'broadcast',fuseFound:true};
+    bossState.events.push('heart','campaign:awakened');
+    for(const site of CAMPAIGN_SITES){
+      bossState.events.push(`relic:${site.x}:${site.y}:2`);
+      bossState.events.push(`elite-cache:ruin-${site.x}-${site.y}-2`);
+    }
+    refreshVisibility(bossState);
+    const ctx=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
+    await ctx.addInitScript(save=>localStorage.setItem('mutation404.v10.save',save),serialize(bossState));
+    const pg=await ctx.newPage(),pageErrors=[];
+    pg.on('pageerror',err=>pageErrors.push(err.message));
+    await pg.goto(base,{waitUntil:'networkidle',timeout:45000});
+    await pg.locator('#start-continue').click();
+    assert.equal(await pg.locator('#nacar-boss').getAttribute('data-phase'),String(phase));
+    assert.ok(await pg.locator('#nacar-boss').isVisible());
+    assert.match(await pg.locator('#nacar-boss-warning').textContent(),/IMPACTO PRÓXIMO/);
+    const screenshot=`qa-evidence/nacar-v29-phase-${phase}.png`;
+    await pg.screenshot({path:screenshot,fullPage:true,animations:'disabled'});
+    if(phase===3){
+      await pg.locator('#art-mode-btn').click();
+      assert.equal(await pg.locator('#viewport').getAttribute('data-art-mode'),'ascii');
+      await pg.screenshot({path:'qa-evidence/nacar-v29-ascii.png',fullPage:true,animations:'disabled'});
+    }
+    assert.deepEqual(pageErrors,[],'Nácar phase screen caused browser errors');
+    results.push({scene:`nacar-phase-${phase}`,screenshot,errors:pageErrors});
+    await ctx.close();
+  }
   // v2.8: verify an actual end-to-end finale UI using a valid pre-finale save.
   // Combat is verified separately by the core campaign tests; this fixture
   // represents the point after the final guardian has been defeated.

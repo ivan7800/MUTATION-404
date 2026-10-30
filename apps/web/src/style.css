@@ -180,3 +180,6 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .nacar-boss-meter{height:7px;margin-top:9px;background:#29313b;border:1px solid #56616c;overflow:hidden}
 .nacar-boss-meter i{display:block;width:100%;height:100%;background:var(--nacar-color,#8fe8f2);transition:width .16s linear}
 @media(prefers-reduced-motion:reduce){.nacar-boss-meter i{transition:none}}
+
+/* v2.9: explicit accessible pre-impact warning in the live-boss HUD. */
+.nacar-boss-warning{margin-top:8px;font:700 11px/1.5 ui-monospace,monospace;letter-spacing:.03em;color:var(--nacar-color,#8fe8f2)}

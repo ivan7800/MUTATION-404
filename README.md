@@ -4,6 +4,8 @@
 
 La v2.9 inicia la ampliación visual premium: el atlas de losetas de píxel se aplica a **todos los biomas regionales**, no solo al poblado y una ruina. Hay paletas específicas para Salinas, Ceniza, Hierro, Vidrio, Médula y Umbral, detalles propios por región y caché de texturas con separación de biomas. El modo ASCII permanece intacto, al igual que combate, generación y esquema de guardado 11.
 
+**Anticipación de ataques v2.9:** en el turno anterior al pulso de Nácar, las dos diagonales amenazadas se marcan sobre el mapa y aparece «IMPACTO PRÓXIMO» junto a su barra de vida. La vista reutiliza la misma función determinista que el motor para evitar avisos engañosos. El aviso permanece legible sin animaciones y en modo ASCII. QA con capturas de las tres fases y del modo ASCII.
+
 **Pulido del enfrentamiento v2.9:** el jefe dispone de un panel de vida propio, identificación permanente de fase I/II/III y una aureola cromática acorde con el peligro ambiental. La fase se calcula con una única función compartida por el motor y la interfaz; la reducción de movimiento mantiene un halo estático y un indicador textual. Pruebas de umbrales y regresiones de presentación añadidas.
 
 **Combate final v2.9:** Nácar libera ataques de área deterministas en tres fases según sus PV: descargas, esporas y fuego. Las áreas se colocan en diagonal, se anuncian mediante la bitácora y pueden esquivarse antes del siguiente pulso ambiental. No hay nuevos campos de guardado ni cambios al RNG.

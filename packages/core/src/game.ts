@@ -1,5 +1,5 @@
 import { RECIPES, RESOURCE_INFO, seedResources, initialEcology, ecologicalPulse, type EcologyState } from './ecology.js';
-import {campaignProgress, campaignObjective, endingStory, FINAL_GUARDIAN_ID, nacarPhase, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
+import {campaignProgress, campaignObjective, endingStory, FINAL_GUARDIAN_ID, nacarPhase, nacarStrikeOffsets, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
 import { TASKS, GOODS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior, generateInterior, type Citizen } from './civilizations.js';
 import { SECTORS, coordsForZone, generateSector, sectorName, zoneForSector } from './frontier.js';
 import { generateDepth, generateRuin, ruinId, ruinName, parseRuin, themeForRuin, ZONE_NAMES, type ZoneId, type ZoneMemory } from './depths.js';
@@ -141,8 +141,7 @@ function pulseNacar(s:GameState):void{
   const phase=nacarPhase(guardian.hp,ENEMY_DEFS.drone.hp*3);
   const kind:Field['kind']=phase===1?'electric':phase===2?'spores':'fire';
   // One of two diagonal pairs alternates predictably, allowing dodging.
-  const diagonal=(Math.floor(s.tick/400)%2)===0;
-  const offsets=diagonal?[[-1,-1],[1,1]]:[[-1,1],[1,-1]];
+  const offsets=nacarStrikeOffsets(s.tick);
   let placed=0;
   for(const [dx,dy] of offsets){
     const x=s.player.x+dx,y=s.player.y+dy;

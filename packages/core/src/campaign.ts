@@ -17,6 +17,10 @@ export function nacarPhase(hp:number,maxHp:number):1|2|3{
   const ratio=Math.max(0,Math.min(1,hp/maxHp));
   return ratio>2/3?1:ratio>1/3?2:3;
 }
+/** Next deterministic pair of strike offsets; called by combat and preview renderer. */
+export function nacarStrikeOffsets(tick:number):ReadonlyArray<readonly [number,number]>{
+  return Math.floor(tick/400)%2===0?[[-1,-1],[1,1]]:[[-1,1],[1,-1]];
+}
 export const NACAR_PHASES={
   1:{name:'RESONANCIA ELÉCTRICA',color:'#8fe8f2'},
   2:{name:'MEMORIAS ESPORALES',color:'#b9e78c'},

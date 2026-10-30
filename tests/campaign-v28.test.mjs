@@ -108,3 +108,10 @@ test('Nácar uses one shared phase rule with exact health thresholds',async()=>{
  assert.equal(nacarPhase(1,45),3);
  assert.equal(NACAR_PHASES[3].name,'INCENDIO DEL CORAZÓN');
 });
+
+test('Nácar strike warning predicts actual alternating diagonal offsets',async()=>{
+ const {nacarStrikeOffsets}=await import('../dist/core/core/src/campaign.js');
+ assert.deepEqual(nacarStrikeOffsets(400),[[-1,1],[1,-1]]);
+ assert.deepEqual(nacarStrikeOffsets(800),[[-1,-1],[1,1]]);
+ assert.deepEqual(nacarStrikeOffsets(1200),[[-1,1],[1,-1]]);
+});
