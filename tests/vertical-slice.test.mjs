@@ -6,6 +6,15 @@ const renderer=readFileSync('apps/web/src/pixi-renderer.ts','utf8');
 const main=readFileSync('apps/web/src/main.ts','utf8');
 const qa=readFileSync('scripts/qa-browser.mjs','utf8');
 
+test('static map floor is drawn in a dedicated cached Graphics layer',()=>{
+ assert.match(renderer,/terrainFloor=new Graphics\(\)/);
+ assert.match(renderer,/terrainCache=new Map/);
+ assert.match(renderer,/const floorDirty=this\.floorKey!==floorKey/);
+ assert.match(renderer,/if\(floorDirty\)\{/);
+ assert.match(renderer,/this\.terrainFloor\.rect\(/);
+ assert.match(renderer,/result\.view\.addChild\(result\.terrainFloor,result\.backdrop,result\.layers\)/);
+ assert.match(renderer,/new URLSearchParams\(location\.search\)\.has\('profile'\)/);
+});
 test('original GPU tile atlas has Faro and Ojo separate palettes and cached sprites',()=>{
  assert.match(renderer,/tileTexture\(tile:Tile,eye:boolean,faro:boolean,variant:number,region:string\)/);
  assert.match(renderer,/this\.tiles\.get\(key\)/);

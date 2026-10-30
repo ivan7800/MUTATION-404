@@ -86,6 +86,12 @@ export class PixiAsciiRenderer {
     const fallback=result.mount.querySelector('canvas:not(.pixi-canvas)');
     if(fallback instanceof HTMLCanvasElement)fallback.style.display='none';
     result.allocateSprites();
+    // Opt-in browser diagnostics only. Never leak game state or add telemetry.
+    if(new URLSearchParams(location.search).has('profile')){
+      Object.defineProperty(window,'__mutation404RenderProfile',{
+        configurable:true,get:()=>result.profile
+      });
+    }
     return result;
   }
 
@@ -327,6 +333,7 @@ export class PixiAsciiRenderer {
     const oy=Math.max(0,Math.min(HEIGHT-this.viewH,state.player.y-Math.floor(this.viewH/2)));
     const night=Math.floor(state.tick/6000)%4>=2;
     this.backdrop.clear();
+    if(this.terrainSeed!==state.seed){this.terrainSeed=state.seed;this.terrainCache.clear();this.floorKey='';}
     const surfaceZone=coordsForZone(state.zone)!==null;
     const eyeZone=state.zone.startsWith('ruin--1--1-');
     const floorKey=`${state.seed}:${state.zone}:${state.tick}:${state.player.x},${state.player.y}:${this.cellW},${this.cellH}:${surfaceZone}:${night}`;

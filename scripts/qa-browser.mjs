@@ -168,10 +168,21 @@ try{
   await regionContext.addInitScript(save=>localStorage.setItem('mutation404.v10.save',save),serialize(regionState));
   const regionPage=await regionContext.newPage(),regionErrors=[];
   regionPage.on('pageerror',err=>regionErrors.push(err.message));
-  await regionPage.goto(base,{waitUntil:'networkidle',timeout:45000});
+  await regionPage.goto(base+'?profile=1',{waitUntil:'networkidle',timeout:45000});
   await regionPage.locator('#start-continue').click();
   await regionPage.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
   assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'pixel');
+  // Performance diagnostics are scoped to the scene builder, NOT GPU time/FPS.
+  await regionPage.waitForFunction(()=>window.__mutation404RenderProfile?.builds>=2,{timeout:10000});
+  const firstProfile=await regionPage.evaluate(()=>window.__mutation404RenderProfile);
+  await regionPage.waitForTimeout(700);
+  const latestProfile=await regionPage.evaluate(()=>window.__mutation404RenderProfile);
+  assert.ok(latestProfile.builds>firstProfile.builds,'pixel ambience must redraw when active');
+  assert.ok(latestProfile.floorDraws<latestProfile.builds,'static floor must be reused across ambience draws');
+  assert.ok(latestProfile.cachedCells>0,'region cache must contain world cells');
+  assert.ok(Number.isFinite(latestProfile.meanBuildMs),'scene build time is not finite');
+  results.push({scene:'render-profile-v29',baseline:firstProfile,after:latestProfile,
+    note:'JavaScript scene construction only; browser GPU timing not measured'});
   await regionPage.screenshot({path:'qa-evidence/region-v29-pixel.png',fullPage:true,animations:'disabled'});
   await regionPage.locator('#art-mode-btn').click();
   assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'ascii');
