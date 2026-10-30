@@ -35,6 +35,7 @@ export class PixiAsciiRenderer {
   private effectUntil=0;
   private readonly flashes=new Map<string,{until:number;heavy:boolean}>();
   private readonly echoes:{x:number;y:number;until:number}[]=[];
+  private readonly fieldBursts:{x:number;y:number;kind:'fire'|'electric'|'spores';until:number}[]=[];
   private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
   private mutationEffect:'kinetic-pulse'|'neural-shock'|'pyrokinesis'|'phase-step'|null=null;
   private reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -62,6 +63,19 @@ export class PixiAsciiRenderer {
     return result;
   }
 
+  /** Diff environmental fields only after accepted turns; no simulation mutations. */
+  environmentFeedback(previous:ReadonlyArray<{x:number;y:number;kind:'fire'|'electric'|'spores';ttl:number}>,state:GameState):void{
+    if(this.reducedMotion)return;
+    const old=new Set(previous.map(f=>`${f.x}:${f.y}:${f.kind}`));
+    const now=performance.now();
+    for(const field of state.fields){
+      const key=`${field.x}:${field.y}:${field.kind}`;
+      if(!old.has(key)&&state.visible[index(field.x,field.y)]===1){
+        this.fieldBursts.push({x:field.x,y:field.y,kind:field.kind,until:now+520});
+      }
+    }
+    if(this.fieldBursts.length>24)this.fieldBursts.splice(0,this.fieldBursts.length-24);
+  }
   combatFeedback(previous:ReadonlyMap<string,{hp:number;x:number;y:number}>,state:GameState):void{
     if(this.reducedMotion)return;
     const now=performance.now(),current=new Set(state.enemies.map(e=>e.id));
@@ -341,13 +355,25 @@ export class PixiAsciiRenderer {
       const phase=1-timeLeft/300,color=this.effectKind==='mutation'?0xbda5ff:this.effectKind==='damage'?0xff6b74:this.effectKind==='attack'?0xffcb81:0x8de3dc;
       this.backdrop.circle(px*this.cellW+this.cellW/2,py*this.cellH+this.cellH/2,7+phase*80).stroke({color,width:2,alpha:1-phase});
     }
-    // Visible tactical telegraph for charged floor cells (including reduced-motion mode).
+    // Distinct non-animated field outlines remain readable in reduced-motion mode.
     for(const field of state.fields){
-      if(field.kind!=='electric'||state.visible[index(field.x,field.y)]!==1)continue;
+      if(state.visible[index(field.x,field.y)]!==1)continue;
       const x=field.x-ox,y=field.y-oy;
       if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
+      const color=field.kind==='electric'?0x8df8e8:field.kind==='fire'?0xff9a68:0xb8e98c;
       const alpha=this.reducedMotion?.9:.55+.25*Math.sin(performance.now()/95+x);
-      this.backdrop.rect(x*this.cellW+1,y*this.cellH+1,this.cellW-2,this.cellH-2).stroke({color:0x8df8e8,width:2,alpha});
+      this.backdrop.rect(x*this.cellW+1,y*this.cellH+1,this.cellW-2,this.cellH-2).stroke({color,width:2,alpha});
+      if(field.x===state.player.x&&field.y===state.player.y){
+        this.backdrop.rect(x*this.cellW+2,y*this.cellH+2,this.cellW-4,this.cellH-4).stroke({color:0xffeff0,width:2,alpha:.95});
+      }
+    }
+    for(let i=this.fieldBursts.length-1;i>=0;i--){
+      const burst=this.fieldBursts[i],left=burst.until-performance.now();
+      if(left<=0){this.fieldBursts.splice(i,1);continue;}
+      if(state.visible[index(burst.x,burst.y)]!==1)continue;
+      const x=burst.x-ox,y=burst.y-oy,progress=1-left/520;
+      const color=burst.kind==='electric'?0xa2f9f2:burst.kind==='fire'?0xffae78:0xb3ef9e;
+      this.backdrop.circle((x+.5)*this.cellW,(y+.5)*this.cellH,4+progress*26).stroke({color,width:2,alpha:1-progress});
     }
     const currentTime=performance.now();
     for(let i=this.echoes.length-1;i>=0;i--){
@@ -389,7 +415,7 @@ export class PixiAsciiRenderer {
       if(now-this.lastAmbient>=125){
         this.lastAmbient=now;
         const biome=biomeAt(this.state.seed,this.state.player.x,this.state.player.y);
-        if(this.artMode==='pixel'||this.flashes.size>0||this.echoes.length>0||this.state.fields.length>0||weatherAt(this.state.seed,this.state.tick,biome)!=='calma'||this.effectUntil>now)this.draw(this.state);
+        if(this.artMode==='pixel'||this.flashes.size>0||this.echoes.length>0||this.fieldBursts.length>0||this.state.fields.length>0||weatherAt(this.state.seed,this.state.tick,biome)!=='calma'||this.effectUntil>now)this.draw(this.state);
       }
       this.ambientFrame=requestAnimationFrame(loop);
     };
