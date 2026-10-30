@@ -334,6 +334,36 @@ export class PixiAsciiRenderer {
         this.backdrop.rect(cx*this.cellW+2,cy*this.cellH+2,this.cellW-4,2).fill({color:0xffd8a4,alpha:shimmer});
       }
     }
+    // Nácar's cathedral: eight archive plinths surrounding the heart.
+    // Decoration only; never change collision, visibility, navigation or saves.
+    if(state.zone==='zero-3'){
+      const heartX=14,heartY=10;
+      const plinths:[[number,number],[number,number],[number,number],[number,number],[number,number],[number,number],[number,number],[number,number]]=[
+        [10,7],[14,6],[18,7],[20,10],[18,13],[14,14],[10,13],[8,10]
+      ];
+      const heartSeen=state.seen[index(heartX,heartY)]===1;
+      if(heartSeen){
+        const cx=(heartX-ox+.5)*this.cellW,cy=(heartY-oy+.5)*this.cellH;
+        const pulse=this.reducedMotion?0.22:0.16+0.055*Math.sin(this.ambience*.18);
+        for(const ring of [2.1,3.7,5.2]){
+          this.backdrop.ellipse(cx,cy,ring*this.cellW,ring*this.cellH)
+            .stroke({color:0xb5d4c9,width:1,alpha:pulse});
+        }
+      }
+      for(let p=0;p<plinths.length;p++){
+        const [wx,wy]=plinths[p];
+        if(!within(wx,wy)||state.seen[index(wx,wy)]!==1)continue;
+        const vx=wx-ox,vy=wy-oy;
+        if(vx<0||vy<0||vx>=this.viewW||vy>=this.viewH)continue;
+        const lit=state.visible[index(wx,wy)]===1;
+        const x=(vx+.5)*this.cellW,y=(vy+.5)*this.cellH;
+        const iconColor=p%2===0?0x91d2db:0xd8b5a8;
+        this.backdrop.circle(x,y,Math.max(3,this.cellW*.33))
+          .stroke({color:iconColor,width:1.25,alpha:lit?.82:.27});
+        this.backdrop.moveTo(x-3,y).lineTo(x+3,y).moveTo(x,y-4).lineTo(x,y+4)
+          .stroke({color:iconColor,width:1.2,alpha:lit?.78:.22});
+      }
+    }
     // Gameplay warning one turn before the deterministic 400-tick strike.
     // Uses the SAME offsets as pulseNacar; does not mutate world state or RNG.
     const guardian=state.zone==='zero-3'?state.enemies.find(e=>e.id==='campaign-heart-custodian'&&e.hp>0):null;

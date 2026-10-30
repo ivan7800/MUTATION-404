@@ -183,3 +183,15 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 
 /* v2.9: explicit accessible pre-impact warning in the live-boss HUD. */
 .nacar-boss-warning{margin-top:8px;font:700 11px/1.5 ui-monospace,monospace;letter-spacing:.03em;color:var(--nacar-color,#8fe8f2)}
+
+/* Final chamber: semantic conclusion presentation, still readable in reduced motion. */
+.epilogue-stage{--ending-color:#a4ddd2;position:relative;padding:clamp(15px,3vw,30px);border:1px solid var(--ending-color);background:radial-gradient(ellipse at 50% 11%,#233d41 0%,#101b23 53%,#090e17 100%);color:#e8e4d5;text-align:center}
+.epilogue-stage[data-ending=release]{--ending-color:#a8e8b6;background:radial-gradient(ellipse at 50% 11%,#244832 0%,#111d1e 53%,#090e17 100%)}
+.epilogue-stage[data-ending=erase]{--ending-color:#e3a6bd;background:radial-gradient(ellipse at 50% 11%,#452337 0%,#201823 53%,#090e17 100%)}
+.epilogue-kicker{font:700 10px/1.8 ui-monospace,monospace;letter-spacing:.15em;color:var(--ending-color)}
+.epilogue-sigil{font-size:clamp(56px,10vw,90px);line-height:1.25;color:var(--ending-color);text-shadow:0 0 35px #a5c6c54d}
+.epilogue-stage .modal-lead{text-align:left;line-height:1.8;max-width:60ch;margin:14px auto}
+.epilogue-verdict{border-top:1px solid var(--ending-color);padding:13px 0 4px;font:700 11px/1.5 ui-monospace,monospace;color:var(--ending-color);letter-spacing:.09em}
+.epilogue-stage .epilogue-credits{margin-top:20px;border-color:var(--ending-color);font-size:11px;letter-spacing:.11em}
+@media(prefers-reduced-motion:no-preference){.epilogue-sigil{animation:nacar-epilogue-glow 3.5s ease-in-out infinite alternate}}
+@keyframes nacar-epilogue-glow{from{opacity:.75}to{opacity:1}}

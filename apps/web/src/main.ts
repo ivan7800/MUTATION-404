@@ -199,7 +199,7 @@ function showModal(title:string,body:string,options:{id:string;label:string}[],m
         if(o.id.startsWith('finale-')&&result.accepted){
           const choice=o.id.slice(7) as 'bind'|'release'|'erase';
           const story=endingStory(choice,state.quest.outcome==='broadcast'?'broadcast':'isolate');
-          showModal(story.title,`<p class="modal-lead">${escapeHtml(story.description)}</p><p>CAMPAÑA COMPLETADA — NÁCAR RECORDARÁ TU DECISIÓN</p><p>Los ocho archivos y las rutas secundarias permanecen disponibles. Puedes seguir explorando, o regresar al menú principal para iniciar otra aventura.</p><p class="epilogue-credits">MUTATION 404 · EL DESPERTAR DE NÁCAR<br/>FIN DE LA CAMPAÑA</p>`,[{id:'close',label:'Continuar explorando'}],'epilogue');
+          showModal(story.title,`<div class="epilogue-stage" data-ending="${choice}"><p class="epilogue-kicker">ARCHIVO FINAL // LA ÚLTIMA FRECUENCIA</p><div class="epilogue-sigil" aria-hidden="true">✺</div><p class="modal-lead">${escapeHtml(story.description)}</p><p class="epilogue-verdict">CAMPAÑA COMPLETADA — NÁCAR RECORDARÁ TU DECISIÓN</p><p>Los ocho archivos permanecen disponibles. Puedes continuar explorando o regresar al menú principal.</p><p class="epilogue-credits">MUTATION 404 · EL DESPERTAR DE NÁCAR — FIN DE LA CAMPAÑA</p></div>`,[{id:'close',label:'Continuar explorando'}],'epilogue');
         }
         if(o.id==='shop')market();if(o.id==='regional-market')regionalMarket();
       }else if(mode==='mutations'&&o.id!=='close'){

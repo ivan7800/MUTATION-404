@@ -133,3 +133,15 @@ test('v2.9 boss transitions are handled once by accepted turns and respect audio
  assert.match(renderer,/bossFeedback\(state:GameState,event:/);
  assert.match(renderer,/if\(this\.reducedMotion\)return/);
 });
+
+test('v2.9 final chamber art is localized to zero-3 and preserves fog-of-war',()=>{
+ const css=readFileSync('apps/web/src/style.css','utf8');
+ assert.match(renderer,/if\(state\.zone==='zero-3'\)\{/);
+ assert.match(renderer,/state\.seen\[index\(wx,wy\)\]!==1/);
+ assert.match(renderer,/const plinths:/);
+ assert.match(renderer,/this\.reducedMotion\?0\.22/);
+ assert.match(main,/class="epilogue-stage"/);
+ assert.match(main,/data-ending="\$\{choice\}"/);
+ assert.match(css,/\.epilogue-stage\[data-ending=erase\]/);
+ assert.match(css,/@media\(prefers-reduced-motion:no-preference\)/);
+});

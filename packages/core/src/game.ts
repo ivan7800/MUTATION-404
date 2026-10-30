@@ -604,14 +604,15 @@ export function dispatch(s:GameState, command:Command):ActionResult {
         const spawn={x:19,y:12};s.tiles[index(spawn.x,spawn.y)]='.';
         if(!s.enemies.some(e=>e.id===FINAL_GUARDIAN_ID))
           s.enemies.push({id:FINAL_GUARDIAN_ID,kind:'drone',x:spawn.x,y:spawn.y,hp:ENEMY_DEFS.drone.hp*3,mode:'hunting',lastKnown:{...s.player},searchTurns:6});
-        message(s,'ACTO V // El custodio de las ocho memorias emerge de la cámara. Ninguna decisión será posible mientras permanezca en pie.');
+        message(s,'ACTO V // Ocho pedestales despiertan alrededor del corazón. Sus ecos pronuncian los nombres de quienes nunca regresaron de Nácar.');
+        message(s,'LA CÁMARA RESPONDE // La luz de cada archivo atraviesa las paredes. El custodio de las ocho memorias emerge de la oscuridad: mientras permanezca en pie no habrá decisión posible.');
         refreshVisibility(s);
         return reply(true,0,'El custodio del corazón ha despertado.');
       }
       if(s.enemies.some(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0))
         return reply(false,0,'El custodio del corazón todavía vive. Derrota al guardián.');
       const signal=s.quest.outcome==='broadcast'?'La frecuencia liberada continúa creciendo.':'La frecuencia aislada está intentando escapar.';
-      s.dialogue={speaker:'EL CORAZÓN DE NÁCAR',text:`${signal} Los ocho testigos ocupan sus lugares. El corazón te pregunta qué clase de mundo merece sobrevivir.`,options:[
+      s.dialogue={speaker:'EL CORAZÓN DE NÁCAR',text:`${signal} Los ocho testigos ocupan sus lugares. La cámara pierde el pulso y, por primera vez, se oye el silencio entre las máquinas. La voz que emerge no pregunta quién tiene razón: pregunta qué clase de mundo merece sobrevivir y qué parte de ti estás dispuesto a entregar.`,options:[
         {id:'finale-bind',label:'ENCADENAR: proteger el mundo y permanecer como guardián.'},
         {id:'finale-release',label:'LIBERAR: devolver las voces a la humanidad, aunque todo mute.'},
         {id:'finale-erase',label:'BORRAR: destruir el registro y sacrificar tu propio recuerdo.'},

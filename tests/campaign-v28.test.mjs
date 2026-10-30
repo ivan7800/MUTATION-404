@@ -115,3 +115,13 @@ test('Nácar strike warning predicts actual alternating diagonal offsets',async(
  assert.deepEqual(nacarStrikeOffsets(800),[[-1,-1],[1,1]]);
  assert.deepEqual(nacarStrikeOffsets(1200),[[-1,1],[1,-1]]);
 });
+
+test('finale activation writes eight-plinth narrative without changing progression rules',()=>{
+ const s=finale();
+ const start=s.events.length;
+ assert.equal(dispatch(s,{type:'interact'}).accepted,true);
+ assert.equal(s.events.length,start+1);
+ assert.ok(s.log.some(line=>line.includes('Ocho pedestales')));
+ assert.ok(s.log.some(line=>line.includes('LA CÁMARA RESPONDE')));
+ assert.equal(s.enemies.filter(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0).length,1);
+});

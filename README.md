@@ -4,6 +4,8 @@
 
 La v2.9 inicia la ampliación visual premium: el atlas de losetas de píxel se aplica a **todos los biomas regionales**, no solo al poblado y una ruina. Hay paletas específicas para Salinas, Ceniza, Hierro, Vidrio, Médula y Umbral, detalles propios por región y caché de texturas con separación de biomas. El modo ASCII permanece intacto, al igual que combate, generación y esquema de guardado 11.
 
+**Arena y cierre final v2.9:** la cámara CERO-7 / nivel 3 muestra ocho pedestales de archivo y anillos de energía alrededor del terminal, siempre sujetos a la visibilidad y niebla del jugador. Son decoraciones PixiJS sin cambios en mapas, colisiones, guardados ni combate. La activación incluye nueva narrativa y cada uno de los tres desenlaces dispone de un panel epilogal con tratamiento cromático propio, texto legible y animaciones opcionales según reducción de movimiento.
+
 **Cinemática ligera del jefe v2.9:** despertar, entrada en fases II y III y derrota ahora tienen señales sonoras sintetizadas originales y ondas radiales con ocho fragmentos en PixiJS. Los efectos de audio respetan el interruptor y volumen existentes y no se reproducen por sí solos; las animaciones respetan movimiento reducido. El disparo de eventos se realiza solo tras acciones aceptadas y no altera RNG ni guardado. Se mantiene el fallback Canvas 2D sin los nuevos efectos GPU.
 
 **Anticipación de ataques v2.9:** en el turno anterior al pulso de Nácar, las dos diagonales amenazadas se marcan sobre el mapa y aparece «IMPACTO PRÓXIMO» junto a su barra de vida. La vista reutiliza la misma función determinista que el motor para evitar avisos engañosos. El aviso permanece legible sin animaciones y en modo ASCII. QA con capturas de las tres fases y del modo ASCII.
