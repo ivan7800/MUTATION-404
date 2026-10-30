@@ -16,6 +16,21 @@ En contraste, el escenario contra vigías usando armas de distancia y cambio a c
 
 Referencia de la medición anterior al ajuste: [GitHub Actions, ejecución 41111227099](https://github.com/ivan7800/MUTATION-404/actions/runs/41111227099).
 
+## Resultados posteriores a la corrección
+
+Tras restringir la pausa de agotamiento a los carroñeros y mantener la retirada normal de los pastores de esporas, el escenario corregido produjo estos resultados sobre las mismas **24 semillas**:
+
+| Simulación: seis encuentros | Enemigos derrotados (media) | Supervivientes | PV restantes (media) | Recursos restantes (media) | Bloqueos |
+|---|---:|---:|---:|---|---:|
+| Carroñeros, cuerpo a cuerpo | 6,00 | 24/24 | 31,6 | 4,4 ampollas | 0 |
+| Vigías, distancia y cuerpo a cuerpo | 6,00 | 24/24 | 20,2 | 0,6 púas; 1,0 ampollas | 0 |
+| Drones, distancia y cuerpo a cuerpo | 5,75 | 20/24 | 15,8 | 0,8 púas; 0,8 ampollas | 0 |
+| Faro Ciego, 80 turnos de refugio | No aplica | 24/24 | 32 | 0 % de exposición | No aplica |
+
+Las medias de PV incluyen los resultados de supervivencia y la progresión de nivel que tenga lugar durante la simulación; **no son barras de vida iniciales ni una tasa de éxito de jugadores reales**. En el escenario de carroñeros las 24 semillas completan los seis encuentros frente a un promedio anterior de 0,08; es una mejora reproducible del problema de persecución. Los drones muestran una dificultad superior sin que la prueba suponga un bloqueo inevitable.
+
+Referencia de la ejecución de referencia posajuste: [GitHub Actions 41112771119](https://github.com/ivan7800/MUTATION-404/actions/runs/41112771119). La versión final incluye guardarraíles flexibles que detectan retornos de la huida imposible o caídas excesivas de supervivencia en estas arenas.
+
 ## Cambios de v2.6
 
 1. **Huida con agotamiento.** Los carroñeros heridos con comportamiento `fleeing` descansan cada segundo turno (los pastores de esporas conservan su conducta anterior); el jugador puede alcanzarlos cuerpo a cuerpo. La pausa depende del turno simulado, sin temporizadores reales ni modificación del esquema de guardado.
@@ -43,4 +58,4 @@ node scripts/balance-audit.mjs
 npm run build:offline
 ```
 
-El informe reproducible queda en `qa-evidence/balance-report.json`. En GitHub Actions se ejecuta también Chromium antes de publicar GitHub Pages. **No se afirma una cifra postajuste hasta leer el informe correspondiente al commit de v2.6.**
+El informe reproducible queda en `qa-evidence/balance-report.json`. En GitHub Actions se ejecuta también Chromium antes de publicar GitHub Pages. Las cifras posajuste aparecen arriba, y los valores de cada semilla quedan disponibles en el artefacto JSON de Actions.
