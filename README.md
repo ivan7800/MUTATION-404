@@ -1,3 +1,22 @@
+# MUTATION 404 v1.7 — Los guardianes del eco
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Novedades
+- Ocho salas de élite conectadas al segundo nivel de las ruinas regionales, con un custodio de Nácar por instalación.
+- Custodios: ataques eléctricos de dos casillas, señalizados en la bitácora antes de causar daños ambientales.
+- Un archivo custodiado en cada ruina, junto a (26,12): elimínalo, pulsa **E**, obtén 15 créditos y un condensador una sola vez.
+- El botín y el estado del guardián persisten en el guardado actual (versión de esquema 11).
+- Pruebas nuevas de mapas reproducibles, desbloqueo del archivo, persistencia y aviso de ataques.
+- Pendientes de QA: validación visual en navegador real, balance de élites y análisis exhaustivo de accesibilidad.
+
+## Desarrollo
+`npm run typecheck`, `npm run test:core`, `npm run build:offline`. Los tres pasos forman parte de GitHub Actions antes de desplegar a Pages.
+
+El motor continúa usando Canvas 2D; PixiJS/WebGL2 sigue pendiente de integración.
+
+---
+
 # MUTATION 404 v1.6 — Las profundidades conscientes
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
