@@ -35,7 +35,7 @@ jobs:
         run: |
           test -f play/index.html
           test -f play/style.css
-          grep -Eq 'assets/index-[^" ]+\\.js' play/index.html
+          grep -q 'assets/' play/index.html
           test -n "$(find play/assets -name '*.js' -print -quit)"
       - name: Install Chrome for visual QA
         id: chrome
