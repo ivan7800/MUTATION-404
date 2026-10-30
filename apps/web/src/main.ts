@@ -5,6 +5,7 @@ import { AsciiRenderer } from './renderer.js';
 import type { PixiAsciiRenderer } from './pixi-renderer.js';
 import { AtmosphereAudio } from './audio.js';
 import { tacticalSignal } from './tactical.js';
+import {nacarPhase,NACAR_PHASES,FINAL_GUARDIAN_ID} from '../../../packages/core/src/campaign.js';
 
 const SAVE_KEY='mutation404.v10.save',V09_KEY='mutation404.v09.save',V08_KEY='mutation404.v08.save',V07_KEY='mutation404.v07.save',LAST_KEY='mutation404.v06.save',OLDER_KEY='mutation404.v05.save',OLD_KEY='mutation404.v04.save',PREVIOUS_KEY='mutation404.v03.save',LEGACY_KEY='mutation404.v02.save',FIRST_KEY='mutation404.v01.save';
 const root=document.querySelector<HTMLElement>('#app');if(!root)throw new Error('Falta #app');
@@ -24,6 +25,7 @@ root.innerHTML=`
 <div class="field-notice"><span id="climate-note">ATMÓSFERA // CALMA</span><span id="threat-note">RIESGO // BAJO</span></div>
 <div class="toolbar"><span><kbd>@</kbd> ERRANTE <b>·</b> <kbd>s</kbd> CARROÑERO <b>·</b> <kbd>V</kbd> VIGÍA <b>·</b> <kbd>l</kbd> LARVA <b>·</b> <kbd>p</kbd> POLILLA <b>·</b> <kbd>D</kbd> CAZADOR <b>·</b> <kbd>f</kbd> PASTOR <b>·</b> <kbd>$</kbd> BOTÍN</span><span>MAPA <span id="map-pos">32,32</span></span></div>
 <div class="combatbar"><div><span class="tiny-label">OBJETIVO ACTUAL</span><strong id="target-info">SIN OBJETIVO</strong></div><div><span class="tiny-label">ARMA ACTIVA</span><strong id="weapon-info">HOJA DE DESGUACE</strong></div><div><span class="tiny-label">MUNICIÓN</span><strong id="ammo-info">12 PÚAS</strong></div></div>
+<div id="nacar-boss" class="nacar-boss hidden" role="status" aria-live="off" data-phase="1"><div class="nacar-boss-title"><span id="nacar-boss-phase">NÁCAR · FASE I</span><strong id="nacar-boss-label">RESONANCIA ELÉCTRICA</strong></div><div class="nacar-boss-meter"><i id="nacar-boss-fill"></i></div></div>
 <div id="survival-strip" class="survival-strip" role="status" aria-live="off" data-risk="stable">SUPERVIVENCIA // INICIANDO INSTRUMENTOS</div>
 <div class="actionbar"><button id="mutations-btn" class="action gene">[U] MUTACIONES</button><button id="pulse-btn" class="action gene">[1] PULSO</button><button id="neural-btn" class="action gene">[2] GRITO NEURAL</button><button id="fire-btn-gene" class="action gene">[3] IGNICIÓN</button><button id="phase-btn" class="action gene">[4] PASO DE FASE</button><button id="scan-btn" class="action discovery">[R] SONDEAR</button><button id="travel-btn" class="action discovery">[V] REGIONES</button><button id="atlas-btn" class="action discovery">[M] ATLAS</button><button id="market-btn" class="action discovery">[C] COMERCIAR</button><button id="house-btn" class="action discovery">[L] EDIFICIO / SALIR</button><button id="down-btn" class="action">[N] DESCENDER</button><button id="up-btn" class="action">[P] ASCENDER</button><button id="interact-btn" class="action primary">[E] INTERACTUAR</button><button id="target-btn" class="action">[T] OBJETIVO</button><button id="attack-btn" class="action attack">[X] GOLPEAR</button><button id="fire-btn" class="action attack">[F] DISPARAR</button><button id="pickup-btn" class="action">[G] RECOGER</button><button id="heal-btn" class="action">[H] CURAR</button><button id="harvest-btn" class="action discovery">[K] RECOLECTAR</button><button id="craft-btn" class="action discovery">[O] FABRICAR</button><button id="ecology-btn" class="action discovery">[Y] ECOLOGÍA</button><button id="inventory-btn" class="action">[B] EQUIPO</button><button id="swap-btn" class="action">[Q] CAMBIAR ARMA</button><button id="journal-btn" class="action">[J] DIARIO</button><button id="wait-btn" class="action">[ESPACIO] ESPERAR</button></div>
 <div class="touch-controls"><div class="dpad"><span></span><button data-move="up" aria-label="Ir al norte">▲</button><span></span><button data-move="left" aria-label="Ir al oeste">◀</button><button data-move="down" aria-label="Ir al sur">▼</button><button data-move="right" aria-label="Ir al este">▶</button></div><p>Controles táctiles / alternativa al teclado</p></div>
@@ -148,6 +150,17 @@ function draw():void{
   write('#quest-text',q.status==='completed'?campaign.description:summary);
   write('#quest-name',q.status==='completed'?campaign.title:'Eco bajo la sal');
   write('#quest-state',milestone.ending?'✓ CAMPAÑA COMPLETA':q.status==='completed'?`◈ ARCHIVOS ${milestone.archives}/8 · CUSTODIOS ${milestone.guardians}/8`:q.status==='undiscovered'?'● SIN INICIAR':q.status==='active'?'● ACTIVA':'● INFORMAR A MARA');
+  const guardian=state.zone==='zero-3'?state.enemies.find(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0):undefined;
+  const bossPanel=$<HTMLElement>('#nacar-boss');
+  bossPanel.classList.toggle('hidden',!guardian);
+  if(guardian){
+    const phase=nacarPhase(guardian.hp,ENEMY_DEFS.drone.hp*3),meta=NACAR_PHASES[phase];
+    bossPanel.dataset.phase=String(phase);
+    bossPanel.style.setProperty('--nacar-color',meta.color);
+    write('#nacar-boss-phase',`NÁCAR · FASE ${['I','II','III'][phase-1]}`);
+    write('#nacar-boss-label',meta.name);
+    $<HTMLElement>('#nacar-boss-fill').style.width=percent(guardian.hp,ENEMY_DEFS.drone.hp*3);
+  }
   const stats=state.stats;
   write('#hp-text',`${stats.hp} / ${stats.maxHp}`);write('#focus-text',`${stats.focus} / ${stats.maxFocus}`);
   write('#level',`NV ${stats.level}`);write('#xp-text',`${stats.xp}/${xpNeeded(stats.level)}`);

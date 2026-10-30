@@ -97,3 +97,14 @@ test('Nácar cannot create phase hazards outside the finale',()=>{
  dispatch(s,{type:'wait'});
  assert.equal(s.log.some(x=>x.includes('NÁCAR · FASE')),false);
 });
+
+test('Nácar uses one shared phase rule with exact health thresholds',async()=>{
+ const {nacarPhase,NACAR_PHASES}=await import('../dist/core/core/src/campaign.js');
+ assert.equal(nacarPhase(45,45),1);
+ assert.equal(nacarPhase(31,45),1);
+ assert.equal(nacarPhase(30,45),2);
+ assert.equal(nacarPhase(16,45),2);
+ assert.equal(nacarPhase(15,45),3);
+ assert.equal(nacarPhase(1,45),3);
+ assert.equal(NACAR_PHASES[3].name,'INCENDIO DEL CORAZÓN');
+});

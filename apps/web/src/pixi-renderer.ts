@@ -1,4 +1,5 @@
 import {Application, Container, Graphics, Sprite, Texture} from 'pixi.js';
+import {nacarPhase} from '../../../packages/core/src/campaign.js';
 import {ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, weatherAt, WEATHER, WIDTH, settlementCitizens, type GameState, type Tile} from '../../../packages/core/src/game.js';
 import {index} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
@@ -349,6 +350,18 @@ export class PixiAsciiRenderer {
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
       const x=enemy.x-ox,y=enemy.y-oy;if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
       const def=ENEMY_DEFS[enemy.kind],nacar=enemy.id==='campaign-heart-custodian',elite=enemy.id.startsWith('elite-')||nacar;
+      if(nacar){
+        // Persistent nonessential FX; stable in reduced-motion and ASCII modes.
+        const phase=nacarPhase(enemy.hp,def.hp*3);
+        const haloColor=phase===1?0x8fe8f2:phase===2?0xb9e78c:0xff9b71;
+        const alpha=this.reducedMotion?.58:.43+.15*Math.sin(this.ambience*.25);
+        const centerX=(x+.5)*this.cellW,centerY=(y+.5)*this.cellH;
+        this.backdrop.circle(centerX,centerY,Math.max(this.cellW,this.cellH)*.66).stroke({color:haloColor,width:2,alpha});
+        for(let j=0;j<4;j++){
+          const angle=j*Math.PI/2+Math.PI/4;
+          this.backdrop.circle(centerX+Math.cos(angle)*this.cellW*.57,centerY+Math.sin(angle)*this.cellH*.49,1.8).fill({color:haloColor,alpha:.8});
+        }
+      }
       if(state.targetId===enemy.id||elite)this.backdrop.rect(x*this.cellW,y*this.cellH,this.cellW,this.cellH).stroke({width:1.5,color:elite?0xef92fc:0xffcb72,alpha:.9});
       const flash=this.flashes.get(enemy.id);
       if(flash&&flash.until>performance.now()){

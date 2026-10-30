@@ -11,6 +11,17 @@ export const CAMPAIGN_SITES=[
 ] as const;
 export type FinaleChoice='bind'|'release'|'erase';
 export const FINAL_GUARDIAN_ID='campaign-heart-custodian';
+/** Shared phase logic avoids discrepancies between HUD, boss art and combat. */
+export function nacarPhase(hp:number,maxHp:number):1|2|3{
+  if(!Number.isFinite(maxHp)||maxHp<=0)return 1;
+  const ratio=Math.max(0,Math.min(1,hp/maxHp));
+  return ratio>2/3?1:ratio>1/3?2:3;
+}
+export const NACAR_PHASES={
+  1:{name:'RESONANCIA ELÉCTRICA',color:'#8fe8f2'},
+  2:{name:'MEMORIAS ESPORALES',color:'#b9e78c'},
+  3:{name:'INCENDIO DEL CORAZÓN',color:'#ff9b71'}
+} as const;
 export const FINALE_EVENT_PREFIX='campaign:ending:';
 
 export function campaignProgress(state:Pick<GameState,'events'|'quest'|'zone'>){

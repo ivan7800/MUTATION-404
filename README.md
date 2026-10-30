@@ -4,6 +4,8 @@
 
 La v2.9 inicia la ampliación visual premium: el atlas de losetas de píxel se aplica a **todos los biomas regionales**, no solo al poblado y una ruina. Hay paletas específicas para Salinas, Ceniza, Hierro, Vidrio, Médula y Umbral, detalles propios por región y caché de texturas con separación de biomas. El modo ASCII permanece intacto, al igual que combate, generación y esquema de guardado 11.
 
+**Pulido del enfrentamiento v2.9:** el jefe dispone de un panel de vida propio, identificación permanente de fase I/II/III y una aureola cromática acorde con el peligro ambiental. La fase se calcula con una única función compartida por el motor y la interfaz; la reducción de movimiento mantiene un halo estático y un indicador textual. Pruebas de umbrales y regresiones de presentación añadidas.
+
 **Combate final v2.9:** Nácar libera ataques de área deterministas en tres fases según sus PV: descargas, esporas y fuego. Las áreas se colocan en diagonal, se anuncian mediante la bitácora y pueden esquivarse antes del siguiente pulso ambiental. No hay nuevos campos de guardado ni cambios al RNG.
 
 **Jefe final — mejora gráfica:** Nácar tiene ahora una silueta original con ocho espinas y corazón de cristal, glifo ASCII diferenciado y barra de salud proporcional a sus PV reforzados. Las mecánicas del combate final siguen pendientes de una revisión específica.

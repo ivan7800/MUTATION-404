@@ -98,3 +98,14 @@ test('v2.4 tactical warnings only consider visible enemies and fields',()=>{
  assert.match(renderer,/0xb3ef9e/);
  assert.ok(qa.includes("getAttribute('data-level'),'contact'"));
 });
+
+test('Nácar shows distinct phase text and persistent accessible boss HUD',()=>{
+ const campaign=readFileSync('packages/core/src/campaign.ts','utf8');
+ const css=readFileSync('apps/web/src/style.css','utf8');
+ assert.match(campaign,/export function nacarPhase/);
+ assert.match(renderer,/nacarPhase\(enemy\.hp,def\.hp\*3\)/);
+ assert.match(renderer,/this\.reducedMotion\?\.58/);
+ assert.match(main,/id="nacar-boss"/);
+ assert.match(main,/bossPanel\.classList\.toggle\('hidden',!guardian\)/);
+ assert.match(css,/\.nacar-boss\.hidden\{display:none\}/);
+});
