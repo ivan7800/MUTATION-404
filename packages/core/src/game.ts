@@ -1,4 +1,5 @@
 import { RECIPES, RESOURCE_INFO, seedResources, initialEcology, ecologicalPulse, type EcologyState } from './ecology.js';
+import {campaignProgress, campaignObjective, endingStory, FINAL_GUARDIAN_ID, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
 import { TASKS, GOODS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior, generateInterior, type Citizen } from './civilizations.js';
 import { SECTORS, coordsForZone, generateSector, sectorName, zoneForSector } from './frontier.js';
 import { generateDepth, generateRuin, ruinId, ruinName, parseRuin, themeForRuin, ZONE_NAMES, type ZoneId, type ZoneMemory } from './depths.js';
@@ -21,6 +22,7 @@ export { SECTORS, coordsForZone, sectorName } from './frontier.js';
 export { TASKS, GOODS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior } from './civilizations.js';
 export { RECIPES, RESOURCE_INFO } from './ecology.js';
 export { BIOMES, WEATHER, biomeAt, weatherAt } from './biomes.js';
+export {campaignProgress,campaignObjective,campaignArchiveList,endingStory,CAMPAIGN_SITES} from './campaign.js';
 export type { Tile, Actor, Landmark } from './world.js';
 export interface Position { x: number; y: number }
 export type QuestStatus = 'undiscovered' | 'active' | 'signal-found' | 'completed';
@@ -294,6 +296,20 @@ export function dispatch(s:GameState, command:Command):ActionResult {
       }
       s.events.push(key);advance(s,100);return reply(true,100,'Decisión de resonancia registrada.');
     }
+    if(option==='finale-bind'||option==='finale-release'||option==='finale-erase'){
+      const choice=option.slice(7) as FinaleChoice;
+      const p=campaignProgress(s);
+      if(s.zone!=='zero-3'||!p.ready||!p.finaleAwakened||p.ending||s.enemies.some(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0))
+        return reply(false,0,'El corazón todavía no acepta esa decisión.');
+      const ending=endingStory(choice,s.quest.outcome==='broadcast'?'broadcast':'isolate');
+      s.events.push(FINALE_EVENT_PREFIX+choice);
+      if(choice==='bind'){s.reputation.concordia+=8;s.exposure=Math.max(0,s.exposure-30);}
+      if(choice==='release'){s.genome.genePoints+=2;s.reputation.ferral+=4;}
+      if(choice==='erase'){s.exposure=0;s.reputation.concordia+=3;s.reputation.ferral+=3;}
+      message(s,'CAMPAÑA COMPLETADA // '+ending.title);
+      message(s,ending.description);
+      return reply(true,0,'Epílogo desbloqueado: '+ending.title);
+    }
     if(option==='accept-task'&&task){
       if(!s.civilization.active.includes(task.id)&&!s.civilization.completed.includes(task.id))s.civilization.active.push(task.id);
       message(s,`ENCARGO REGIONAL // ${task.title}: reúne ${task.required} unidades de chatarra.`);
@@ -320,7 +336,7 @@ export function dispatch(s:GameState, command:Command):ActionResult {
       message(s,option==='broadcast'?'La señal se libera. A lo lejos, una radio contesta con tu propia voz.':'La torre enmudece. Por un instante, todas tus sombras apuntan hacia arriba.');
       message(s,'MISIÓN // Vuelve a informar a Mara Venn en Faro Ciego.');
       advance(s,100);return reply(true,100,'Decisión registrada.');
-    }else if(option==='finish'){s.quest.status='completed';message(s,`MISIÓN COMPLETADA // Eco bajo la sal (${s.quest.outcome==='broadcast'?'transmisión':'aislamiento'}).`);}
+    }else if(option==='finish'){s.quest.status='completed';message(s,`MISIÓN COMPLETADA // Eco bajo la sal (${s.quest.outcome==='broadcast'?'transmisión':'aislamiento'}).`);message(s,'ACTO II // La torre era un aviso: ocho ruinas contienen archivos de la conciencia de Nácar. Abre el diario (J).');}
     else if(option==='rumor')message(s,'Sira: «Hay una máquina que fabrica recuerdos. Nadie sabe para quién».');
     else if(option==='echo')message(s,'Keth-9: «El mensaje llegó 17 años antes de ser emitido».');
     return reply(true,0,'Elección registrada.');
@@ -545,6 +561,41 @@ export function dispatch(s:GameState, command:Command):ActionResult {
     s.ground=s.ground.filter(g=>!loot.includes(g));advance(s,100);return reply(true,100,'Objetos recogidos.');
   }
   if(command.type==='interact'){
+    // The late-game heart console is part of the original third level.
+    // Event flags keep the entire finale backwards compatible with v11 save files.
+    if(s.zone==='zero-3'&&manhattan(s.player,{x:14,y:10})<=1){
+      const p=campaignProgress(s);
+      if(p.ending){
+        const choice=p.ending as FinaleChoice;
+        const ending=endingStory(choice,s.quest.outcome==='broadcast'?'broadcast':'isolate');
+        s.dialogue={speaker:'ARCHIVO DE EPÍLOGO',text:ending.description,options:[{id:'leave',label:'Continuar explorando Nácar'}]};
+        return reply(true,0,'El epílogo permanece en la memoria de Nácar.');
+      }
+      if(!p.ready){
+        message(s,`EL CORAZÓN // Bloqueo: ${p.archives}/8 reliquias, ${p.guardians}/8 custodios; ${p.prologueDone?'prólogo completado':'regresa primero con Mara'}.`);
+        return reply(false,0,'Faltan archivos para acceder al corazón.');
+      }
+      if(!p.finaleAwakened){
+        s.events.push('campaign:awakened');
+        // The guardian uses the normal turn-based AI and is persisted in zone snapshots.
+        const spawn={x:19,y:12};s.tiles[index(spawn.x,spawn.y)]='.';
+        if(!s.enemies.some(e=>e.id===FINAL_GUARDIAN_ID))
+          s.enemies.push({id:FINAL_GUARDIAN_ID,kind:'drone',x:spawn.x,y:spawn.y,hp:ENEMY_DEFS.drone.hp*3,mode:'hunting',lastKnown:{...s.player},searchTurns:6});
+        message(s,'ACTO V // El custodio de las ocho memorias emerge de la cámara. Ninguna decisión será posible mientras permanezca en pie.');
+        refreshVisibility(s);
+        return reply(true,0,'El custodio del corazón ha despertado.');
+      }
+      if(s.enemies.some(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0))
+        return reply(false,0,'El custodio del corazón todavía vive. Derrota al guardián.');
+      const signal=s.quest.outcome==='broadcast'?'La frecuencia liberada continúa creciendo.':'La frecuencia aislada está intentando escapar.';
+      s.dialogue={speaker:'EL CORAZÓN DE NÁCAR',text:`${signal} Los ocho testigos ocupan sus lugares. El corazón te pregunta qué clase de mundo merece sobrevivir.`,options:[
+        {id:'finale-bind',label:'ENCADENAR: proteger el mundo y permanecer como guardián.'},
+        {id:'finale-release',label:'LIBERAR: devolver las voces a la humanidad, aunque todo mute.'},
+        {id:'finale-erase',label:'BORRAR: destruir el registro y sacrificar tu propio recuerdo.'},
+        {id:'leave',label:'Todavía no estoy preparado.'}
+      ]};
+      return reply(true,0,'La última decisión de Nácar está en tus manos.');
+    }
     const r=parseRuin(s.zone);
     if(r&&manhattan(s.player,{x:20,y:12})<=1){
       const theme=themeForRuin(r.x,r.y);
