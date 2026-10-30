@@ -1,3 +1,22 @@
+# MUTATION 404 v2.3 — NÁCAR INMERSIVO
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Cambios implementados
+- Cuatro manifestaciones distintas de mutación con PixiJS/WebGL: ondas concéntricas para pulso cinético, rayos neurales, partículas de ignición y distorsiones de fase.
+- Cuatro voces sonoras sintetizadas mediante WebAudio, con tonos y curvas de frecuencia propias, siempre desactivadas hasta que el jugador active el audio.
+- Efectos vinculados exclusivamente a comandos `cast` aceptados por el motor; sin alterar resultados, coste, orden de turnos ni guardados.
+- Se mantienen la visualización de golpes, muertes, señales eléctricas, la reducción de movimiento y la alternancia Píxel/ASCII (tecla Z).
+- Pruebas de regresión para el vínculo entre mutaciones reales, gráficos, audio opcional y preferencias de accesibilidad.
+
+## Validación
+Workflow GitHub Actions: TypeScript estricto, pruebas de núcleo, compilación Vite/PixiJS, Chromium (WebGL y Canvas 2D), controles, guardado, capturas y muestras orientativas de fluidez.
+
+## Límites
+Los nuevos efectos se concentran en las cuatro mutaciones existentes. Todavía faltan animaciones completas por criatura, localización sonora espacial, revisión humana detallada de capturas, pruebas de campaña larga y métricas en hardware físico. No se certifica 9,5/10 con pruebas automatizadas.
+
+---
+
 # MUTATION 404 v2.2 — Combate visceral
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
