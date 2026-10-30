@@ -10,7 +10,7 @@ test('original GPU tile atlas has Faro and Ojo separate palettes and cached spri
  assert.match(renderer,/tileTexture\(tile:Tile,eye:boolean,faro:boolean,variant:number\)/);
  assert.match(renderer,/this\.tiles\.get\(key\)/);
  assert.match(renderer,/this\.tiles\.set\(key,texture\)/);
- assert.match(renderer,/state\.zone==='ruin--1--1-2'/);
+ assert.match(renderer,/state\.zone\.startsWith\('ruin--1--1-'\)/);
  assert.match(renderer,/state\.zone==='surface'/);
  assert.match(renderer,/this\.artMode==='pixel'/);
 });
