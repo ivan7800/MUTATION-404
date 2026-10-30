@@ -55,3 +55,21 @@ test('every elite room has a contiguous approach for diverse seeds',()=>{
    assert.equal(room.enemies.filter(e=>e.id.startsWith('elite-')&&e.hp>0).length,1);
  }
 });
+
+test('long deterministic walks and waits keep replay and save compatibility across seeds',()=>{
+ const cmds=[{type:'move',dx:1,dy:0},{type:'move',dx:-1,dy:0},{type:'wait'},{type:'inspect'},{type:'scan'}];
+ for(const seed of [1,17,404,808,2026]){
+  const a=createGame(seed),b=createGame(seed);
+  a.enemies=[];b.enemies=[];
+  for(let turn=0;turn<80;turn++){
+   const cmd=cmds[turn%cmds.length];
+   const first=dispatch(a,cmd),second=dispatch(b,cmd);
+   assert.deepEqual(first,second,`action mismatch for seed ${seed}, turn ${turn}`);
+   assert.equal(serialize(a),serialize(b),`simulation desync for seed ${seed}, turn ${turn}`);
+  }
+  const saved=deserialize(serialize(a));
+  assert.equal(saved.stats.hp,a.stats.hp);
+  assert.deepEqual(saved.player,a.player);
+  assert.equal(saved.zone,a.zone);
+ }
+});
