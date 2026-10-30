@@ -168,3 +168,6 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .mission-card #quest-state{letter-spacing:.02em;line-height:1.6}
 #modal-content h3{margin-top:20px;color:#e7d09b}
 #modal-content li{line-height:1.7;margin-bottom:5px}
+
+/* v2.9 P0: a living player must never see the death warning. */
+.death-banner.hidden{display:none}

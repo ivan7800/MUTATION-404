@@ -29,6 +29,11 @@ test('v2.9 final custodian has its own texture, ASCII glyph, and correct HP deno
  assert.match(renderer,/nacar\?'✺'/);
  assert.match(renderer,/enemy\.hp\/\(nacar\?def\.hp\*3:def\.hp\)/);
 });
+test('v2.9 death banner is hidden for living characters',()=>{
+ const css=readFileSync('apps/web/src/style.css','utf8');
+ assert.match(main,/classList\.toggle\('hidden',stats\.hp>0\)/);
+ assert.match(css,/\.death-banner\.hidden\s*\{\s*display:\s*none\s*\}/);
+});
 test('pixel mode toggle is interactive without touching the core game state',()=>{
  assert.match(main,/id="art-mode-btn"/);
  assert.match(main,/#art-mode-btn'\)\.addEventListener\('click'/);

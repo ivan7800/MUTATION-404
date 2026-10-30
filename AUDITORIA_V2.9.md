@@ -35,3 +35,7 @@ Comprobar el artefacto `mutation-404-browser-qa` del workflow de Pages: `region-
 5. Actualizar `docs/ROADMAP.md` y `docs/ARCHITECTURE.md`, aún referidos a versiones antiguas.
 
 No confundir compilación, pruebas deterministas o capturas de navegador con aprobación de una campaña completa por jugadores reales.
+
+## Hallazgo P0 confirmado mediante screenshot real
+
+En `region-v29-pixel.png` se veía el mensaje «SEÑAL VITAL PERDIDA» con 32/32 PV. La lógica de `main.ts` alternaba correctamente la clase `hidden`, pero `style.css` solo definía esa clase para `.modal`, `.start-menu` y `.start-settings`, no para `.death-banner`. Se añadió `.death-banner.hidden{display:none}` y una regresión que exige coherencia CSS/DOM. La captura procedía del artefacto Chromium del commit cdf0d68a.
