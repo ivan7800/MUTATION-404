@@ -1,3 +1,15 @@
+# MUTATION 404 v2.9 — PREMIUM EXPERIENCE (VERTICAL SLICE)
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+La v2.9 inicia la ampliación visual premium: el atlas de losetas de píxel se aplica a **todos los biomas regionales**, no solo al poblado y una ruina. Hay paletas específicas para Salinas, Ceniza, Hierro, Vidrio, Médula y Umbral, detalles propios por región y caché de texturas con separación de biomas. El modo ASCII permanece intacto, al igual que combate, generación y esquema de guardado 11.
+
+**QA añadido:** Chromium captura una región exterior en los modos píxel y ASCII y comprueba errores JavaScript; las pruebas, compilación y despliegue siguen bloqueados por GitHub Actions si falla la validación.
+
+**Alcance honesto:** es una primera vertical slice artística del **terreno regional**, no arte final de todas las criaturas ni un rediseño integral de interfaz. No se certifica aún 9,5/10 ni una prueba humana completa. [Auditoría y próximos riesgos](./AUDITORIA_V2.9.md).
+
+---
+
 # MUTATION 404 v2.8 — LA CAMPAÑA DE NÁCAR
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/

@@ -125,6 +125,26 @@ try{
     results.push({scene,mode,zone:eye?'Ojo del Silencio':'Faro Ciego',screenshot,frameStats,errors});
     await context.close();
   }
+  // v2.9: exercise a previously glyph-only overworld biome in both art modes.
+  // Capture evidence without changing gameplay state, save schema or seed.
+  const regionState=createGame(404);
+  regionState.player={x:6,y:8};
+  refreshVisibility(regionState);
+  const regionContext=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
+  await regionContext.addInitScript(save=>localStorage.setItem('mutation404.v10.save',save),serialize(regionState));
+  const regionPage=await regionContext.newPage(),regionErrors=[];
+  regionPage.on('pageerror',err=>regionErrors.push(err.message));
+  await regionPage.goto(base,{waitUntil:'networkidle',timeout:45000});
+  await regionPage.locator('#start-continue').click();
+  await regionPage.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
+  assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'pixel');
+  await regionPage.screenshot({path:'qa-evidence/region-v29-pixel.png',fullPage:true,animations:'disabled'});
+  await regionPage.locator('#art-mode-btn').click();
+  assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'ascii');
+  await regionPage.screenshot({path:'qa-evidence/region-v29-ascii.png',fullPage:true,animations:'disabled'});
+  assert.deepEqual(regionErrors,[],'regional art mode caused a browser exception');
+  results.push({scene:'regional-v29',pixel:'qa-evidence/region-v29-pixel.png',ascii:'qa-evidence/region-v29-ascii.png',errors:regionErrors});
+  await regionContext.close();
   // v2.8: verify an actual end-to-end finale UI using a valid pre-finale save.
   // Combat is verified separately by the core campaign tests; this fixture
   // represents the point after the final guardian has been defeated.

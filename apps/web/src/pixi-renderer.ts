@@ -106,14 +106,25 @@ export class PixiAsciiRenderer {
    * This art lives in GPU textures; draw() never rasterizes individual tiles.
    * It is intentionally separate from tile collision and the saved world.
    */
-  private tileTexture(tile:Tile,eye:boolean,faro:boolean,variant:number):Texture{
-    const key=`${eye?'eye':faro?'faro':'world'}:${tile}:${variant}`;
+  private tileTexture(tile:Tile,eye:boolean,faro:boolean,variant:number,region:string):Texture{
+    const key=`${eye?'eye':faro?'faro':region}:${tile}:${variant}`;
     const cached=this.tiles.get(key);if(cached)return cached;
     const c=document.createElement('canvas');c.width=32;c.height=48;
     const g=c.getContext('2d');if(!g)throw new Error('Atlas de losetas no disponible.');
     g.imageSmoothingEnabled=false;
-    const stone=eye?['#111c30','#192b40','#223448']:faro?['#25352f','#2f443a','#3b5140']:['#25302e','#30463e','#3b4f44'];
-    const earth=eye?['#172233','#25344b','#3b4b5e']:faro?['#5a5541','#776d4e','#958562']:['#484739','#665f47','#847458'];
+    // Region-specific raster palettes make the entire overworld pixel-art, not just Faro.
+    // The biome is part of the atlas cache key: no palette bleeding between sectors.
+    const regionColors:Record<string,{stone:string[];earth:string[];mark:string}>={
+      salinas:{stone:['#343d36','#47544a','#687064'],earth:['#675f4a','#887959','#aa9772'],mark:'#e1c38e'},
+      ceniza:{stone:['#31232a','#473038','#62424a'],earth:['#493638','#624243','#80514b'],mark:'#c9856d'},
+      hierro:{stone:['#142d35','#244650','#32616a'],earth:['#263f43','#31545a','#47747a'],mark:'#9ee2e1'},
+      vidrio:{stone:['#2c2540','#47365e','#65507b'],earth:['#352b49','#544269','#74608c'],mark:'#dec0ee'},
+      medula:{stone:['#20362b','#31533e','#426a50'],earth:['#283f31','#3e5940','#567651'],mark:'#abdd9f'},
+      umbral:{stone:['#32223e','#4a2b55','#633768'],earth:['#35283c','#52324f','#744363'],mark:'#f0b4cf'}
+    };
+    const colors=regionColors[region]??regionColors.salinas;
+    const stone=eye?['#111c30','#192b40','#223448']:faro?['#25352f','#2f443a','#3b5140']:colors.stone;
+    const earth=eye?['#172233','#25344b','#3b4b5e']:faro?['#5a5541','#776d4e','#958562']:colors.earth;
     const solid=tile==='#'||tile==='%'||tile==='=';
     g.fillStyle=(solid?stone:earth)[variant%3];g.fillRect(0,0,32,48);
     const seed=(variant*9+tile.charCodeAt(0))%11;
@@ -138,6 +149,24 @@ export class PixiAsciiRenderer {
       if(tile==='T'){p(4,7,24,35,'#303b45');p(8,13,16,18,'#b6a16f');p(14,11,4,25,'#f0d58d');}
       if(tile==='+'){p(4,5,24,37,'#473b32');p(7,9,18,28,'#8d7953');p(20,23,3,5,'#ecc986');}
       if(tile==='!'){p(4,4,24,40,'#562c39');p(9,9,14,27,'#c55772');p(15,6,2,31,'#f5a8a3');}
+    }
+    // Restrained environmental detailing: colors and silhouettes belong to each region.
+    // Details avoid game-state randomness and are generated only once per atlas entry.
+    if(!eye&&!faro){
+      const mark=colors.mark;
+      if(region==='ceniza'){
+        p(5+seed,7,2,11,mark);p(23-seed,32,2,7,'#1d171e');
+      }else if(region==='hierro'){
+        p(4,4,23,2,mark);p(7,5,2,9,'#10272f');p(23,30,5,3,mark);
+      }else if(region==='vidrio'){
+        p(6,5,3,17,mark);p(20,24,2,18,mark);p(11,17,8,2,'#7b638f');
+      }else if(region==='medula'){
+        p(4+seed,27,3,17,mark);p(8+seed,23,8,2,'#304e3b');
+      }else if(region==='umbral'){
+        p(5,9,2,21,mark);p(23,17,2,21,mark);p(12,27,8,2,'#b97caa');
+      }else{
+        p(6+seed,10,3,2,mark);p(22-seed,35,3,2,mark);
+      }
     }
     // Always draw at integer coordinates: genuine crisp raster texture.
     const texture=Texture.from(c);
@@ -252,7 +281,7 @@ export class PixiAsciiRenderer {
       if(!state.seen[at])continue;
       const glyph=state.tiles[at] as Tile;
       const visible=state.visible[at]===1;
-      const biome=BIOMES[biomeAt(state.seed,x,y)];
+      const biomeKey=biomeAt(state.seed,x,y),biome=BIOMES[biomeKey];
       const dist=Math.hypot(x-state.player.x,y-state.player.y);
       const radius=night?7:12;
       const dim=visible?Math.min(night?.62:.28,Math.max(0,(dist-radius*.35)/radius)*(night?.55:.28)):0;
@@ -263,9 +292,9 @@ export class PixiAsciiRenderer {
         glyph==='#'?'#697a75':glyph==='T'?'#ffd085':glyph==='o'?'#d5b1f2':glyph==='?'?'#f0a6db':glyph==='!'?'#fd7892':glyph==='~'?'#75d3e3':glyph==='+'?'#f5ce8b':glyph==='&'?'#a3e0a3':glyph==='%'?'#8ac8d3':glyph==='='?'#b9d4cf':'#c5bbaa';
       const eye=state.zone.startsWith('ruin--1--1-');
       const faro=state.zone==='surface'&&x>=18&&x<=47&&y>=21&&y<=43;
-      if(this.artMode==='pixel'&&(eye||faro)){
+      if(this.artMode==='pixel'){
         const sprite=this.sprites[used++];
-        sprite.texture=this.tileTexture(glyph,eye,faro,Math.floor(terrainHash(state.seed+917,x,y)*3));
+        sprite.texture=this.tileTexture(glyph,eye,faro,Math.floor(terrainHash(state.seed+917,x,y)*3),biomeKey);
         sprite.tint=0xffffff;sprite.alpha=alpha;
         sprite.x=cx*this.cellW+this.cellW/2;sprite.y=cy*this.cellH+this.cellH/2;
         sprite.width=this.cellW;sprite.height=this.cellH;sprite.visible=true;
