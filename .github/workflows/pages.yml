@@ -8,7 +8,6 @@ on:
 permissions:
   contents: read
   pages: write
-  issues: write
   id-token: write
 
 concurrency:
@@ -29,15 +28,7 @@ jobs:
       - name: Type check
         run: npm run typecheck
       - name: Core tests
-        id: core_tests
-        run: npm run test:core > core-test-output.txt 2>&1 || { cat core-test-output.txt; exit 1; }
-      - name: Report failing tests for diagnosis
-        if: failure() && steps.core_tests.conclusion == 'failure'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          { echo 'Temporary CI diagnostic, please close after fixing.'; echo; echo '```'; tail -n 100 core-test-output.txt; echo '```'; } > ci-diagnostic.md
-          gh issue create --title 'CI diagnostic v1.7 — failing core tests' --body-file ci-diagnostic.md
+        run: npm run test:core
       - name: Build static web release
         run: npm run build:offline
       - name: Verify Pages entry point
