@@ -25,3 +25,14 @@ test('browser QA exercises both artistic scenes in both modes',()=>{
  assert.match(qa,/generateRuin\(404,-1,-1,2\)/);
  assert.match(qa,/eyeSave=serialize\(state\)/);
 });
+
+test('v2.1 reusable character sprites cover all original species and reduced motion',()=>{
+ assert.match(renderer,/creatureTexture\(kind:string,frame:0\|1\)/);
+ assert.match(renderer,/this\.tiles\.get\(key\)/);
+ assert.match(renderer,/this\.tiles\.set\(key,texture\)/);
+ for(const kind of ['hero','crawler','sentinel','drone','spore','moth','larva','elite','npc']){
+  assert.ok(renderer.includes(kind+":"),'missing texture palette '+kind);
+ }
+ assert.match(renderer,/this\.artMode==='pixel'\?this\.drawCreature/);
+ assert.match(renderer,/this\.reducedMotion\?0/);
+});
