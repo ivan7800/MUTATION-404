@@ -32,7 +32,10 @@ try{
     assert.equal(await page.locator('#start-continue').isDisabled(),true,'continue must be disabled without a save');
     await page.locator('#start-options').click();
     assert.ok(await page.locator('#start-settings').isVisible(),'audio options panel missing');
-    await page.locator('#start-volume').fill('75');
+    await page.locator('#start-volume').evaluate(el=>{
+      el.value='75';
+      el.dispatchEvent(new Event('input',{bubbles:true}));
+    });
     assert.equal(await page.locator('#start-volume-value').textContent(),'75%');
     await page.locator('#start-audio').click();
     await page.waitForFunction(()=>document.querySelector('#start-audio')?.getAttribute('aria-pressed')==='true',{timeout:10000});
