@@ -12,7 +12,7 @@ root.innerHTML=`
 <div class="hero-strip"><span><span id="biome-strip">REGIÓN / SALINAS DE VÉRTICE</span></span><span id="clock">07:00</span><span id="coords">X:32 Y:32</span><span class="strip-accent" id="exploration">EXPLORACIÓN 0%</span></div>
 <main class="layout">
 <section class="game-column" aria-label="Área de juego">
-<div class="panel-heading"><div><span class="tiny-label">VISTA DE EXPLORACIÓN / COMBATE TÁCTICO</span><h1 id="location">Faro Ciego</h1></div><div class="zoom"><button id="zoom-out" aria-label="Reducir mapa">−</button><span>ASCII</span><button id="zoom-in" aria-label="Ampliar mapa">+</button></div></div>
+<div class="panel-heading"><div><span class="tiny-label">VISTA DE EXPLORACIÓN / COMBATE TÁCTICO</span><h1 id="location">Faro Ciego</h1></div><div class="zoom"><button id="zoom-out" aria-label="Reducir mapa">−</button><button id="art-mode-btn" type="button" aria-label="Alternar entre modo píxel y ASCII" aria-pressed="true">PÍXEL / ASCII</button><button id="zoom-in" aria-label="Ampliar mapa">+</button></div></div>
 <div class="biome-story" aria-live="polite">
   <div class="biome-emblem">◈</div>
   <div class="biome-story-text"><span class="tiny-label" id="biome-subtitle">EL DESIERTO QUE ESCUCHA</span><p id="biome-description">La sal conserva ecos de quienes desaparecieron.</p></div>
@@ -261,6 +261,7 @@ window.addEventListener('keydown',e=>{
   if(['1','2','3','4'].includes(key)){e.preventDefault();const powers:MutationId[]=['kinetic-pulse','neural-shock','pyrokinesis','phase-step'];act({type:'cast',mutation:powers[Number(key)-1]});return;}
   if(key==='b'){e.preventDefault();inventory();return;}
   if(key==='v'){e.preventDefault();regions();return;}
+  if(key==='z'){e.preventDefault();$('#art-mode-btn').click();return;}
   if(key==='m'){e.preventDefault();atlas();return;}
   if(key==='?' ){e.preventDefault();help();return;}
   const command=keymap[key];if(!command)return;
@@ -283,6 +284,17 @@ $('#harvest-btn').addEventListener('click',()=>act({type:'harvest'}));$('#craft-
 $('#inventory-btn').addEventListener('click',inventory);$('#journal-btn').addEventListener('click',journal);$('#help-btn').addEventListener('click',help);
 $('#modal-close').addEventListener('click',closeModal);
 $('#modal').addEventListener('click',ev=>{if(ev.target===$('#modal'))closeModal();});
+$('#art-mode-btn').addEventListener('click',()=>{
+  if(renderer instanceof AsciiRenderer){
+    state.log.push('GRÁFICOS // Modo pixel art disponible con WebGL.');
+    draw();return;
+  }
+  const mode=renderer.toggleArt();
+  $('#art-mode-btn').setAttribute('aria-pressed',String(mode==='pixel'));
+  $('#viewport').dataset.artMode=mode;
+  state.log.push(mode==='pixel'?'GRÁFICOS // Atlas pixel art original activado.':'GRÁFICOS // Vista ASCII clásica activada.');
+  draw();
+});
 $('#zoom-in').addEventListener('click',()=>{renderer.zoom(2);draw();});$('#zoom-out').addEventListener('click',()=>{renderer.zoom(-2);draw();});
 $('#save-btn').addEventListener('click',()=>{save();draw();});
 $('#load-btn').addEventListener('click',()=>{
@@ -324,10 +336,14 @@ void import('./pixi-renderer.js').then(async ({PixiAsciiRenderer})=>{
   renderer.pauseAmbience();
   renderer=candidate;
   $('#viewport').dataset.renderer='pixi-webgl';
+  $('#viewport').dataset.artMode='pixel';
+  $('#art-mode-btn').setAttribute('aria-pressed','true');
   state.log.push('GRÁFICOS // Renderizado PixiJS WebGL activado.');
   draw();renderer.startAmbience();renderer.focus();
 }).catch(error=>{
   $('#viewport').dataset.renderer='canvas2d';
+  $('#viewport').dataset.artMode='ascii';
+  $('#art-mode-btn').setAttribute('aria-pressed','false');
   state.log.push('GRÁFICOS // WebGL no disponible; motor Canvas 2D operativo.');
   console.warn('PixiJS WebGL fallback:',error);
   draw();
