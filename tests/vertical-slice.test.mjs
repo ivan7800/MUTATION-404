@@ -74,6 +74,6 @@ test('v2.4 tactical warnings only consider visible enemies and fields',()=>{
  assert.match(renderer,/this\.fieldBursts\.push/);
  assert.match(renderer,/field\.kind==='fire'/);
  assert.match(renderer,/field\.kind==='electric'/);
- assert.match(renderer,/field\.kind==='spores'/);
- assert.match(qa,/data-level'\),'contact'/);
+ assert.match(renderer,/0xb3ef9e/);
+ assert.ok(qa.includes("getAttribute('data-level'),'contact'"));
 });
