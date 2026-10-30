@@ -152,7 +152,7 @@ export class PixiAsciiRenderer {
       this.backdrop.rect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH).fill({color:this.color(groundColor),alpha:visible?1:.55});
       const palette=visible&&coordsForZone(state.zone)&&['.',',','*'].includes(glyph)?biome.palette:
         glyph==='#'?'#697a75':glyph==='T'?'#ffd085':glyph==='o'?'#d5b1f2':glyph==='?'?'#f0a6db':glyph==='!'?'#fd7892':glyph==='~'?'#75d3e3':glyph==='+'?'#f5ce8b':glyph==='&'?'#a3e0a3':glyph==='%'?'#8ac8d3':glyph==='='?'#b9d4cf':'#c5bbaa';
-      const eye=state.zone==='ruin--1--1-1'||state.zone==='ruin--1--1-2';
+      const eye=state.zone.startsWith('ruin--1--1-');
       const faro=state.zone==='surface'&&x>=18&&x<=47&&y>=21&&y<=43;
       if(this.artMode==='pixel'&&(eye||faro)){
         const sprite=this.sprites[used++];
