@@ -3,7 +3,8 @@ import {spawn} from 'node:child_process';
 import {mkdir,writeFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {createGame,serialize,refreshVisibility} from '../dist/core/core/src/game.js';
-import {generateRuin} from '../dist/core/core/src/depths.js';
+import {generateRuin,generateDepth} from '../dist/core/core/src/depths.js';
+import {CAMPAIGN_SITES} from '../dist/core/core/src/campaign.js';
 const PORT=8877;
 const base=`http://127.0.0.1:${PORT}/`;
 const server=spawn(process.execPath,['scripts/server.mjs','--no-open'],{env:{...process.env,PORT:String(PORT)},stdio:'pipe'});
@@ -124,6 +125,40 @@ try{
     results.push({scene,mode,zone:eye?'Ojo del Silencio':'Faro Ciego',screenshot,frameStats,errors});
     await context.close();
   }
+  // v2.8: verify an actual end-to-end finale UI using a valid pre-finale save.
+  // Combat is verified separately by the core campaign tests; this fixture
+  // represents the point after the final guardian has been defeated.
+  const endState=createGame(404),heartRoom=generateDepth(404,3);
+  endState.zone='zero-3';endState.tiles=heartRoom.tiles;endState.seen=heartRoom.seen;
+  endState.enemies=[];endState.fields=[];endState.ground=[];endState.player={x:14,y:10};
+  endState.quest={status:'completed',outcome:'broadcast',fuseFound:true};
+  endState.events.push('heart','campaign:awakened');
+  for(const site of CAMPAIGN_SITES){
+    endState.events.push(`relic:${site.x}:${site.y}:2`);
+    endState.events.push(`elite-cache:ruin-${site.x}-${site.y}-2`);
+  }
+  refreshVisibility(endState);
+  const endingContext=await browser.newContext({viewport:{width:1440,height:900}});
+  await endingContext.addInitScript(save=>localStorage.setItem('mutation404.v10.save',save),serialize(endState));
+  const endingPage=await endingContext.newPage(),endingErrors=[];
+  endingPage.on('pageerror',err=>endingErrors.push(err.message));
+  await endingPage.goto(base,{waitUntil:'networkidle',timeout:45000});
+  assert.ok(await endingPage.locator('#start-continue').isEnabled());
+  await endingPage.locator('#start-continue').click();
+  await endingPage.keyboard.press('e');
+  assert.match(await endingPage.locator('#modal-title').textContent(),/CORAZÓN DE NÁCAR/);
+  await endingPage.getByRole('button',{name:/ENCADENAR/}).click();
+  assert.match(await endingPage.locator('#modal-title').textContent(),/FINAL — EL JURAMENTO DEL FARO/);
+  assert.match(await endingPage.locator('#modal-content').textContent(),/FIN DE LA CAMPAÑA/);
+  await endingPage.screenshot({path:'qa-evidence/final-campana-v28.png',fullPage:true,animations:'disabled'});
+  await endingPage.locator('#modal-close').click();
+  assert.match(await endingPage.locator('#quest-state').textContent(),/CAMPAÑA COMPLETA/);
+  await endingPage.reload({waitUntil:'networkidle'});
+  await endingPage.locator('#start-continue').click();
+  assert.match(await endingPage.locator('#quest-state').textContent(),/CAMPAÑA COMPLETA/);
+  assert.deepEqual(endingErrors,[]);
+  results.push({scene:'final-campana',status:'passed',savedEnding:'bind',screenshot:'qa-evidence/final-campana-v28.png'});
+  await endingContext.close();
   await writeFile('qa-evidence/report.json',JSON.stringify({status:'passed',browser:browserExecutable,results},null,2));
   console.log('PASS real browser QA',results);
 }catch(error){
