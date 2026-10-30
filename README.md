@@ -1,5 +1,7 @@
 # MUTATION 404 v2.9 — PREMIUM EXPERIENCE (VERTICAL SLICE)
 
+**Pool de sprites v2.9:** PixiJS ya no instancia 1.519 sprites al iniciar. Reserva 64 y crece en grupos de 64 cuando las escenas realmente los necesitan. Solo se ocultan los sprites utilizados anteriormente, evitando recorrer toda la reserva en cada cuadro. El límite máximo se mantiene y se informa del número de sprites activos/asignados cuando se activa `?profile=1`. QA de navegador y prueba de límites añadidas.
+
 **Optimización de PixiJS:** el suelo de las casillas se conserva en una capa Graphics separada de los efectos animados y no vuelve a rasterizarse en cada fotograma ambiental. El bioma y la variante del terreno se calculan una vez por posición/semilla y se cachean en memoria con invalidación al cambiar de semilla. La región y el tipo de ruina se consultan una vez por escena. Se instrumenta el tiempo de *construcción JavaScript* del renderizador (NO es tiempo de GPU ni FPS) solo cuando se abre la página con `?profile=1`; Chromium comprueba reutilización de la capa y añade las métricas al informe de QA.
 
 

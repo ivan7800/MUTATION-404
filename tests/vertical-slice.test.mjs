@@ -154,3 +154,12 @@ test('v2.9 final chamber art is localized to zero-3 and preserves fog-of-war',()
  assert.match(css,/\.epilogue-stage\[data-ending=erase\]/);
  assert.match(css,/@media\(prefers-reduced-motion:no-preference\)/);
 });
+
+test('v2.9 Pixi sprite pool is lazy and only hides previously active elements',()=>{
+ assert.match(renderer,/private allocateSprites\(\):void\{this\.growSprites\(64\);\}/);
+ assert.match(renderer,/private spriteAt\(i:number\):Sprite/);
+ assert.match(renderer,/if\(i>=this\.viewW\*this\.viewH\+250\)throw/);
+ assert.match(renderer,/for\(let i=used;i<this\.activeSprites;i\+\+\)this\.sprites\[i\]\.visible=false/);
+ assert.match(renderer,/this\.peakActiveSprites=Math\.max/);
+ assert.match(qa,/allocatedSprites<47\*27\+250/);
+});

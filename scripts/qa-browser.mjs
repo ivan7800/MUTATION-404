@@ -180,6 +180,9 @@ try{
   assert.ok(latestProfile.builds>firstProfile.builds,'pixel ambience must redraw when active');
   assert.ok(latestProfile.floorDraws<latestProfile.builds,'static floor must be reused across ambience draws');
   assert.ok(latestProfile.cachedCells>0,'region cache must contain world cells');
+  assert.ok(latestProfile.allocatedSprites>=latestProfile.activeSprites,'sprite pool must cover visible cells');
+  assert.ok(latestProfile.allocatedSprites<47*27+250,'regional view should not eagerly allocate the entire pool');
+  assert.ok(latestProfile.peakActiveSprites>=latestProfile.activeSprites,'pool peak should never trail current count');
   assert.ok(Number.isFinite(latestProfile.meanBuildMs),'scene build time is not finite');
   results.push({scene:'render-profile-v29',baseline:firstProfile,after:latestProfile,
     note:'JavaScript scene construction only; browser GPU timing not measured'});

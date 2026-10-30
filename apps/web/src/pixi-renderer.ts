@@ -325,6 +325,7 @@ export class PixiAsciiRenderer {
     }
   }
   private spriteAt(i:number):Sprite{
+    if(i>=this.viewW*this.viewH+250)throw new Error('Sprite pool exhausted');
     while(i>=this.sprites.length)this.growSprites(64);
     const sprite=this.sprites[i];
     if(!sprite)throw new Error('Sprite pool exhausted');
