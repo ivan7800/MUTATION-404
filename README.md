@@ -1,3 +1,22 @@
+# MUTATION 404 v2.2 — Combate visceral
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Cambios de combate y claridad táctica
+- Destellos temporales en los enemigos cuya salud realmente disminuye, con distinción entre golpes normales y fuertes (daño de 5+).
+- Partículas de disipación cuando muere una criatura; no se alteran recompensas ni resultados.
+- Perímetros de advertencia en las casillas electrificadas para identificar mejor ataques enemigos.
+- El feedback se calcula a partir de la diferencia de HP y posiciones antes/después de cada comando aceptado, sin tocar el motor de simulación.
+- Los efectos adicionales se desactivan cuando se solicita movimiento reducido; los avisos tácticos permanecen visibles.
+- Modo Píxel PixiJS/WebGL y modo ASCII con tecla Z, respaldo Canvas 2D y esquema de guardado intactos.
+
+## Validación
+GitHub Actions: TypeScript estricto, pruebas de motor, build Vite, QA Chromium WebGL/Canvas, capturas de Faro Ciego y El Ojo del Silencio en ambos modos y telemetría orientativa de fotogramas.
+
+**Pendiente:** animaciones extensas de ataques específicos por especie, sonido individual para cada mutación, análisis visual profesional de las capturas y perfil de rendimiento en GPU reales. Esta versión es una mejora concreta de feedback, no una garantía de 9,5/10.
+
+---
+
 # MUTATION 404 v2.1 — Criaturas y mundo vivo
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
