@@ -1,3 +1,29 @@
+# MUTATION 404 v2.7 — EL DESPERTAR DE NÁCAR
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Menú principal nuevo
+- Pantalla de inicio obligatoria: **Continuar partida**, **Nueva partida**, **Cargar guardado local**, **Importar archivo .json** y **Opciones**.
+- No se inicia automáticamente una partida ni se sobrescribe una existente al abrir el navegador. La opción Continuar aparece inactiva si no hay un guardado local.
+- Botón **☰ MENÚ** y tecla **Esc** para pausar y volver al título, guardando antes la partida. El archivo importado solo sustituye el estado después de que su estructura haya sido validada correctamente. Límite de importación: 4 MB.
+- Compatibilidad con las claves de partidas guardadas de versiones anteriores y esquema de juego 11.
+
+## Sonido audible y controles
+- WebAudio sintetizado **sin archivos externos ni CDN**: nuevo ambiente armónico con tres voces, sonidos para ataque, daño, exploración y cuatro mutaciones.
+- En **Opciones** hay un deslizador de volumen (0–100 %) y un botón **Activar sonido y probar**; el tono de diagnóstico confirma la activación.
+- El volumen predeterminado es 55 %, no 0 %. Los ajustes se guardan localmente. La reproducción únicamente empieza mediante una interacción voluntaria, respetando las normas del navegador.
+
+## Progresión y economía
+- Corregido un posible ciclo de créditos infinitos: los descuentos por reputación nunca permiten recomprar/vender en el mismo mercado con beneficio.
+- Nuevas pruebas para precios en todos los mercados regionales y reputaciones, además de simulaciones deterministas de progresión y guardados.
+
+## Comprobaciones
+El pipeline GitHub Actions ejecuta TypeScript, pruebas del motor, simulación de balance, compilación PixiJS y Chromium con WebGL y respaldo Canvas, comprobando también el menú, control de volumen, guardar, pausar y continuar.
+
+**Pendiente:** mezcla musical compuesta (en lugar de sonido procedural), revisión estética humana de la pantalla de título, batería real de dispositivos físicos y validación jugable prolongada. No se presenta todavía como 9,5/10.
+
+---
+
 # MUTATION 404 v2.6 — EQUILIBRIO Y SUPERVIVENCIA
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
