@@ -73,3 +73,14 @@ test('long deterministic walks and waits keep replay and save compatibility acro
   assert.equal(saved.zone,a.zone);
  }
 });
+
+test('wounded crawler has a recoverable fleeing rhythm in a real ruin',()=>{
+ const s=arena('ruin-1-0-2');
+ const enemy={id:'wounded-crawler',kind:'crawler',x:62,y:32,hp:3,mode:'fleeing',searchTurns:0};
+ s.enemies=[enemy];s.tick=100;
+ takeEnemyTurn(s,()=>{});
+ assert.deepEqual({x:enemy.x,y:enemy.y},{x:62,y:32},'odd turns should expose an opportunity to catch the wounded foe');
+ s.tick=200;
+ takeEnemyTurn(s,()=>{});
+ assert.ok(Math.abs(enemy.x-32)+Math.abs(enemy.y-32)>30,'even turns may resume retreat');
+});
