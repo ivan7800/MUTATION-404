@@ -113,6 +113,84 @@ export class PixiAsciiRenderer {
     this.tiles.set(key,texture);
     return texture;
   }
+  /** Original 16-bit character sheets, two poses per creature.
+   * Each sheet is rasterized once and cached as a Pixi GPU texture.
+   * No extra assets, loading delays, game-state fields or network requests.
+   */
+  private creatureTexture(kind:string,frame:0|1):Texture{
+    const key=`character:${kind}:${frame}`;
+    const cached=this.tiles.get(key);if(cached)return cached;
+    const c=document.createElement('canvas');c.width=32;c.height=48;
+    const g=c.getContext('2d');if(!g)throw Error('No hay Canvas para preparar el atlas.');
+    g.imageSmoothingEnabled=false;
+    const p=(x:number,y:number,w:number,h:number,color:string)=>{
+      g.fillStyle=color;g.fillRect(x,y,w,h);
+    };
+    const palette:Record<string,[string,string,string]>={
+      hero:['#e8c994','#4e756c','#243c40'],
+      crawler:['#b87f59','#6c493b','#e1bf86'],
+      sentinel:['#d5b47b','#535d69','#c2e4df'],
+      drone:['#ac9ebc','#4a6679','#83e7ee'],
+      spore:['#8ab887','#345c4d','#d5e7a4'],
+      moth:['#c6a0cf','#4a385c','#f0d6e7'],
+      larva:['#d2ae80','#755a45','#ebdac0'],
+      elite:['#e1b4fa','#5b447e','#91f0ea'],
+      npc:['#d6be90','#647877','#ab9c78']
+    };
+    const [skin,armor,accent]=palette[kind]??palette.npc;
+    const bounce=frame===1?2:0;
+    // Shadow, feet and hinged legs establish a readable silhouette at tiny scales.
+    p(5,42,22,3,'#0b1520');
+    if(kind==='moth'){
+      p(2,13+bounce,12,19,armor);p(18,13+bounce,12,19,armor);
+      p(4,15+bounce,9,5,skin);p(19,15+bounce,9,5,skin);
+      p(12,15+bounce,8,23,skin);p(13,11+bounce,6,6,accent);
+      p(11,27+bounce,10,4,armor);
+    }else if(kind==='spore'){
+      p(11,24+bounce,10,15,armor);p(8,35+bounce,16,6,skin);
+      p(4,11+bounce,24,17,skin);p(8,7+bounce,16,7,accent);
+      p(8,19+bounce,5,3,'#202c35');p(20,19+bounce,5,3,'#202c35');
+      p(6,15+bounce,4,4,armor);p(23,13+bounce,4,5,armor);
+    }else if(kind==='crawler'||kind==='larva'){
+      p(3,26+bounce,26,11,armor);
+      for(let i=0;i<4;i++){
+        const step=(i%2===frame)?2:0;
+        p(3+i*7,35+bounce-step,4,7,skin);
+      }
+      p(20,16+bounce,10,16,skin);p(24,20+bounce,5,3,accent);
+      p(6,23+bounce,17,7,skin);p(27,17+bounce,3,4,'#160f20');
+    }else if(kind==='sentinel'||kind==='drone'||kind==='elite'){
+      p(7,17+bounce,18,20,armor);p(10,12+bounce,12,9,skin);
+      p(4,23+bounce,4,15,accent);p(24,23+bounce,4,15,accent);
+      p(9,36+bounce,5,7,armor);p(19,36+bounce,5,7,armor);
+      p(12,17+bounce,8,4,'#1a2c3b');p(14,18+bounce,4,2,accent);
+      p(8,26+bounce,16,4,skin);
+      if(kind==='elite'){
+        p(5,13+bounce,5,5,accent);p(22,13+bounce,5,5,accent);
+        p(12,6+bounce,8,5,skin);
+      }
+    }else{
+      p(10,8+bounce,12,10,skin);
+      p(9,18+bounce,14,15,armor);
+      p(5,19+bounce,5,17,skin);p(22,19+bounce,5,17,skin);
+      p(9,32+bounce,6,11,'#253c45');p(18,32+bounce,6,11,'#253c45');
+      p(11,12+bounce,3,2,'#1c252b');p(19,12+bounce,3,2,'#1c252b');
+      p(7,19+bounce,18,4,accent);p(12,26+bounce,8,4,skin);
+      if(kind==='hero'){p(9,6+bounce,14,4,'#324d52');p(22,23+bounce,5,11,'#d3c184');}
+    }
+    const texture=Texture.from(c);
+    this.tiles.set(key,texture);
+    return texture;
+  }
+  private drawCreature(i:number,kind:string,x:number,y:number,frame:0|1):number{
+    const sprite=this.sprites[i];
+    if(!sprite)return i;
+    sprite.texture=this.creatureTexture(kind,frame);
+    sprite.tint=0xffffff;sprite.alpha=1;
+    sprite.x=x*this.cellW+this.cellW/2;sprite.y=y*this.cellH+this.cellH/2;
+    sprite.width=this.cellW;sprite.height=this.cellH;sprite.visible=true;
+    return i+1;
+  }
   private allocateSprites():void{
     for(let i=0;i<this.viewW*this.viewH+250;i++){
       const sprite=new Sprite(this.texture('.'));
@@ -189,14 +267,15 @@ export class PixiAsciiRenderer {
     for(const npc of [...(state.zone==='surface'?ACTORS:[]),...settlementCitizens(state.zone,state.tick)]){
       if(state.visible[index(npc.x,npc.y)]!==1)continue;
       const x=npc.x-ox,y=npc.y-oy;if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
-      used=this.drawGlyph(used,npc.glyph,x,y,this.color(npc.color));
+      used=this.artMode==='pixel'?this.drawCreature(used,'npc',x,y,this.reducedMotion?0:(Math.floor(this.ambience/5)%2) as 0|1):this.drawGlyph(used,npc.glyph,x,y,this.color(npc.color));
     }
     for(const enemy of state.enemies){
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
       const x=enemy.x-ox,y=enemy.y-oy;if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
       const def=ENEMY_DEFS[enemy.kind],elite=enemy.id.startsWith('elite-');
       if(state.targetId===enemy.id||elite)this.backdrop.rect(x*this.cellW,y*this.cellH,this.cellW,this.cellH).stroke({width:1.5,color:elite?0xef92fc:0xffcb72,alpha:.9});
-      used=this.drawGlyph(used,elite?'◆':def.glyph,x,y,elite?0xecb9ff:this.color(def.color));
+      const pose=(this.reducedMotion?0:Math.floor(this.ambience/6+enemy.x+enemy.y)%2) as 0|1;
+      used=this.artMode==='pixel'?this.drawCreature(used,elite?'elite':enemy.kind,x,y,pose):this.drawGlyph(used,elite?'◆':def.glyph,x,y,elite?0xecb9ff:this.color(def.color));
       const health=Math.max(0,Math.min(1,enemy.hp/def.hp));
       if(health<1){this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,this.cellW-2,2).fill(0x492c33);this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,(this.cellW-2)*health,2).fill(health>.45?0xdcbf83:0xee7373);}
     }
@@ -207,7 +286,8 @@ export class PixiAsciiRenderer {
       // Player remains unmistakable among the textured tiles.
       this.backdrop.circle(px*this.cellW+this.cellW/2,py*this.cellH+this.cellH/2,this.cellW*.44).fill({color:0xf6d593,alpha:.24});
     }
-    used=this.drawGlyph(used,'@',px,py,state.stats.hp>0?0xffe1a0:0xc78487);
+    const heroPose=(this.reducedMotion?0:Math.floor(this.ambience/6)%2) as 0|1;
+    used=this.artMode==='pixel'?this.drawCreature(used,'hero',px,py,heroPose):this.drawGlyph(used,'@',px,py,state.stats.hp>0?0xffe1a0:0xc78487);
     const timeLeft=this.effectUntil-performance.now();
     if(timeLeft>0&&!this.reducedMotion){
       const phase=1-timeLeft/300,color=this.effectKind==='mutation'?0xbda5ff:this.effectKind==='damage'?0xff6b74:this.effectKind==='attack'?0xffcb81:0x8de3dc;
@@ -236,7 +316,7 @@ export class PixiAsciiRenderer {
       if(now-this.lastAmbient>=125){
         this.lastAmbient=now;
         const biome=biomeAt(this.state.seed,this.state.player.x,this.state.player.y);
-        if(this.state.fields.length>0||weatherAt(this.state.seed,this.state.tick,biome)!=='calma'||this.effectUntil>now)this.draw(this.state);
+        if(this.artMode==='pixel'||this.state.fields.length>0||weatherAt(this.state.seed,this.state.tick,biome)!=='calma'||this.effectUntil>now)this.draw(this.state);
       }
       this.ambientFrame=requestAnimationFrame(loop);
     };
