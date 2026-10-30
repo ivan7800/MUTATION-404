@@ -26,7 +26,7 @@ function battle(seed,kind,weapon){
      let command;
      if(weapon==='fire'&&dist<=6&&stackCount(s.inventory,'ammo')>0)command={type:'fire'};
      else if(dist===1)command={type:'attack'};
-     else command={type:'move',dx:Math.sign(enemy.x-s.player.x),dy:0};
+     else {const dx=Math.sign(enemy.x-s.player.x);command={type:'move',dx,dy:dx===0?Math.sign(enemy.y-s.player.y):0};}
      // Combat decisions respect the original world rules: no direct HP edits.
      const response=dispatch(s,command);
      if(response.accepted){actions++;if(command.type==='attack'||command.type==='fire')attacks++;}
