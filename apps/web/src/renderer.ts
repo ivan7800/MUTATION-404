@@ -20,6 +20,27 @@ export class AsciiRenderer {
   private effectUntil=0;
   private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
   private effectFrame=0;
+  private ambientFrame=0;
+  private ambientLast=0;
+  /** Animated climate redraws are throttled and suspended when the tab is hidden. */
+  startAmbience():void{
+    if(this.reducedMotion||this.ambientFrame)return;
+    const loop=(time:number):void=>{
+      this.ambientFrame=0;
+      if(document.visibilityState==='hidden'||!this.lastState)return;
+      if(time-this.ambientLast>=125){
+        this.ambientLast=time;
+        const state=this.lastState;
+        if(state.fields.length>0||weatherAt(state.seed,state.tick,biomeAt(state.seed,state.player.x,state.player.y))!=='calma')this.draw(state);
+      }
+      this.ambientFrame=requestAnimationFrame(loop);
+    };
+    this.ambientFrame=requestAnimationFrame(loop);
+  }
+  pauseAmbience():void{
+    if(this.ambientFrame)cancelAnimationFrame(this.ambientFrame);
+    this.ambientFrame=0;
+  }
   /** Cosmetic-only bursts: never advance simulation time or consume RNG. */
   effect(state:GameState,kind:'attack'|'mutation'|'scan'|'damage'):void{
     if(this.reducedMotion)return;
@@ -92,6 +113,18 @@ export class AsciiRenderer {
       }
       ctx.fillStyle=coordsForZone(state.zone)?(tile==='.'||tile==='*'||tile===','?def.palette:COLORS[tile]):(tile==='#'?'#506070':tile==='.'?'#839aab':COLORS[tile]);
       ctx.fillText(tile,px,py);
+      // Lighting never reveals fog-of-war tiles or changes the core simulation.
+      if(visible){
+        const distance=Math.hypot(x-state.player.x,y-state.player.y);
+        const radius=timeNight?7:12;
+        const dim=Math.min(timeNight?.64:.30,Math.max(0,(distance-radius*.35)/radius)*(timeNight?.58:.30));
+        if(dim>0){ctx.globalAlpha=dim;ctx.fillStyle='#020811';ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);}
+        if(tile==='T'||tile==='o'||tile==='?'||tile==='+'||tile==='~'){
+          const shimmer=this.reducedMotion?.45:.45+.2*Math.sin(this.ambience*.14+x*.3+y);
+          ctx.globalAlpha=(tile==='~'?.12:.25)*shimmer;ctx.fillStyle=tile==='~'?'#8fe8ef':'#e4c89f';
+          ctx.fillRect(cx*this.cellW+1,cy*this.cellH-2,this.cellW-2,2);
+        }
+      }
     }
     ctx.globalAlpha=1;
     for(const field of state.fields){
@@ -142,6 +175,10 @@ export class AsciiRenderer {
 
     }
     const px=(state.player.x-ox)*this.cellW,py=(state.player.y-oy)*this.cellH;
+    // Orientation glow emphasizes the errant without making hidden tiles visible.
+    const glow=ctx.createRadialGradient(px+this.cellW/2,py+this.cellH/2,2,px+this.cellW/2,py+this.cellH/2,this.cellW*3.5);
+    glow.addColorStop(0,'#f8b85a30');glow.addColorStop(1,'#f8b85a00');
+    ctx.globalAlpha=1;ctx.fillStyle=glow;ctx.fillRect(px-this.cellW*3,py-this.cellH*2,this.cellW*7,this.cellH*5);
     ctx.shadowColor=state.stats.hp>0?'#ffe29a':'#c78487';ctx.shadowBlur=this.reducedMotion?5:9;
     ctx.fillStyle=state.stats.hp>0?'#4c3825':'#3e1b22';ctx.fillRect(px,py,this.cellW,this.cellH);
     ctx.fillStyle=state.stats.hp>0?'#ffe29a':'#c78487';ctx.fillText('@',px+this.cellW/2,py+this.cellH/2);
