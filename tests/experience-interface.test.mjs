@@ -20,3 +20,11 @@ test('exploration panel presents current ruin identity instead of generic subter
  assert.match(ui,/ruinTheme\?\.name\?\?biomeDef\.name/);
  assert.match(ui,/ruinTheme\?\.lore\?\?biomeDef\.sound/);
 });
+
+test('v2.6 HUD conveys medicine, ammunition and critical-health warnings',()=>{
+ assert.match(ui,/id="survival-strip"/);
+ assert.match(ui,/criticalHp=state\.stats\.hp/);
+ assert.match(ui,/kits=stackCount\(state\.inventory,'medkit'\)/);
+ assert.match(ui,/ammo=stackCount\(state\.inventory,'ammo'\)/);
+ assert.match(ui,/data-risk="stable"/);
+});
