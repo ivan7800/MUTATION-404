@@ -1,4 +1,4 @@
-import { createGame, deserialize, dispatch, RECIPES, RESOURCE_INFO, MUTATIONS, biomeAt, BIOMES, weatherAt, WEATHER, ENEMY_DEFS, formatClock, HEIGHT, ITEM_DEFS, LANDMARKS, MARKET, ZONE_NAMES, ruinName, SECTORS, coordsForZone, sectorName, serialize, stackCount, WIDTH, xpNeeded, TASKS, GOODS, priceFor, settlementCitizens, exteriorForInterior, type Command, type GameState, type ItemId, type MutationId } from '../../../packages/core/src/game.js';
+import { createGame, deserialize, dispatch, RECIPES, RESOURCE_INFO, MUTATIONS, biomeAt, BIOMES, weatherAt, WEATHER, ENEMY_DEFS, formatClock, HEIGHT, ITEM_DEFS, LANDMARKS, MARKET, ZONE_NAMES, ruinName, SECTORS, coordsForZone, sectorName, serialize, stackCount, WIDTH, xpNeeded, TASKS, GOODS, priceFor, settlementCitizens, exteriorForInterior, campaignProgress, campaignObjective, campaignArchiveList, endingStory, type Command, type GameState, type ItemId, type MutationId } from '../../../packages/core/src/game.js';
 import { index } from '../../../packages/core/src/world.js';
 import { parseRuin, themeForRuin } from '../../../packages/core/src/depths.js';
 import { AsciiRenderer } from './renderer.js';
@@ -82,7 +82,7 @@ function safeVolume():number{
 audio.setVolume(safeVolume());
 
 let state:GameState=createGame(404);
-let modalMode:'dialogue'|'journal'|'help'|'inventory'|'atlas'|'mutations'|'market'|'regional-market'|'craft'|'ecology'|null=null;
+let modalMode:'dialogue'|'journal'|'help'|'inventory'|'atlas'|'mutations'|'market'|'regional-market'|'craft'|'ecology'|'epilogue'|null=null;
 let stepCount=0;
 const write=(selector:string,text:string)=>{$<HTMLElement>(selector).textContent=text;};
 const escapeHtml=(s:string):string=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c));
@@ -142,9 +142,12 @@ function draw():void{
   const log=$<HTMLElement>('#log');log.replaceChildren();
   state.log.slice(-9).reverse().forEach((line,i)=>{const p=document.createElement('p');p.className=i===0?'latest':'';p.textContent=line;log.appendChild(p);});
   const q=state.quest;
+  const campaign=campaignObjective(state),milestone=campaignProgress(state);
   write('#quest-name',q.status==='completed'?'Eco bajo la sal — COMPLETADA':'Eco bajo la sal');
   const summary=q.status==='undiscovered'?'Habla con Mara Venn (M), en la plaza.':q.status==='active'?'Investiga la Torre del Nudo (79,13). El fusible está en la caravana (12,10).':q.status==='signal-found'?'Regresa a Faro Ciego e informa a Mara Venn.':`La señal fue ${q.outcome==='broadcast'?'difundida':'aislada'}. Tus actos han dejado una huella.`;
-  write('#quest-text',summary);write('#quest-state',q.status==='undiscovered'?'● SIN INICIAR':q.status==='active'?'● ACTIVA':q.status==='signal-found'?'● INFORMAR A MARA':'✓ COMPLETADA');
+  write('#quest-text',q.status==='completed'?campaign.description:summary);
+  write('#quest-name',q.status==='completed'?campaign.title:'Eco bajo la sal');
+  write('#quest-state',milestone.ending?'✓ CAMPAÑA COMPLETA':q.status==='completed'?`◈ ARCHIVOS ${milestone.archives}/8 · CUSTODIOS ${milestone.guardians}/8`:q.status==='undiscovered'?'● SIN INICIAR':q.status==='active'?'● ACTIVA':'● INFORMAR A MARA');
   const stats=state.stats;
   write('#hp-text',`${stats.hp} / ${stats.maxHp}`);write('#focus-text',`${stats.focus} / ${stats.maxFocus}`);
   write('#level',`NV ${stats.level}`);write('#xp-text',`${stats.xp}/${xpNeeded(stats.level)}`);
@@ -177,7 +180,14 @@ function showModal(title:string,body:string,options:{id:string;label:string}[],m
     const btn=document.createElement('button');btn.className='modal-option';btn.textContent=`${i+1}. ${o.label}`;
     btn.addEventListener('click',()=>{
       if(mode==='dialogue'){
-        const result=dispatch(state,{type:'choose',option:o.id});closeModal();if(result.accepted)save(true);draw();if(o.id==='shop')market();if(o.id==='regional-market')regionalMarket();
+        const result=dispatch(state,{type:'choose',option:o.id});
+        closeModal();if(result.accepted)save(true);draw();
+        if(o.id.startsWith('finale-')&&result.accepted){
+          const choice=o.id.slice(7) as 'bind'|'release'|'erase';
+          const story=endingStory(choice,state.quest.outcome==='broadcast'?'broadcast':'isolate');
+          showModal(story.title,`<p class="modal-lead">${escapeHtml(story.description)}</p><p>CAMPAÑA COMPLETADA — NÁCAR RECORDARÁ TU DECISIÓN</p><p>Los ocho archivos y las rutas secundarias permanecen disponibles. Puedes seguir explorando, o regresar al menú principal para iniciar otra aventura.</p><p class="epilogue-credits">MUTATION 404 · EL DESPERTAR DE NÁCAR<br/>FIN DE LA CAMPAÑA</p>`,[{id:'close',label:'Continuar explorando'}],'epilogue');
+        }
+        if(o.id==='shop')market();if(o.id==='regional-market')regionalMarket();
       }else if(mode==='mutations'&&o.id!=='close'){
         actFromModal({type:'unlock',mutation:o.id as MutationId});
       }else if(mode==='regional-market'&&o.id!=='close'){
@@ -248,7 +258,10 @@ function regionalMarket():void{
 function journal():void{
   if(modalMode)return;
   const status=state.quest.status;
-  const body=`<p class="modal-lead">REGISTRO DE LA FRECUENCIA</p><p>${escapeHtml(status==='undiscovered'?'Mara Venn parece querer hablar contigo.':status==='active'?'Viaja a la torre del noreste. La caravana del noroeste puede ayudarte.':status==='signal-found'?'La transmisión ha sido procesada. Tienes que informar a Mara.':`Misión finalizada: ${state.quest.outcome==='broadcast'?'la señal se difundió':'la señal fue aislada'}.`)}</p><h3>Botín y combate</h3><p>Enemigos derrotados: ${state.kills}. Nivel ${state.stats.level}. Enemigos visibles: ${state.enemies.filter(e=>e.hp>0&&state.visible[index(e.x,e.y)]).length}.</p><h3>Archivo de ecosistemas (${state.biomeNotes.length}/6)</h3><ul>${state.biomeNotes.map(id=>`<li><strong>${escapeHtml(BIOMES[id].name)}</strong> — ${escapeHtml(BIOMES[id].lore)}</li>`).join('')||'<li>Sin lecturas. Sondea con R en el exterior.</li>'}</ul><h3>Profundidades y facciones</h3><p>Localización: ${escapeHtml((coordsForZone(state.zone)||exteriorForInterior(state.zone)?currentLocation():ruinName(state.zone)))}. Reputación Ferral: ${state.reputation.ferral}; Concordia: ${state.reputation.concordia}. Acontecimientos: ${state.events.map(escapeHtml).join(', ')||'ninguno'}.</p><h3>Encargos regionales</h3><ul>${TASKS.filter(t=>state.civilization.active.includes(t.id)||state.civilization.completed.includes(t.id)).map(t=>`<li>${escapeHtml(t.title)} · ${state.civilization.completed.includes(t.id)?'COMPLETADO':'ACTIVO · entrega '+t.required+' chatarra'}</li>`).join('')||'<li>Habla con los cronistas (?) de las casas comunales para conseguir encargos.</li>'}</ul><h3>Mutaciones</h3><p>Genoma ${state.genome.unlocked.length}/9 · Puntos genéticos ${state.genome.genePoints}. Pulsa U para evolucionar.</p><h3>Inventario de misión</h3><p>${state.quest.fuseFound?'◈ Fusible cerámico de Caravana Quietud':'Ningún objeto de misión.'}</p><h3>Lugares descubiertos</h3><ul>${LANDMARKS.filter(p=>state.discoveries.includes(p.id)).map(p=>`<li><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.description)}</li>`).join('')}</ul>`;
+  const campaign=campaignProgress(state),objective=campaignObjective(state);
+  const archives=campaignArchiveList(state).map(site=>`<li>${site.archive?'✓':'○'} <strong>${escapeHtml(site.name)}</strong> — Reliquia: ${site.archive?'recuperada':'pendiente'} · Custodio: ${site.guardian?'derrotado y documentado':'pendiente'}</li>`).join('');
+  const campaignSection=`<h3>CAMPAÑA DE NÁCAR · ${escapeHtml(objective.title)}</h3><p class="modal-lead">${escapeHtml(objective.description)}</p><p>Testigos ${campaign.archives}/8 · Custodios ${campaign.guardians}/8 · CERO-7 ${campaign.heartFound?'descubierto':'pendiente'}</p><ul>${archives}</ul>`;
+  const body=`<p class="modal-lead">REGISTRO DE LA FRECUENCIA</p>${campaignSection}<p>${escapeHtml(status==='undiscovered'?'Mara Venn parece querer hablar contigo.':status==='active'?'Viaja a la torre del noreste. La caravana del noroeste puede ayudarte.':status==='signal-found'?'La transmisión ha sido procesada. Tienes que informar a Mara.':`Misión finalizada: ${state.quest.outcome==='broadcast'?'la señal se difundió':'la señal fue aislada'}.`)}</p><h3>Botín y combate</h3><p>Enemigos derrotados: ${state.kills}. Nivel ${state.stats.level}. Enemigos visibles: ${state.enemies.filter(e=>e.hp>0&&state.visible[index(e.x,e.y)]).length}.</p><h3>Archivo de ecosistemas (${state.biomeNotes.length}/6)</h3><ul>${state.biomeNotes.map(id=>`<li><strong>${escapeHtml(BIOMES[id].name)}</strong> — ${escapeHtml(BIOMES[id].lore)}</li>`).join('')||'<li>Sin lecturas. Sondea con R en el exterior.</li>'}</ul><h3>Profundidades y facciones</h3><p>Localización: ${escapeHtml((coordsForZone(state.zone)||exteriorForInterior(state.zone)?currentLocation():ruinName(state.zone)))}. Reputación Ferral: ${state.reputation.ferral}; Concordia: ${state.reputation.concordia}. Acontecimientos: ${state.events.map(escapeHtml).join(', ')||'ninguno'}.</p><h3>Encargos regionales</h3><ul>${TASKS.filter(t=>state.civilization.active.includes(t.id)||state.civilization.completed.includes(t.id)).map(t=>`<li>${escapeHtml(t.title)} · ${state.civilization.completed.includes(t.id)?'COMPLETADO':'ACTIVO · entrega '+t.required+' chatarra'}</li>`).join('')||'<li>Habla con los cronistas (?) de las casas comunales para conseguir encargos.</li>'}</ul><h3>Mutaciones</h3><p>Genoma ${state.genome.unlocked.length}/9 · Puntos genéticos ${state.genome.genePoints}. Pulsa U para evolucionar.</p><h3>Inventario de misión</h3><p>${state.quest.fuseFound?'◈ Fusible cerámico de Caravana Quietud':'Ningún objeto de misión.'}</p><h3>Lugares descubiertos</h3><ul>${LANDMARKS.filter(p=>state.discoveries.includes(p.id)).map(p=>`<li><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.description)}</li>`).join('')}</ul>`;
   showModal('DIARIO DE CAMPO',body,[{id:'close',label:'Cerrar el diario'}],'journal');
 }
 function atlas():void{
