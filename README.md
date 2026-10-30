@@ -1,3 +1,21 @@
+# MUTATION 404 v1.9 — Nácar WebGL
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Renderizador PixiJS real
+- **PixiJS 8 con WebGL**: motor GPU para el mapa ASCII y las entidades, con atlas de glifos reutilizables, sprites agrupados, colores por bioma, enemigos, campos ambientales, objetivos y minimapa.
+- **Respaldo Canvas 2D**: si WebGL no está disponible o falla la inicialización, el juego conserva el renderizador anterior y sus controles.
+- **Compilación portable mediante Vite**: dependencias PixiJS empaquetadas en `play/assets/`. No se requiere CDN ni backend para cargar el juego desde GitHub Pages.
+- **Sin migración de guardados**: la lógica de turnos, las zonas y la serialización no cambian.
+
+## Validación automatizada de navegador
+GitHub Actions ejecuta comprobación estricta TypeScript, pruebas del motor y compilación web; después lanza Chromium en modo WebGL y en modo de respaldo forzado. Comprueba mapa visible, movimiento, ayuda, zoom, guardar/cargar y errores del navegador. Las capturas completas y el informe JSON se adjuntan a cada ejecución como artefacto `mutation-404-browser-qa`.
+
+## Limitaciones pendientes
+La comprobación automatizada no reemplaza el juicio de una revisión artística humana, una partida completa de varias horas ni pruebas en tarjetas gráficas de diferentes fabricantes. Seguimos midiendo rendimiento y accesibilidad antes de afirmar una puntuación de 9,5/10.
+
+---
+
 # MUTATION 404 v1.8 — Nácar atmosférico
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
