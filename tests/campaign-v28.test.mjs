@@ -81,7 +81,7 @@ test('Nácar phase hazards are deterministic, signalled and compatible with save
  const saved=deserialize(serialize(s));
  assert.deepEqual(saved.fields,s.fields);
  const phaseOne=s.fields.length;
- g.hp=15;
+ g.hp=25;
  s.tick=700;
  dispatch(s,{type:'wait'});
  assert.ok(s.fields.some(f=>f.kind==='spores'),'phase 2 introduces spores');
