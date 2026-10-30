@@ -175,12 +175,12 @@ function advance(s:GameState,cost:number):void {
     message(s,`ATMÓSFERA // ${WEATHER[weather].name}: ${WEATHER[weather].description}`);
     s.lastWeather=weather;
   }
-  if(s.tick>0&&Math.floor(s.tick/100)%13===0&&!inFaro(s.player)){
+  if(s.tick>0&&Math.floor(s.tick/100)%13===0&&!(s.zone==='surface'&&inFaro(s.player))){
     const samples=AMBIENT_ECHOES[biome];
     const selected=Math.floor(terrainHash(s.seed,Math.floor(s.tick/1300),s.player.x+s.player.y)*samples.length);
     message(s,`ECO // ${samples[selected]}`);
   }
-  const sheltered=inFaro(s.player);
+  const sheltered=s.zone==='surface'&&inFaro(s.player);
   s.environmentalTurns++;
   if(sheltered){
     s.exposure=Math.max(0,s.exposure-4);
@@ -440,7 +440,7 @@ export function dispatch(s:GameState, command:Command):ActionResult {
         enemy.hp=Math.max(0,enemy.hp-damage);enemy.stunned=Math.max(enemy.stunned??0,1);
         const dx=Math.sign(enemy.x-s.player.x),dy=Math.sign(enemy.y-s.player.y);
         const push=(Math.abs(dx)>Math.abs(dy))?{x:enemy.x+dx,y:enemy.y}:{x:enemy.x,y:enemy.y+dy};
-        if(enemy.hp>0&&within(push.x,push.y)&&passable(s.tiles[index(push.x,push.y)])&&!enemyAt(s,push.x,push.y)&&!ACTORS.some(a=>a.x===push.x&&a.y===push.y)&&!inFaro(push)){
+        if(enemy.hp>0&&within(push.x,push.y)&&passable(s.tiles[index(push.x,push.y)])&&!enemyAt(s,push.x,push.y)&&!ACTORS.some(a=>a.x===push.x&&a.y===push.y)&&!(s.zone==='surface'&&inFaro(push))){
           enemy.x=push.x;enemy.y=push.y;
         }
         message(s,`PULSO CINÉTICO // ${ENEMY_DEFS[enemy.kind].name} sufre ${damage} PV, retrocede y queda aturdido.`);
@@ -674,7 +674,7 @@ export function deserialize(raw:string):GameState{
     const game:GameState={...s,version:11,ecology:initialEcology(),civilization:{active:[],completed:[]},zone:'surface',zones:{},reputation:{ferral:0,concordia:0},events:[],stats:{...INITIAL_STATS},inventory:INITIAL_INVENTORY.map(x=>({...x})),equipment:{...INITIAL_EQUIPMENT},enemies:spawnEnemies(s.tiles),ground:[],targetId:null,kills:0,visible:[],dialogue:null,
       genome:initialGenome(),fields:initialFields(s.seed!,s.tiles!),exposure:0,biomeNotes:[],lastBiome:biomeAt(s.seed!,s.player!.x,s.player!.y),
       lastWeather:weatherAt(s.seed!,s.tick!,biomeAt(s.seed!,s.player!.x,s.player!.y)),environmentalTurns:0} as GameState;
-    if(inFaro(game.player))game.log.push('MIGRACIÓN // Partida v0.1 conservada. Nuevos peligros detectados fuera de Faro Ciego.');
+    if(game.zone==='surface'&&inFaro(game.player))game.log.push('MIGRACIÓN // Partida v0.1 conservada. Nuevos peligros detectados fuera de Faro Ciego.');
     refreshVisibility(game);return game;
   }
   const validItem=(v:unknown):v is ItemId=>typeof v==='string'&&Object.hasOwn(ITEM_DEFS,v);
