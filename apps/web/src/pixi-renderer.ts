@@ -36,6 +36,7 @@ export class PixiAsciiRenderer {
   private readonly flashes=new Map<string,{until:number;heavy:boolean}>();
   private readonly echoes:{x:number;y:number;until:number}[]=[];
   private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
+  private mutationEffect:'kinetic-pulse'|'neural-shock'|'pyrokinesis'|'phase-step'|null=null;
   private reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private readonly viewW=47;
   private readonly viewH=27;
@@ -311,6 +312,31 @@ export class PixiAsciiRenderer {
     const heroPose=(this.reducedMotion?0:Math.floor(this.ambience/6)%2) as 0|1;
     used=this.artMode==='pixel'?this.drawCreature(used,'hero',px,py,heroPose):this.drawGlyph(used,'@',px,py,state.stats.hp>0?0xffe1a0:0xc78487);
     const timeLeft=this.effectUntil-performance.now();
+    if(timeLeft>0&&this.mutationEffect&&!this.reducedMotion){
+      const progress=Math.min(1,Math.max(0,1-timeLeft/420));
+      const x=(px+.5)*this.cellW,y=(py+.5)*this.cellH;
+      const colors={'kinetic-pulse':0xe5b985,'neural-shock':0x9be9ff,'pyrokinesis':0xff875f,'phase-step':0xc19df7} as const;
+      const color=colors[this.mutationEffect];
+      if(this.mutationEffect==='kinetic-pulse'){
+        for(let i=0;i<3;i++)this.backdrop.circle(x,y,9+progress*72+i*11).stroke({color,width:Math.max(.5,2-progress*1.4),alpha:(1-progress)*.5});
+      }else if(this.mutationEffect==='pyrokinesis'){
+        for(let i=0;i<11;i++){
+          const a=i*2.399+progress,dist=4+progress*(17+i%4*4);
+          this.backdrop.circle(x+Math.cos(a)*dist,y-Math.abs(Math.sin(a)*dist),2+(i%3)).fill({color,alpha:1-progress});
+        }
+      }else if(this.mutationEffect==='neural-shock'){
+        for(let i=0;i<8;i++){
+          const a=i*Math.PI/4,d=7+progress*62;
+          this.backdrop.moveTo(x+Math.cos(a)*7,y+Math.sin(a)*7).lineTo(x+Math.cos(a)*d,y+Math.sin(a)*d).stroke({color,width:1.7,alpha:1-progress});
+        }
+      }else{
+        for(let i=0;i<4;i++){
+          const offset=(i-1.5)*(5+progress*14);
+          this.backdrop.rect(x+offset-4,y-18-progress*12,8,36+progress*24).stroke({color,width:1.6,alpha:(1-progress)*.7});
+        }
+      }
+    }
+    if(timeLeft<=0)this.mutationEffect=null;
     if(timeLeft>0&&!this.reducedMotion){
       const phase=1-timeLeft/300,color=this.effectKind==='mutation'?0xbda5ff:this.effectKind==='damage'?0xff6b74:this.effectKind==='attack'?0xffcb81:0x8de3dc;
       this.backdrop.circle(px*this.cellW+this.cellW/2,py*this.cellH+this.cellH/2,7+phase*80).stroke({color,width:2,alpha:1-phase});
@@ -346,6 +372,13 @@ export class PixiAsciiRenderer {
   effect(state:GameState,kind:'attack'|'mutation'|'scan'|'damage'):void{
     if(this.reducedMotion)return;
     this.effectKind=kind;this.effectUntil=performance.now()+300;
+    this.draw(state);
+  }
+  mutationFeedback(state:GameState,mutation:'kinetic-pulse'|'neural-shock'|'pyrokinesis'|'phase-step'):void{
+    if(this.reducedMotion)return;
+    this.mutationEffect=mutation;
+    this.effectKind='mutation';
+    this.effectUntil=performance.now()+420;
     this.draw(state);
   }
   startAmbience():void{
