@@ -108,3 +108,13 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .modal-card{scrollbar-color:#657f6c #091518}
 @media(max-width:620px){.toolbar{line-height:1.75}.actionbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.action{width:100%;font-size:10px;min-height:46px}.viewport{scrollbar-width:thin}}
 @media(prefers-reduced-motion:reduce){.world-canvas{filter:none;box-shadow:0 0 0 1px #5b8776}.viewport:before{display:none}}
+
+/* v2.0 vertical slice: an accessible, actual rendering mode switch */
+#art-mode-btn{min-width:134px;padding:7px 12px;min-height:38px;border:1px solid #b59c64;border-radius:5px;color:#ffdf9e;background:linear-gradient(130deg,#192b2b,#2b2838);font-size:11px;font-weight:800;letter-spacing:.04em;cursor:pointer}
+#art-mode-btn[aria-pressed="true"]{border-color:#e8c983;box-shadow:inset 0 0 0 1px #d8bb6c33,0 0 14px #ceb4701a}
+#art-mode-btn:hover{background:#30423d}
+#art-mode-btn:focus-visible{outline:2px solid #ffe5a6;outline-offset:3px}
+#viewport[data-art-mode="pixel"] .pixi-canvas{image-rendering:pixelated;filter:contrast(1.04) saturate(1.16)}
+#viewport[data-art-mode="ascii"] .pixi-canvas{image-rendering:crisp-edges;filter:contrast(1.13)}
+@media(max-width:540px){#art-mode-btn{min-width:110px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){#viewport .pixi-canvas{filter:none!important}}
