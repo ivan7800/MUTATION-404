@@ -1,3 +1,18 @@
+# MUTATION 404 v1.6 — Las profundidades conscientes
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Cambios
+- Vigías de cobre: preparan una descarga eléctrica señalizada en la casilla del jugador. El daño se aplica en el siguiente turno ambiental, así que es posible esquivarlo.
+- Pastores de esporas heridos: intentan huir cuando ven al jugador.
+- Segundo estrato de las ocho ruinas: estabilizar una resonancia neutraliza campos peligrosos cercanos; absorberla despierta un guardián de ferrita persistente y modifica los caminos adyacentes.
+- Guardados: se conserva el esquema 11; los guardianes, campos y modificaciones se guardan en la memoria de zona. Se añaden pruebas de regresión.
+- Renderizado: sigue siendo Canvas 2D. No se ha integrado PixiJS ni se ha realizado QA visual interactiva completa.
+
+Para compilar y probar: `npm run typecheck && npm run test:core && npm run build:offline`.
+
+---
+
 # MUTATION 404 v1.5 — El despertar de Nácar
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
