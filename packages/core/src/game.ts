@@ -223,8 +223,10 @@ function killEnemy(s:GameState,e:Enemy):void{
   awardExperience(s,def.xp);
   const drop:ItemId=(e.kind==='crawler'||e.kind==='moth')?'carapace':(e.kind==='sentinel'||e.kind==='drone')?'capacitor':'scrap';
   s.ground.push({id:`loot-${e.id}`,x:e.x,y:e.y,item:drop,count:1});
-  // Small deterministic ammunition / medicine replenishment from encounters.
-  if(rngRoll(s,1,100)<=35)s.ground.push({id:`bonus-${e.id}`,x:e.x,y:e.y,item:e.kind==='sentinel'?'ammo':'medkit',count:e.kind==='sentinel'?3:1});
+  // Mechanical hostiles may yield spare projectiles; organic foes can leave medicine.
+  // Keep the original 35% bonus chance, but prevent drones from being medicine factories.
+  const mechanical=e.kind==='sentinel'||e.kind==='drone';
+  if(rngRoll(s,1,100)<=35)s.ground.push({id:`bonus-${e.id}`,x:e.x,y:e.y,item:mechanical?'ammo':'medkit',count:mechanical?(e.kind==='sentinel'?3:2):1});
   if(s.kills===3){s.ground.push({id:'upgrade-rifle',x:e.x,y:e.y,item:'rifle',count:1});message(s,'HALLAZGO // Un arma de bobina aparece entre los restos.');}
   if(s.kills===6){s.ground.push({id:'upgrade-armor',x:e.x,y:e.y,item:'shell-armor',count:1});message(s,'HALLAZGO // Una coraza de médula permanece intacta.');}
   if(s.targetId===e.id)s.targetId=null;
