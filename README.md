@@ -1,3 +1,21 @@
+# MUTATION 404 v1.8 — Nácar atmosférico
+
+**Jugar:** https://ivan7800.github.io/MUTATION-404/
+
+## Novedades visuales
+- Atenuación graduada de las celdas **ya visibles** según distancia al personaje y ciclo nocturno; las casillas no descubiertas nunca se iluminan.
+- Luz cálida alrededor del errante y brillos sutiles en terminales, agua y estructuras anómalas.
+- Animación ambiental del mapa limitada a unos 8 FPS cuando existen efectos o clima activo; se suspende al ocultar la pestaña y no se inicia cuando está solicitada la reducción de movimiento.
+- Paneles, contraste, botones y navegación táctil más legibles.
+- Nuevas pruebas automatizadas del renderizador y del ciclo de animación.
+
+## Compatibilidad y límites
+Se mantiene Canvas 2D y el formato de guardado **11**, sin cambios de reglas ni alteración de partidas. No se afirma haber integrado PixiJS/WebGL ni realizado auditoría visual completa en navegador.
+
+El workflow GitHub Actions ejecuta `npm run typecheck`, `npm run test:core` y `npm run build:offline` antes de publicar `play/` a Pages.
+
+---
+
 # MUTATION 404 v1.7 — Los guardianes del eco
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
