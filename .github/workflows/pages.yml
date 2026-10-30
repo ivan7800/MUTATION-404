@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   pages: write
+  issues: write
   id-token: write
 
 concurrency:
@@ -38,6 +39,20 @@ jobs:
           test -f play/js/apps/web/src/main.js
           grep -Eq 'assets/index-[^" ]+\\.js' play/index.html
           test -n "$(find play/assets -name '*.js' -print -quit)"
+      - name: Diagnose missing Pages assets
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo 'CI v1.9 generated files diagnostic'
+            echo
+            echo '### Repository root'; pwd
+            echo '### Play tree'; find play -maxdepth 4 -type f | head -n 75
+            echo '### Play HTML'; cat play/index.html || true
+            echo '### Dist web tree'; find dist/web -maxdepth 3 -type f 2>/dev/null | head -n 40 || true
+          } > qa-build-diagnostic.md
+          gh issue create --title 'Temporary v1.9 Pages bundle diagnostic' --body-file qa-build-diagnostic.md
       - name: Install Chrome for visual QA
         id: chrome
         uses: browser-actions/setup-chrome@v2
