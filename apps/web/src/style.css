@@ -126,3 +126,10 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 #threat-note[data-level="enemy"]{color:#f4deae}
 #threat-note[data-level="clear"]{color:#b0c5b5}
 @media(prefers-reduced-motion:reduce){#threat-note{transition:none;text-shadow:none!important}}
+
+/* v2.6 survival readiness: persistent, compact status above tactical actions */
+.survival-strip{padding:8px 12px;margin:5px 0;border:1px solid #4a7166;background:#111f22;color:#cbe4d0;font-size:11px;font-weight:700;letter-spacing:.03em;line-height:1.65;border-radius:5px;font-variant-numeric:tabular-nums}
+.survival-strip[data-risk="warning"]{border-color:#bd9d60;color:#f1d5a0}
+.survival-strip[data-risk="critical"]{border-color:#bd676b;color:#ffe0de;background:#311d27}
+@media(max-width:620px){.survival-strip{font-size:10px;padding:9px 10px}}
+@media(prefers-reduced-motion:reduce){.survival-strip{animation:none;transition:none}}
