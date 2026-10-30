@@ -152,7 +152,9 @@ function handleDialogue():void{const d=state.dialogue;if(d)showModal(d.speaker,`
 function act(command:Command):void{
   if(modalMode)return;
   const beforeHp=state.stats.hp;
+  const beforeEnemies=new Map(state.enemies.filter(e=>e.hp>0).map(e=>[e.id,{hp:e.hp,x:e.x,y:e.y}]));
   const result=dispatch(state,command);
+  if(result.accepted&&'combatFeedback' in renderer)renderer.combatFeedback(beforeEnemies,state);
   if(result.accepted){
     const kind=state.stats.hp<beforeHp?'damage':command.type==='cast'?'mutation':command.type==='scan'?'scan':(['attack','fire'].includes(command.type)?'attack':null);
     if(kind){renderer.effect(state,kind);audio.cue(kind);}
