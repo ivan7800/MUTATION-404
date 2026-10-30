@@ -264,6 +264,22 @@ export function dispatch(s:GameState, command:Command):ActionResult {
     if(!s.dialogue||!s.dialogue.options.some(o=>o.id===command.option))return reply(false,0,'Elección no disponible.');
     const option=command.option;s.dialogue=null;
     const task=localTask(s);
+    if(option==='resonance-stabilize'||option==='resonance-harvest'){
+      const r=parseRuin(s.zone),site=r&&r.depth===2&&manhattan(s.player,{x:22,y:12})<=1;
+      if(!site)return reply(false,0,'La resonancia se ha perdido.');
+      const key=`resonance:${s.zone}`;
+      if(s.events.includes(key))return reply(false,0,'Resonancia ya resuelta.');
+      if(option==='resonance-stabilize'){
+        if(!removeStack(s.inventory,'capacitor',1))return reply(false,0,'Necesitas un condensador.');
+        s.exposure=Math.max(0,s.exposure-25);s.stats.focus=Math.min(s.stats.maxFocus,s.stats.focus+8);
+        message(s,'RESONANCIA // El condensador absorbe la frecuencia. Exposición -25, concentración +8.');
+      }else{
+        s.exposure=Math.min(100,s.exposure+18);s.genome.genePoints++;
+        placeField(s.fields,{x:22,y:12,kind:themeForRuin(r!.x,r!.y).hazard,ttl:5});
+        message(s,'RESONANCIA // La frecuencia entra en tu carne. +1 gen, exposición +18; el suelo despierta.');
+      }
+      s.events.push(key);advance(s,100);return reply(true,100,'Decisión de resonancia registrada.');
+    }
     if(option==='accept-task'&&task){
       if(!s.civilization.active.includes(task.id)&&!s.civilization.completed.includes(task.id))s.civilization.active.push(task.id);
       message(s,`ENCARGO REGIONAL // ${task.title}: reúne ${task.required} unidades de chatarra.`);
@@ -418,6 +434,13 @@ export function dispatch(s:GameState, command:Command):ActionResult {
         message(s,`PULSO CINÉTICO // ${ENEMY_DEFS[enemy.kind].name} sufre ${damage} PV, retrocede y queda aturdido.`);
       }else{
         enemy.hp=Math.max(0,enemy.hp-2);enemy.stunned=Math.max(enemy.stunned??0,1);
+        // Burning an active spore cloud causes a short-lived flash and consumes its fuel.
+        const volatile=s.fields.some(f=>f.x===enemy.x&&f.y===enemy.y&&f.kind==='spores');
+        if(volatile){
+          s.fields=s.fields.filter(f=>!(f.x===enemy.x&&f.y===enemy.y&&f.kind==='spores'));
+          const bonus=3;enemy.hp=Math.max(0,enemy.hp-bonus);
+          message(s,'REACCIÓN // Ignición de esporas: explosión biológica (+3 daño).');
+        }
         placeField(s.fields,{x:enemy.x,y:enemy.y,kind:'fire',ttl:4});
         message(s,'IGNICIÓN // Una memoria incendiada prende bajo la criatura. El fuego persistirá.');
       }
@@ -524,6 +547,19 @@ export function dispatch(s:GameState, command:Command):ActionResult {
       }
       message(s,`ARCHIVO DEL SITIO // ${theme.lore} Ya has recuperado la reliquia.`);
       return reply(true,0,'Este archivo ya está documentado.');
+    }
+    if(r&&r.depth===2&&manhattan(s.player,{x:22,y:12})<=1){
+      const key=`resonance:${s.zone}`;
+      if(!s.events.includes(key)){
+        const theme=themeForRuin(r.x,r.y);
+        s.dialogue={speaker:'Resonancia de Nácar',text:`${theme.lore} La frecuencia te ofrece dos opciones: estabilizarla con un condensador o absorberla a costa de tu cuerpo.`,options:[
+          {id:'resonance-stabilize',label:'Estabilizar: gastar 1 condensador, sanar exposición y recuperar concentración.'},
+          {id:'resonance-harvest',label:'Absorber: +1 gen, +18 exposición y peligro ambiental.'},
+          {id:'leave',label:'Alejarse de la resonancia.'}
+        ]};
+        return reply(true,0,'Resonancia descubierta.');
+      }
+      return reply(true,0,'La resonancia ya ha sido resuelta.');
     }
     const citizen=nearbyCitizen(s);
     if(citizen){talkToCitizen(s,citizen);return reply(true,0,`Conversando con ${citizen.name}.`);}
