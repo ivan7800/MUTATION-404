@@ -297,7 +297,15 @@ for(const btn of Array.from(document.querySelectorAll<HTMLButtonElement>('[data-
     act(cmds[btn.dataset.move??'up']);
   });
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&state.stats.hp>0)save(true);});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    renderer.pauseAmbience();
+    if(state.stats.hp>0)save(true);
+  }else{
+    renderer.startAmbience();
+    draw();
+  }
+});
 window.addEventListener('pagehide',()=>{if(state.stats.hp>0)save(true);});
 try{
   const saved=localStorage.getItem(SAVE_KEY)??localStorage.getItem(V09_KEY)??localStorage.getItem(V08_KEY)??localStorage.getItem(V07_KEY)??localStorage.getItem(LAST_KEY)??localStorage.getItem(OLDER_KEY)??localStorage.getItem(OLD_KEY)??localStorage.getItem(PREVIOUS_KEY)??localStorage.getItem(LEGACY_KEY)??localStorage.getItem(FIRST_KEY);
@@ -306,4 +314,4 @@ try{
     if((old.version??0)<10)save(true);
   }
 }catch{state.log.push('ADVERTENCIA // Guardado previo incompatible o dañado.');}
-draw();renderer.focus();
+draw();renderer.startAmbience();renderer.focus();
