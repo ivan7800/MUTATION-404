@@ -54,7 +54,7 @@ test('v2.3 distinct audiovisual mutation feedback is tied to accepted cast comma
   assert.ok(audio.includes("'"+id+"'"),'no synthesized voice for '+id);
   assert.ok(renderer.includes("'"+id+"'"),'no GPU effect for '+id);
  }
- assert.match(audio,/if\(!this\.enabled\|\|!this\.context\)return/);
+ assert.match(audio,/if\(!this\.enabled\|\|!this\.context\|\|!this\.master\)return/);
  assert.match(renderer,/mutationFeedback\(state:GameState/);
  assert.match(main,/audio\.mutationCue\(m\)/);
  assert.match(main,/renderer\.mutationFeedback\(state,m\)/);
