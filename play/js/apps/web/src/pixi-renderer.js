@@ -135,8 +135,8 @@ export class PixiAsciiRenderer {
                 this.flashes.set(enemy.id, { until: now + 320, heavy: before.hp - enemy.hp >= 5 });
         }
         for (const [id, old] of previous)
-            if (!current.has(id) || state.enemies.some(e => e.id === id && e.hp <= 0)) {
-                this.echoes.push({ x: old.x, y: old.y, until: now + 450 });
+            if (old.zone === state.zone && (!current.has(id) || state.enemies.some(e => e.id === id && e.hp <= 0))) {
+                this.echoes.push({ x: old.x, y: old.y, glyph: old.glyph, until: now + 450 });
                 this.flashes.delete(id);
             }
         if (this.echoes.length > 20)
@@ -762,6 +762,9 @@ export class PixiAsciiRenderer {
                 continue;
             }
             const phase = 1 - remaining / 450, cx = (e.x - ox + .5) * this.cellW, cy = (e.y - oy + .5) * this.cellH;
+            const vx = e.x - ox, vy = e.y - oy;
+            if (vx >= 0 && vy >= 0 && vx < this.viewW && vy < this.viewH && state.visible[index(e.x, e.y)] === 1)
+                used = this.drawGlyph(used, `enemy:death:${e.glyph}`, vx, vy, 0xe8a0a0, 1 - phase);
             for (let n = 0; n < 8; n++) {
                 const a = n * Math.PI / 4 + phase * .5, r = 3 + phase * 20;
                 this.backdrop.circle(cx + Math.cos(a) * r, cy + Math.sin(a) * r, Math.max(.5, 2.5 * (1 - phase))).fill({ color: n % 2 ? 0xf5d29c : 0xb6a5ec, alpha: 1 - phase });

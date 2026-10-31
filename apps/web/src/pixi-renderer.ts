@@ -60,7 +60,7 @@ export class PixiAsciiRenderer {
   private ambience=0;
   private effectUntil=0;
   private readonly flashes=new Map<string,{until:number;heavy:boolean}>();
-  private readonly echoes:{x:number;y:number;until:number}[]=[];
+  private readonly echoes:{x:number;y:number;glyph:string;until:number}[]=[];
   private readonly fieldBursts:{x:number;y:number;kind:'fire'|'electric'|'spores';until:number}[]=[];
   private readonly bossBursts:{x:number;y:number;until:number;color:number}[]=[];
   private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
@@ -116,15 +116,15 @@ export class PixiAsciiRenderer {
     }
     if(this.fieldBursts.length>24)this.fieldBursts.splice(0,this.fieldBursts.length-24);
   }
-  combatFeedback(previous:ReadonlyMap<string,{hp:number;x:number;y:number}>,state:GameState):void{
+  combatFeedback(previous:ReadonlyMap<string,{hp:number;x:number;y:number;zone:string;glyph:string}>,state:GameState):void{
     if(this.reducedMotion)return;
     const now=performance.now(),current=new Set(state.enemies.map(e=>e.id));
     for(const enemy of state.enemies){
       const before=previous.get(enemy.id);
       if(before&&enemy.hp<before.hp)this.flashes.set(enemy.id,{until:now+320,heavy:before.hp-enemy.hp>=5});
     }
-    for(const [id,old] of previous)if(!current.has(id)||state.enemies.some(e=>e.id===id&&e.hp<=0)){
-      this.echoes.push({x:old.x,y:old.y,until:now+450});
+    for(const [id,old] of previous)if(old.zone===state.zone&&(!current.has(id)||state.enemies.some(e=>e.id===id&&e.hp<=0))){
+      this.echoes.push({x:old.x,y:old.y,glyph:old.glyph,until:now+450});
       this.flashes.delete(id);
     }
     if(this.echoes.length>20)this.echoes.splice(0,this.echoes.length-20);
@@ -581,6 +581,8 @@ export class PixiAsciiRenderer {
       const e=this.echoes[i],remaining=e.until-currentTime;
       if(remaining<=0){this.echoes.splice(i,1);continue;}
       const phase=1-remaining/450,cx=(e.x-ox+.5)*this.cellW,cy=(e.y-oy+.5)*this.cellH;
+      const vx=e.x-ox,vy=e.y-oy;
+      if(vx>=0&&vy>=0&&vx<this.viewW&&vy<this.viewH&&state.visible[index(e.x,e.y)]===1)used=this.drawGlyph(used,`enemy:death:${e.glyph}`,vx,vy,0xe8a0a0,1-phase);
       for(let n=0;n<8;n++){
         const a=n*Math.PI/4+phase*.5,r=3+phase*20;
         this.backdrop.circle(cx+Math.cos(a)*r,cy+Math.sin(a)*r,Math.max(.5,2.5*(1-phase))).fill({color:n%2?0xf5d29c:0xb6a5ec,alpha:1-phase});

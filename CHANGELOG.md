@@ -8,6 +8,7 @@
 - Movimiento reducido actualizado durante la partida en ambos renderizadores.
 - Siluetas transitorias del protagonista para movimiento, combate, daño, mutación, interacción y muerte.
 - Siluetas de daño para seis enemigos, élites y Nácar en Canvas y WebGL.
+- Marcas ASCII de muerte por enemigo, sin mostrar muertes falsas al cambiar de zona.
 - Pulsaciones rápidas independientes, foco contenido en modales y recuperación desde una copia de guardado válida si el archivo principal está dañado.
 - Instalación reproducible mediante lockfile y npm ci; lanzadores incrementales.
 - Caché versionada por build y scope, assets precargados, manifiesto y prueba offline en subruta.

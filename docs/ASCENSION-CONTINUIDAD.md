@@ -54,9 +54,11 @@ Una prueba funcional de dos versiones del service worker instala v1 y v2 sobre e
 
 Canvas y WebGL comparten ahora siluetas de herida para las seis especies originales, élites y Nácar. Canvas recibe la comparación de PV tras cada turno aceptado y borra los impactos expirados; Pixi usa su registro de impactos existente para elegir la misma composición. No se alteraron daño, IA, turnos ni guardados. La prueba del catálogo ASCII verifica las ocho heridas; build y 154 tests pasaron tras el ajuste final de limpieza. QA de Chromium y prueba offline pasaron antes de ese ajuste menor. Quedan ataques, muerte y coreografía específica de enemigos y revisión humana de legibilidad.
 
+La iteración siguiente añade marcas de muerte ASCII distintas para las mismas ocho clases visuales. Canvas dibuja la marca efímera al desaparecer un enemigo y WebGL la superpone a sus ecos existentes. Ambos verifican que el enemigo pertenecía a la misma zona antes de mostrar muerte, evitando falsos cadáveres al viajar. Las marcas son sólo presentación: 155 tests, typecheck, lint, build, QA de Chromium y prueba offline pasaron. Los ataques específicos de enemigos siguen pendientes.
+
 ## Fases siguientes concretas
 
-1. Afinar la legibilidad y duración de los estados visuales del héroe y heridas de enemigos con revisión humana; completar ataques y muerte específicos de cada enemigo, incluido Nácar.
+1. Afinar la legibilidad y duración de los estados visuales del héroe, heridas y muertes de enemigos con revisión humana; completar ataques específicos de cada enemigo, incluido Nácar.
 2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Perfeccionar oclusión y escala Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
 4. Probar actualización del SW con dos builds y pestañas reales en Chromium, recursos ausentes y recuperación tras red intermitente; implementar exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.

@@ -20,3 +20,11 @@ test('all original enemy types and boss have a visible ASCII wound pose',()=>{
     for(const row of hurt)assert.match(row,/^[\x20-\x7e]+$/);
   }
 });
+test('all original enemy types and boss leave distinct printable ASCII death marks',()=>{
+  for(const glyph of ['s','V','l','p','D','f','✺','◆']){
+    const rows=composition(`enemy:death:${glyph}`);
+    assert.ok(rows.length>=3,`${glyph} death mark missing`);
+    assert.notDeepEqual(rows,composition(`enemy:hurt:${glyph}`));
+    for(const row of rows)assert.match(row,/^[\x20-\x7e]+$/);
+  }
+});

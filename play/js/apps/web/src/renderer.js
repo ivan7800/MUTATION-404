@@ -23,6 +23,7 @@ export class AsciiRenderer {
     heroUntil = 0;
     heroTimer = 0;
     enemyHits = new Map();
+    enemyDeaths = [];
     enemyHitTimer = 0;
     effectFrame = 0;
     ambientFrame = 0;
@@ -63,6 +64,7 @@ export class AsciiRenderer {
                 clearTimeout(this.enemyHitTimer);
             this.enemyHitTimer = 0;
             this.enemyHits.clear();
+            this.enemyDeaths.length = 0;
             if (this.effectFrame)
                 cancelAnimationFrame(this.effectFrame);
             this.effectFrame = 0;
@@ -93,12 +95,24 @@ export class AsciiRenderer {
                 hit = true;
             }
         }
+        for (const [id, before] of previous) {
+            if (before.zone !== state.zone)
+                continue;
+            const after = state.enemies.find(enemy => enemy.id === id);
+            if (!after || after.hp <= 0) {
+                this.enemyDeaths.push({ x: before.x, y: before.y, glyph: before.glyph, until: now + 450 });
+                this.enemyHits.delete(id);
+                hit = true;
+            }
+        }
+        if (this.enemyDeaths.length > 20)
+            this.enemyDeaths.splice(0, this.enemyDeaths.length - 20);
         if (!hit)
             return;
         if (this.enemyHitTimer)
             clearTimeout(this.enemyHitTimer);
         this.enemyHitTimer = window.setTimeout(() => { this.enemyHitTimer = 0; if (this.lastState)
-            this.draw(this.lastState); }, 340);
+            this.draw(this.lastState); }, 470);
         this.draw(state);
     }
     /** Cosmetic-only bursts: never advance simulation time or consume RNG. */
@@ -165,6 +179,9 @@ export class AsciiRenderer {
         for (const [id, until] of this.enemyHits)
             if (until <= frameTime)
                 this.enemyHits.delete(id);
+        for (let i = this.enemyDeaths.length - 1; i >= 0; i--)
+            if (this.enemyDeaths[i].until <= frameTime)
+                this.enemyDeaths.splice(i, 1);
         const ctx = this.ctx, w = VIEW_W * this.cellW, h = VIEW_H * this.cellH;
         const currentBiome = biomeAt(state.seed, state.player.x, state.player.y);
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -318,6 +335,17 @@ export class AsciiRenderer {
                 ctx.fillRect(px + 1, py + this.cellH - 3, (this.cellW - 2) * health, 2);
             }
         }
+        for (const dead of this.enemyDeaths) {
+            if (state.visible[index(dead.x, dead.y)] !== 1)
+                continue;
+            const cx = dead.x - ox, cy = dead.y - oy;
+            if (cx < 0 || cy < 0 || cx >= VIEW_W || cy >= VIEW_H)
+                continue;
+            ctx.globalAlpha = Math.max(0, (dead.until - frameTime) / 450);
+            ctx.fillStyle = '#e8a0a0';
+            this.glyph(`enemy:death:${dead.glyph}`, (cx + .5) * this.cellW, (cy + .5) * this.cellH);
+        }
+        ctx.globalAlpha = 1;
         const px = (state.player.x - ox) * this.cellW, py = (state.player.y - oy) * this.cellH;
         // Orientation glow emphasizes the errant without making hidden tiles visible.
         const glow = ctx.createRadialGradient(px + this.cellW / 2, py + this.cellH / 2, 2, px + this.cellW / 2, py + this.cellH / 2, this.cellW * 3.5);

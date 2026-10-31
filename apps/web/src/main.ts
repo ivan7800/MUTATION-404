@@ -243,7 +243,7 @@ function handleDialogue():void{const d=state.dialogue;if(d)showModal(d.speaker,`
 function act(command:Command):void{
   if(!gameStarted||modalMode)return;
   const beforeHp=state.stats.hp;
-  const beforeEnemies=new Map(state.enemies.filter(e=>e.hp>0).map(e=>[e.id,{hp:e.hp,x:e.x,y:e.y}]));
+  const beforeEnemies=new Map(state.enemies.filter(e=>e.hp>0).map(e=>[e.id,{hp:e.hp,x:e.x,y:e.y,zone:state.zone,glyph:e.id==='campaign-heart-custodian'?'✺':e.id.startsWith('elite-')?'◆':ENEMY_DEFS[e.kind].glyph}]));
   const beforeFields=state.fields.map(field=>({...field}));
   const priorNacar=state.zone==='zero-3'?beforeEnemies.get(FINAL_GUARDIAN_ID):undefined;
   const result=dispatch(state,command);
