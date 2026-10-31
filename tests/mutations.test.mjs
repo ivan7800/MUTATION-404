@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGame,dispatch,serialize,deserialize,MUTATIONS,BIOMES} from '../dist/core/core/src/game.js';
+import {createGame,dispatch,serialize,deserialize,MUTATIONS} from '../dist/core/core/src/game.js';
 import {index} from '../dist/core/core/src/world.js';
 import {stepEnvironment,placeField} from '../dist/core/core/src/environment.js';
-import {initialGenome,tickCooldowns,unlock,knows} from '../dist/core/core/src/mutations.js';
+import {initialGenome,unlock} from '../dist/core/core/src/mutations.js';
 
 function game(){const s=createGame(404);s.tiles.fill('.');s.enemies=[];s.fields=[];s.player={x:52,y:30};s.stats.focus=100;s.stats.maxFocus=100;return s;}
 function foe(s,x=54,y=30,kind='crawler'){const e={id:'mutation-target',kind,x,y,hp:9,mode:'idle',searchTurns:0};s.enemies.push(e);s.visible[index(x,y)]=1;return e;}

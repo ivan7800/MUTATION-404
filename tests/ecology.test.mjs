@@ -1,9 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame, dispatch, serialize, deserialize, RECIPES, RESOURCE_INFO, stackCount, ITEM_DEFS } from '../dist/core/core/src/game.js';
-import { ecologicalPulse, initialEcology, seedResources } from '../dist/core/core/src/ecology.js';
-import { biomeAt } from '../dist/core/core/src/biomes.js';
-import { index } from '../dist/core/core/src/world.js';
+import { createGame, dispatch, serialize, deserialize, RESOURCE_INFO, stackCount } from '../dist/core/core/src/game.js';
 
 test('ecological resource generation is reproducible by seed',()=>{
   const s=createGame(404), t=createGame(404);

@@ -5,6 +5,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 const SEEDS=[1,7,17,42,77,101,404,808,2026,9999,13579,24680,31,53,79,97,113,127,151,173,191,211,223,251];
 
 function arena(seed,kind){
+ void kind;
  const s=createGame(seed);
  s.zone='ruin-1-0-1';s.tiles.fill('.');s.player={x:60,y:30};
  s.fields=[];s.enemies=[];s.ground=[];s.seen.fill(1);s.visible.fill(1);

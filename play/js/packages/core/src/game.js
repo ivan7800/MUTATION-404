@@ -1,4 +1,5 @@
 import { RECIPES, RESOURCE_INFO, seedResources, initialEcology, ecologicalPulse } from './ecology.js';
+import { campaignProgress, endingStory, FINAL_GUARDIAN_ID, nacarPhase, nacarStrikeOffsets, nacarMark, NACAR_MARK_PREFIX, FINALE_EVENT_PREFIX } from './campaign.js';
 import { TASKS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior, generateInterior } from './civilizations.js';
 import { SECTORS, coordsForZone, generateSector, sectorName, zoneForSector } from './frontier.js';
 import { generateDepth, generateRuin, ruinId, ruinName, parseRuin, themeForRuin, ZONE_NAMES } from './depths.js';
@@ -19,6 +20,7 @@ export { SECTORS, coordsForZone, sectorName } from './frontier.js';
 export { TASKS, GOODS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior } from './civilizations.js';
 export { RECIPES, RESOURCE_INFO } from './ecology.js';
 export { BIOMES, WEATHER, biomeAt, weatherAt } from './biomes.js';
+export { campaignProgress, campaignObjective, campaignArchiveList, endingStory, CAMPAIGN_SITES } from './campaign.js';
 const MSG_LIMIT = 70;
 function message(state, text) { state.log.push(text); if (state.log.length > MSG_LIMIT)
     state.log.splice(0, state.log.length - MSG_LIMIT); }
@@ -158,6 +160,46 @@ function changeZone(s, to) {
 }
 const MARKET = { medkit: { buy: 12, sell: 5 }, ammo: { buy: 2, sell: 1 }, scrap: { buy: 6, sell: 3 }, carapace: { buy: 8, sell: 4 }, capacitor: { buy: 15, sell: 8 } };
 export { ZONE_NAMES, MARKET };
+/** Three deterministic guardian phases, without timers, RNG draws or save fields.
+ * Each pulse leaves a visible, avoidable tile hazard for the following turn.
+ * The same seed, turn, player position and guardian HP always produce the same result.
+ */
+function pulseNacar(s) {
+    if (s.zone !== 'zero-3' || s.stats.hp <= 0)
+        return;
+    const boss = s.enemies.find(e => e.id === FINAL_GUARDIAN_ID && e.hp > 0);
+    if (!boss) {
+        s.events = s.events.filter(e => !e.startsWith(NACAR_MARK_PREFIX));
+        return;
+    }
+    if (s.tick % 400 === 300) {
+        s.events = s.events.filter(e => !e.startsWith(NACAR_MARK_PREFIX));
+        if (s.events.length > 47)
+            return; // Never overflow the 50-entry save validation.
+        const phase = nacarPhase(boss.hp, ENEMY_DEFS.drone.hp * 3);
+        for (const [dx, dy] of nacarStrikeOffsets(s.tick + 100)) {
+            const x = s.player.x + dx, y = s.player.y + dy;
+            if (within(x, y) && passable(s.tiles[index(x, y)]))
+                s.events.push(`${NACAR_MARK_PREFIX}${s.tick + 100}:${x}:${y}:${phase}`);
+        }
+        if (nacarMark(s.events, s.tick + 100).length)
+            message(s, 'NÁCAR // Impacto anunciado: las casillas señaladas no cambiarán aunque te muevas.');
+        return;
+    }
+    if (s.tick % 400 !== 0)
+        return;
+    const marks = nacarMark(s.events, s.tick);
+    s.events = s.events.filter(e => !e.startsWith(NACAR_MARK_PREFIX));
+    // Never launch an untelegraphed strike (including resumed legacy saves).
+    for (const mark of marks) {
+        if (!within(mark.x, mark.y) || !passable(s.tiles[index(mark.x, mark.y)]))
+            continue;
+        const kind = mark.phase === 1 ? 'electric' : mark.phase === 2 ? 'spores' : 'fire';
+        placeField(s.fields, { x: mark.x, y: mark.y, kind, ttl: 3 });
+    }
+    if (marks.length)
+        message(s, 'NÁCAR // Las casillas anunciadas reciben el impacto. Esquiva las siguientes marcas.');
+}
 /** Every world-changing action uses this entry point; no hidden UI-side combat. */
 function advance(s, cost) {
     s.tick += cost;
@@ -179,6 +221,7 @@ function advance(s, cost) {
                 killEnemy(s, foe);
         if (s.stats.hp > 0)
             takeEnemyTurn(s, text => message(s, text));
+        pulseNacar(s);
         if (knows(s.genome, 'regeneration') && s.environmentalTurns % 4 === 3 && s.exposure < 65 && s.stats.hp > 0) {
             const healed = Math.min(1, s.stats.maxHp - s.stats.hp);
             s.stats.hp += healed;
@@ -217,12 +260,12 @@ function advance(s, cost) {
         message(s, `ATMÓSFERA // ${WEATHER[weather].name}: ${WEATHER[weather].description}`);
         s.lastWeather = weather;
     }
-    if (s.tick > 0 && Math.floor(s.tick / 100) % 13 === 0 && !inFaro(s.player)) {
+    if (s.tick > 0 && Math.floor(s.tick / 100) % 13 === 0 && !(s.zone === 'surface' && inFaro(s.player))) {
         const samples = AMBIENT_ECHOES[biome];
         const selected = Math.floor(terrainHash(s.seed, Math.floor(s.tick / 1300), s.player.x + s.player.y) * samples.length);
         message(s, `ECO // ${samples[selected]}`);
     }
-    const sheltered = inFaro(s.player);
+    const sheltered = s.zone === 'surface' && inFaro(s.player);
     s.environmentalTurns++;
     if (sheltered) {
         s.exposure = Math.max(0, s.exposure - 4);
@@ -281,9 +324,11 @@ function killEnemy(s, e) {
     awardExperience(s, def.xp);
     const drop = (e.kind === 'crawler' || e.kind === 'moth') ? 'carapace' : (e.kind === 'sentinel' || e.kind === 'drone') ? 'capacitor' : 'scrap';
     s.ground.push({ id: `loot-${e.id}`, x: e.x, y: e.y, item: drop, count: 1 });
-    // Small deterministic ammunition / medicine replenishment from encounters.
+    // Mechanical hostiles may yield spare projectiles; organic foes can leave medicine.
+    // Keep the original 35% bonus chance, but prevent drones from being medicine factories.
+    const mechanical = e.kind === 'sentinel' || e.kind === 'drone';
     if (rngRoll(s, 1, 100) <= 35)
-        s.ground.push({ id: `bonus-${e.id}`, x: e.x, y: e.y, item: e.kind === 'sentinel' ? 'ammo' : 'medkit', count: e.kind === 'sentinel' ? 3 : 1 });
+        s.ground.push({ id: `bonus-${e.id}`, x: e.x, y: e.y, item: mechanical ? 'ammo' : 'medkit', count: mechanical ? (e.kind === 'sentinel' ? 3 : 2) : 1 });
     if (s.kills === 3) {
         s.ground.push({ id: 'upgrade-rifle', x: e.x, y: e.y, item: 'rifle', count: 1 });
         message(s, 'HALLAZGO // Un arma de bobina aparece entre los restos.');
@@ -348,6 +393,67 @@ export function dispatch(s, command) {
         const option = command.option;
         s.dialogue = null;
         const task = localTask(s);
+        if (option === 'resonance-stabilize' || option === 'resonance-harvest') {
+            const r = parseRuin(s.zone), site = r && r.depth === 2 && manhattan(s.player, { x: 22, y: 12 }) <= 1;
+            if (!site)
+                return reply(false, 0, 'La resonancia se ha perdido.');
+            const key = `resonance:${s.zone}`;
+            if (s.events.includes(key))
+                return reply(false, 0, 'Resonancia ya resuelta.');
+            if (option === 'resonance-stabilize') {
+                if (!removeStack(s.inventory, 'capacitor', 1))
+                    return reply(false, 0, 'Necesitas un condensador.');
+                s.exposure = Math.max(0, s.exposure - 25);
+                s.stats.focus = Math.min(s.stats.maxFocus, s.stats.focus + 8);
+                // Neutralization changes this physical floor and survives zone snapshots.
+                s.fields = s.fields.filter(field => manhattan(field, { x: 22, y: 12 }) > 6);
+                message(s, 'RESONANCIA // El condensador absorbe la frecuencia. Exposición -25, concentración +8.');
+            }
+            else {
+                s.exposure = Math.min(100, s.exposure + 18);
+                s.genome.genePoints++;
+                placeField(s.fields, { x: 22, y: 12, kind: themeForRuin(r.x, r.y).hazard, ttl: 5 });
+                // The absorbed signal wakes a real guardian, retained by the zone save.
+                for (const x of [24, 25, 26]) {
+                    const y = 12, cell = index(x, y);
+                    if (!passable(s.tiles[cell]))
+                        s.tiles[cell] = ':';
+                    if (!enemyAt(s, x, y) && !(s.player.x === x && s.player.y === y)) {
+                        s.enemies.push({ id: `resonance-guardian-${s.zone}`, kind: 'drone', x, y, hp: ENEMY_DEFS.drone.hp, mode: 'hunting', lastKnown: { ...s.player }, searchTurns: 3 });
+                        message(s, 'GUARDIÁN DESPERTADO // Un cazador de ferrita responde a la señal.');
+                        break;
+                    }
+                }
+                message(s, 'RESONANCIA // La frecuencia entra en tu carne. +1 gen, exposición +18; el suelo despierta.');
+            }
+            s.events.push(key);
+            advance(s, 100);
+            return reply(true, 100, 'Decisión de resonancia registrada.');
+        }
+        if (option === 'finale-bind' || option === 'finale-release' || option === 'finale-erase') {
+            const choice = option.slice(7);
+            const p = campaignProgress(s);
+            if (s.zone !== 'zero-3' || !p.ready || !p.finaleAwakened || p.ending || s.enemies.some(e => e.id === FINAL_GUARDIAN_ID && e.hp > 0))
+                return reply(false, 0, 'El corazón todavía no acepta esa decisión.');
+            const ending = endingStory(choice, s.quest.outcome === 'broadcast' ? 'broadcast' : 'isolate');
+            s.events.push(FINALE_EVENT_PREFIX + choice);
+            if (choice === 'bind') {
+                s.reputation.concordia += 8;
+                s.exposure = Math.max(0, s.exposure - 30);
+            }
+            if (choice === 'release') {
+                s.genome.genePoints += 2;
+                s.reputation.ferral += 4;
+            }
+            if (choice === 'erase') {
+                s.exposure = 0;
+                s.reputation.concordia += 3;
+                s.reputation.ferral += 3;
+            }
+            message(s, 'CAMPAÑA COMPLETADA // ' + ending.title);
+            message(s, ending.description);
+            return reply(true, 0, 'Epílogo desbloqueado: ' + ending.title);
+        }
         if (option === 'accept-task' && task) {
             if (!s.civilization.active.includes(task.id) && !s.civilization.completed.includes(task.id))
                 s.civilization.active.push(task.id);
@@ -399,6 +505,7 @@ export function dispatch(s, command) {
         else if (option === 'finish') {
             s.quest.status = 'completed';
             message(s, `MISIÓN COMPLETADA // Eco bajo la sal (${s.quest.outcome === 'broadcast' ? 'transmisión' : 'aislamiento'}).`);
+            message(s, 'ACTO II // La torre era un aviso: ocho ruinas contienen archivos de la conciencia de Nácar. Abre el diario (J).');
         }
         else if (option === 'rumor')
             message(s, 'Sira: «Hay una máquina que fabrica recuerdos. Nadie sabe para quién».');
@@ -431,7 +538,6 @@ export function dispatch(s, command) {
         if (!coordsForZone(s.zone))
             return reply(false, 0, 'Solo puedes recolectar en la superficie.');
         if (!s.ecology.seededZones.includes(s.zone)) {
-            const coords = coordsForZone(s.zone);
             const nodes = seedResources(s.seed, s.zone, s.tiles, (x, y) => biomeAt(s.seed, x, y));
             s.ecology.nodes.push(...nodes);
             s.ecology.seededZones.push(s.zone);
@@ -581,7 +687,7 @@ export function dispatch(s, command) {
                 enemy.stunned = Math.max(enemy.stunned ?? 0, 1);
                 const dx = Math.sign(enemy.x - s.player.x), dy = Math.sign(enemy.y - s.player.y);
                 const push = (Math.abs(dx) > Math.abs(dy)) ? { x: enemy.x + dx, y: enemy.y } : { x: enemy.x, y: enemy.y + dy };
-                if (enemy.hp > 0 && within(push.x, push.y) && passable(s.tiles[index(push.x, push.y)]) && !enemyAt(s, push.x, push.y) && !ACTORS.some(a => a.x === push.x && a.y === push.y) && !inFaro(push)) {
+                if (enemy.hp > 0 && within(push.x, push.y) && passable(s.tiles[index(push.x, push.y)]) && !enemyAt(s, push.x, push.y) && !ACTORS.some(a => a.x === push.x && a.y === push.y) && !(s.zone === 'surface' && inFaro(push))) {
                     enemy.x = push.x;
                     enemy.y = push.y;
                 }
@@ -590,6 +696,14 @@ export function dispatch(s, command) {
             else {
                 enemy.hp = Math.max(0, enemy.hp - 2);
                 enemy.stunned = Math.max(enemy.stunned ?? 0, 1);
+                // Burning an active spore cloud causes a short-lived flash and consumes its fuel.
+                const volatile = s.fields.some(f => f.x === enemy.x && f.y === enemy.y && f.kind === 'spores');
+                if (volatile) {
+                    s.fields = s.fields.filter(f => !(f.x === enemy.x && f.y === enemy.y && f.kind === 'spores'));
+                    const bonus = 3;
+                    enemy.hp = Math.max(0, enemy.hp - bonus);
+                    message(s, 'REACCIÓN // Ignición de esporas: explosión biológica (+3 daño).');
+                }
                 placeField(s.fields, { x: enemy.x, y: enemy.y, kind: 'fire', ttl: 4 });
                 message(s, 'IGNICIÓN // Una memoria incendiada prende bajo la criatura. El fuego persistirá.');
             }
@@ -731,6 +845,43 @@ export function dispatch(s, command) {
         return reply(true, 100, 'Objetos recogidos.');
     }
     if (command.type === 'interact') {
+        // The late-game heart console is part of the original third level.
+        // Event flags keep the entire finale backwards compatible with v11 save files.
+        if (s.zone === 'zero-3' && manhattan(s.player, { x: 14, y: 10 }) <= 1) {
+            const p = campaignProgress(s);
+            if (p.ending) {
+                const choice = p.ending;
+                const ending = endingStory(choice, s.quest.outcome === 'broadcast' ? 'broadcast' : 'isolate');
+                s.dialogue = { speaker: 'ARCHIVO DE EPÍLOGO', text: ending.description, options: [{ id: 'leave', label: 'Continuar explorando Nácar' }] };
+                return reply(true, 0, 'El epílogo permanece en la memoria de Nácar.');
+            }
+            if (!p.ready) {
+                message(s, `EL CORAZÓN // Bloqueo: ${p.archives}/8 reliquias, ${p.guardians}/8 custodios; ${p.prologueDone ? 'prólogo completado' : 'regresa primero con Mara'}.`);
+                return reply(false, 0, 'Faltan archivos para acceder al corazón.');
+            }
+            if (!p.finaleAwakened) {
+                s.events.push('campaign:awakened');
+                // The guardian uses the normal turn-based AI and is persisted in zone snapshots.
+                const spawn = { x: 19, y: 12 };
+                s.tiles[index(spawn.x, spawn.y)] = '.';
+                if (!s.enemies.some(e => e.id === FINAL_GUARDIAN_ID))
+                    s.enemies.push({ id: FINAL_GUARDIAN_ID, kind: 'drone', x: spawn.x, y: spawn.y, hp: ENEMY_DEFS.drone.hp * 3, mode: 'hunting', lastKnown: { ...s.player }, searchTurns: 6 });
+                message(s, 'ACTO V // Ocho pedestales despiertan alrededor del corazón. Sus ecos pronuncian los nombres de quienes nunca regresaron de Nácar.');
+                message(s, 'LA CÁMARA RESPONDE // La luz de cada archivo atraviesa las paredes. El custodio de las ocho memorias emerge de la oscuridad: mientras permanezca en pie no habrá decisión posible.');
+                refreshVisibility(s);
+                return reply(true, 0, 'El custodio del corazón ha despertado.');
+            }
+            if (s.enemies.some(e => e.id === FINAL_GUARDIAN_ID && e.hp > 0))
+                return reply(false, 0, 'El custodio del corazón todavía vive. Derrota al guardián.');
+            const signal = s.quest.outcome === 'broadcast' ? 'La frecuencia liberada continúa creciendo.' : 'La frecuencia aislada está intentando escapar.';
+            s.dialogue = { speaker: 'EL CORAZÓN DE NÁCAR', text: `${signal} Los ocho testigos ocupan sus lugares. La cámara pierde el pulso y, por primera vez, se oye el silencio entre las máquinas. La voz que emerge no pregunta quién tiene razón: pregunta qué clase de mundo merece sobrevivir y qué parte de ti estás dispuesto a entregar.`, options: [
+                    { id: 'finale-bind', label: 'ENCADENAR: proteger el mundo y permanecer como guardián.' },
+                    { id: 'finale-release', label: 'LIBERAR: devolver las voces a la humanidad, aunque todo mute.' },
+                    { id: 'finale-erase', label: 'BORRAR: destruir el registro y sacrificar tu propio recuerdo.' },
+                    { id: 'leave', label: 'Todavía no estoy preparado.' }
+                ] };
+            return reply(true, 0, 'La última decisión de Nácar está en tus manos.');
+        }
         const r = parseRuin(s.zone);
         if (r && manhattan(s.player, { x: 20, y: 12 }) <= 1) {
             const theme = themeForRuin(r.x, r.y);
@@ -750,6 +901,36 @@ export function dispatch(s, command) {
             }
             message(s, `ARCHIVO DEL SITIO // ${theme.lore} Ya has recuperado la reliquia.`);
             return reply(true, 0, 'Este archivo ya está documentado.');
+        }
+        if (r && r.depth === 2 && manhattan(s.player, { x: 22, y: 12 }) <= 1) {
+            const key = `resonance:${s.zone}`;
+            if (!s.events.includes(key)) {
+                const theme = themeForRuin(r.x, r.y);
+                s.dialogue = { speaker: 'Resonancia de Nácar', text: `${theme.lore} La frecuencia te ofrece dos opciones: estabilizarla con un condensador o absorberla a costa de tu cuerpo.`, options: [
+                        { id: 'resonance-stabilize', label: 'Estabilizar: gastar 1 condensador, sanar exposición y recuperar concentración.' },
+                        { id: 'resonance-harvest', label: 'Absorber: +1 gen, +18 exposición y peligro ambiental.' },
+                        { id: 'leave', label: 'Alejarse de la resonancia.' }
+                    ] };
+                return reply(true, 0, 'Resonancia descubierta.');
+            }
+            return reply(true, 0, 'La resonancia ya ha sido resuelta.');
+        }
+        if (r && r.depth === 2 && manhattan(s.player, { x: 26, y: 12 }) <= 1) {
+            const key = `elite-cache:${s.zone}`;
+            if (s.events.includes(key)) {
+                message(s, 'ARCHIVO // El registro del custodio ya está recuperado.');
+                return reply(true, 0, 'Registro ya recuperado.');
+            }
+            if (s.enemies.some(e => e.id === `elite-${r.x}-${r.y}-2` && e.hp > 0)) {
+                message(s, 'SEGURIDAD // El custodio de Nácar protege el archivo. Elimina al guardián para recuperarlo.');
+                return reply(false, 0, 'El custodio todavía vigila el archivo.');
+            }
+            s.events.push(key);
+            s.stats.credits += 15;
+            addStack(s.inventory, 'capacitor', 1);
+            message(s, `ARCHIVO ÚNICO // ${themeForRuin(r.x, r.y).reward}: +15 créditos y 1 condensador.`);
+            advance(s, 100);
+            return reply(true, 100, 'Archivo del custodio recuperado.');
         }
         const citizen = nearbyCitizen(s);
         if (citizen) {
@@ -862,7 +1043,9 @@ export function dispatch(s, command) {
 }
 export function formatClock(tick) { const mins = Math.floor(tick / 100); return `${String((7 + Math.floor(mins / 60)) % 24).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`; }
 export function serialize(s) {
-    const { visible: _visible, dialogue: _dialogue, ...stored } = s;
+    const { visible, dialogue, ...stored } = s;
+    void visible;
+    void dialogue;
     return JSON.stringify(stored);
 }
 /** Migration keeps all v0.1 terrain, discovery, quest state and world clock. */
@@ -899,7 +1082,7 @@ export function deserialize(raw) {
         const game = { ...s, version: 11, ecology: initialEcology(), civilization: { active: [], completed: [] }, zone: 'surface', zones: {}, reputation: { ferral: 0, concordia: 0 }, events: [], stats: { ...INITIAL_STATS }, inventory: INITIAL_INVENTORY.map(x => ({ ...x })), equipment: { ...INITIAL_EQUIPMENT }, enemies: spawnEnemies(s.tiles), ground: [], targetId: null, kills: 0, visible: [], dialogue: null,
             genome: initialGenome(), fields: initialFields(s.seed, s.tiles), exposure: 0, biomeNotes: [], lastBiome: biomeAt(s.seed, s.player.x, s.player.y),
             lastWeather: weatherAt(s.seed, s.tick, biomeAt(s.seed, s.player.x, s.player.y)), environmentalTurns: 0 };
-        if (inFaro(game.player))
+        if (game.zone === 'surface' && inFaro(game.player))
             game.log.push('MIGRACIÓN // Partida v0.1 conservada. Nuevos peligros detectados fuera de Faro Ciego.');
         refreshVisibility(game);
         return game;

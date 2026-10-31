@@ -33,8 +33,11 @@ export function priceFor(item, side, reputation, sector) {
     if (indexOf < 0)
         return null;
     const scarcity = (indexOf % 3) - 1;
-    if (side === 'buy')
-        return Math.max(1, base.buy + scarcity - Math.min(5, Math.floor(Math.max(0, reputation) / 3)));
+    if (side === 'buy') {
+        // A high reputation discount must not create infinite buy/sell credit loops.
+        const sellPrice = Math.max(1, base.sell + Math.min(2, Math.floor(Math.max(0, reputation) / 6)));
+        return Math.max(sellPrice + 1, base.buy + scarcity - Math.min(5, Math.floor(Math.max(0, reputation) / 3)));
+    }
     return Math.max(1, base.sell + Math.min(2, Math.floor(Math.max(0, reputation) / 6)));
 }
 export function generateInterior(seed, zone) {

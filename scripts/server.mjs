@@ -14,7 +14,16 @@ const server=createServer(async (req,res)=>{
     const info=await stat(path);
     if(!info.isFile()){res.writeHead(404);res.end('Not Found');return;}
     const body=await readFile(path);
-    res.writeHead(200,{'Content-Type':types[extname(path)]||'application/octet-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Length':body.length});
+    res.writeHead(200,{
+      'Content-Type':types[extname(path)]||'application/octet-stream',
+      'Cache-Control':'no-store',
+      'X-Content-Type-Options':'nosniff',
+      'Referrer-Policy':'no-referrer',
+      'X-Frame-Options':'DENY',
+      'Permissions-Policy':'camera=(), microphone=(), geolocation=()',
+      'Content-Security-Policy':"default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+      'Content-Length':body.length
+    });
     res.end(req.method==='HEAD'?undefined:body);
   }catch{res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('No encontrado');}
 });

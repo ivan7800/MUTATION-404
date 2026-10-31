@@ -2,7 +2,7 @@ import { placeField, type Field } from './environment.js';
 import { hasLineOfSight } from './fov.js';
 import { biomeAt, WEATHER, weatherAt } from './biomes.js';
 import { SeededRng } from './rng.js';
-import { ACTORS, HEIGHT, index, passable, WIDTH, within, type Point, type Tile } from './world.js';
+import { ACTORS, index, passable, WIDTH, within, type Point, type Tile } from './world.js';
 
 export type EnemyKind = 'crawler' | 'sentinel' | 'larva' | 'moth' | 'drone' | 'spore';
 export type Behaviour = 'idle' | 'hunting' | 'searching' | 'fleeing';

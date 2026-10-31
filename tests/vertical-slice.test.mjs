@@ -28,8 +28,7 @@ test('v2.9 regional tile atlas covers six biomes while preserving ASCII mode',()
  assert.match(renderer,/if\(this\.artMode==='pixel'\)\{/);
  assert.match(renderer,/this\.tileTexture\(glyph,eye,faro,terrain\.variant,biomeKey\)/);
  assert.match(renderer,/const key=\x60\$\{eye\?'eye':faro\?'faro':region\}/);
- assert.ok(qa.includes('region-v29-pixel.png'));
- assert.ok(qa.includes('region-v29-ascii.png'));
+ assert.ok(qa.includes('region-v29-ascii-unified.png'));
 });
 test('v2.9 final custodian has its own texture, ASCII glyph, and correct HP denominator',()=>{
  assert.match(renderer,/nacar:\['#f3d9a8'/);
@@ -43,14 +42,15 @@ test('v2.9 death banner is hidden for living characters',()=>{
  assert.match(main,/classList\.toggle\('hidden',stats\.hp>0\)/);
  assert.match(css,/\.death-banner\.hidden\s*\{\s*display:\s*none\s*\}/);
 });
-test('pixel mode toggle is interactive without touching the core game state',()=>{
- assert.match(main,/id="art-mode-btn"/);
- assert.match(main,/#art-mode-btn'\)\.addEventListener\('click'/);
- assert.match(main,/renderer\.toggleArt\(\)/);
- assert.match(main,/key==='z'/);
+test('ASCII is the single visual language across renderers',()=>{
+ assert.match(main,/ASCII ISOMÉTRICO/);
+ assert.doesNotMatch(main,/art-mode-btn|toggleArt|PÍXEL/);
+ assert.match(renderer,/private readonly artMode:'ascii'\|'pixel'='ascii'/);
+ assert.doesNotMatch(renderer,/toggleArt\(\)/);
 });
-test('browser QA exercises both artistic scenes in both modes',()=>{
- for(const scene of ['faro-pixel','faro-ascii','ojo-pixel','ojo-ascii'])assert.ok(qa.includes(scene));
+test('browser QA exercises both artistic scenes in the unified ASCII mode',()=>{
+ assert.ok(qa.includes('faro-ascii-unified'));
+ assert.ok(qa.includes('ojo-ascii-unified'));
  assert.match(qa,/generateRuin\(404,-1,-1,2\)/);
  assert.match(qa,/eyeSave=serialize\(state\)/);
 });

@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import {createGame,dispatch,deserialize,serialize} from '../dist/core/core/src/game.js';
 import {generateRuin} from '../dist/core/core/src/depths.js';
 import {takeEnemyTurn} from '../dist/core/core/src/combat.js';
-import {index} from '../dist/core/core/src/world.js';
 
 function ruin(){
   const s=createGame(404), z=generateRuin(s.seed,1,0,2);

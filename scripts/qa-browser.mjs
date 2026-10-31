@@ -13,7 +13,7 @@ const browserExecutable=process.env.CHROME_PATH||process.env.CHROMIUM_PATH||'/us
 await mkdir('qa-evidence',{recursive:true});
 let browser;
 try{
-  for(let n=0;n<70;n++){try{const r=await fetch(base);if(r.ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
+  for(let n=0;n<70;n++){try{const r=await fetch(base);if(r.ok)break;}catch{/* server is still starting */}await new Promise(r=>setTimeout(r,100));}
   browser=await chromium.launch({headless:true,executablePath:browserExecutable,args:['--no-sandbox','--disable-dev-shm-usage','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   for(const mode of ['webgl','canvas-fallback']){
     const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
@@ -110,7 +110,7 @@ try{
     results.push({scene:`responsive-${width}`,width,height,layout,screenshot,errors});
     await context.close();
   }
-  // v2.0: actual images from both art modes and a genuine saved Ojo del Silencio.
+  // Unified ASCII isometric presentation in the overworld and Ojo del Silencio.
   const state=createGame(404),room=generateRuin(404,-1,-1,2);
   state.zone='ruin--1--1-2';state.tiles=room.tiles;state.seen=room.seen;
   state.fields=room.fields;state.ground=room.ground;state.enemies=room.enemies;
@@ -118,8 +118,8 @@ try{
   state.fields.push({x:19,y:12,kind:'spores',ttl:10},{x:20,y:12,kind:'fire',ttl:10});
   refreshVisibility(state);
   const eyeSave=serialize(state);
-  for(const scene of ['faro-pixel','faro-ascii','ojo-pixel','ojo-ascii']){
-    const eye=scene.startsWith('ojo'),ascii=scene.endsWith('ascii');
+  for(const scene of ['faro-ascii-unified','ojo-ascii-unified']){
+    const eye=scene.startsWith('ojo');
     const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
     if(eye)await context.addInitScript(save=>localStorage.setItem('mutation404.v10.save',save),eyeSave);
     const page=await context.newPage(),errors=[];
@@ -132,10 +132,8 @@ try{
     }else await page.locator('#start-new').click();
     assert.equal(await page.locator('#start-menu').isVisible(),false);
     await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
-    if(ascii)await page.locator('#art-mode-btn').click();
     const mode=await page.locator('#viewport').getAttribute('data-art-mode');
-    assert.equal(mode,ascii?'ascii':'pixel');
-    assert.equal(await page.locator('#art-mode-btn').getAttribute('aria-pressed'),String(!ascii));
+    assert.equal(mode,'ascii');
     if(eye){
       assert.match(await page.locator('#location').textContent(),/Ojo del Silencio/i);
       assert.match(await page.locator('#biome-description').textContent(),/Las paredes repiten pensamientos/i);
@@ -159,7 +157,7 @@ try{
     results.push({scene,mode,zone:eye?'Ojo del Silencio':'Faro Ciego',screenshot,frameStats,errors});
     await context.close();
   }
-  // v2.9: exercise a previously glyph-only overworld biome in both art modes.
+  // v2.9: exercise a previously glyph-only overworld biome in the unified mode.
   // Capture evidence without changing gameplay state, save schema or seed.
   const regionState=createGame(404);
   regionState.player={x:6,y:8};
@@ -171,7 +169,7 @@ try{
   await regionPage.goto(base+'?profile=1',{waitUntil:'networkidle',timeout:45000});
   await regionPage.locator('#start-continue').click();
   await regionPage.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
-  assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'pixel');
+  assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'ascii');
   // Performance diagnostics are scoped to the scene builder, NOT GPU time/FPS.
   await regionPage.waitForFunction(()=>window.__mutation404RenderProfile?.builds>=2,{timeout:10000});
   const firstProfile=await regionPage.evaluate(()=>window.__mutation404RenderProfile);
@@ -186,12 +184,9 @@ try{
   assert.ok(Number.isFinite(latestProfile.meanBuildMs),'scene build time is not finite');
   results.push({scene:'render-profile-v29',baseline:firstProfile,after:latestProfile,
     note:'JavaScript scene construction only; browser GPU timing not measured'});
-  await regionPage.screenshot({path:'qa-evidence/region-v29-pixel.png',fullPage:true,animations:'disabled'});
-  await regionPage.locator('#art-mode-btn').click();
-  assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'ascii');
-  await regionPage.screenshot({path:'qa-evidence/region-v29-ascii.png',fullPage:true,animations:'disabled'});
-  assert.deepEqual(regionErrors,[],'regional art mode caused a browser exception');
-  results.push({scene:'regional-v29',pixel:'qa-evidence/region-v29-pixel.png',ascii:'qa-evidence/region-v29-ascii.png',errors:regionErrors});
+  await regionPage.screenshot({path:'qa-evidence/region-v29-ascii-unified.png',fullPage:true,animations:'disabled'});
+  assert.deepEqual(regionErrors,[],'regional ASCII scene caused a browser exception');
+  results.push({scene:'regional-v29-ascii-unified',screenshot:'qa-evidence/region-v29-ascii-unified.png',errors:regionErrors});
   await regionContext.close();
   // v2.9: an actual living boss at every phase, plus a pre-impact tell.
   // Each save is real and loaded via the normal Continue button.
@@ -221,11 +216,7 @@ try{
     assert.match(await pg.locator('#nacar-boss-warning').textContent(),/IMPACTO PRÓXIMO/);
     const screenshot=`qa-evidence/nacar-v29-phase-${phase}.png`;
     await pg.screenshot({path:screenshot,fullPage:true,animations:'disabled'});
-    if(phase===3){
-      await pg.locator('#art-mode-btn').click();
-      assert.equal(await pg.locator('#viewport').getAttribute('data-art-mode'),'ascii');
-      await pg.screenshot({path:'qa-evidence/nacar-v29-ascii.png',fullPage:true,animations:'disabled'});
-    }
+    assert.equal(await pg.locator('#viewport').getAttribute('data-art-mode'),'ascii');
     assert.deepEqual(pageErrors,[],'Nácar phase screen caused browser errors');
     results.push({scene:`nacar-phase-${phase}`,screenshot,errors:pageErrors});
     await ctx.close();

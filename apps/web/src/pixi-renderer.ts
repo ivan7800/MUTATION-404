@@ -1,6 +1,6 @@
 import {Application, Container, Graphics, Sprite, Texture} from 'pixi.js';
 import {nacarPhase,nacarMark} from '../../../packages/core/src/campaign.js';
-import {ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, weatherAt, WEATHER, WIDTH, settlementCitizens, type GameState, type Tile} from '../../../packages/core/src/game.js';
+import {ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, weatherAt, WIDTH, settlementCitizens, type GameState, type Tile} from '../../../packages/core/src/game.js';
 import {index,passable,within} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
@@ -46,13 +46,10 @@ export class PixiAsciiRenderer {
     }
     return cached;
   }
-  private artMode:'pixel'|'ascii'='pixel';
-  get mode(): 'pixel'|'ascii' {return this.artMode;}
-  toggleArt(): 'pixel'|'ascii' {
-    this.artMode=this.artMode==='pixel'?'ascii':'pixel';
-    if(this.state)this.draw(this.state);
-    return this.artMode;
-  }
+  // The game has one visual language: atmospheric isometric ASCII. WebGL only
+  // accelerates the glyph layers; it never swaps the characters for sprites.
+  private readonly artMode:'ascii'|'pixel'='ascii';
+  get mode(): 'ascii'|'pixel' {return this.artMode;}
   private state:GameState|null=null;
   private cellW=15;
   private cellH=23;

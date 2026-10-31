@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, deserialize, dispatch, refreshVisibility, serialize, ENEMY_DEFS, stackCount } from '../dist/core/core/src/game.js';
-import { addStack, inFaro, nextStep, removeStack, spawnEnemies, xpNeeded } from '../dist/core/core/src/combat.js';
+import { addStack, inFaro, nextStep, removeStack, xpNeeded } from '../dist/core/core/src/combat.js';
 import { index, passable } from '../dist/core/core/src/world.js';
 
 const setup=(seed=404)=>{

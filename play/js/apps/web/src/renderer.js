@@ -15,6 +15,53 @@ export class AsciiRenderer {
     cellW = 15;
     cellH = 23;
     ambience = 0;
+    lastState = null;
+    effectUntil = 0;
+    effectKind = 'scan';
+    effectFrame = 0;
+    ambientFrame = 0;
+    ambientLast = 0;
+    /** Animated climate redraws are throttled and suspended when the tab is hidden. */
+    startAmbience() {
+        if (this.reducedMotion || this.ambientFrame)
+            return;
+        const loop = (time) => {
+            this.ambientFrame = 0;
+            if (document.visibilityState === 'hidden' || !this.lastState)
+                return;
+            if (time - this.ambientLast >= 125) {
+                this.ambientLast = time;
+                const state = this.lastState;
+                if (state.fields.length > 0 || weatherAt(state.seed, state.tick, biomeAt(state.seed, state.player.x, state.player.y)) !== 'calma')
+                    this.draw(state);
+            }
+            this.ambientFrame = requestAnimationFrame(loop);
+        };
+        this.ambientFrame = requestAnimationFrame(loop);
+    }
+    pauseAmbience() {
+        if (this.ambientFrame)
+            cancelAnimationFrame(this.ambientFrame);
+        this.ambientFrame = 0;
+    }
+    /** Cosmetic-only bursts: never advance simulation time or consume RNG. */
+    effect(state, kind) {
+        if (this.reducedMotion)
+            return;
+        this.lastState = state;
+        this.effectKind = kind;
+        this.effectUntil = performance.now() + 300;
+        if (this.effectFrame)
+            return;
+        const animate = () => {
+            this.effectFrame = 0;
+            if (!this.lastState || performance.now() >= this.effectUntil)
+                return;
+            this.draw(this.lastState);
+            this.effectFrame = requestAnimationFrame(animate);
+        };
+        this.effectFrame = requestAnimationFrame(animate);
+    }
     reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     constructor(element) {
         this.canvas = document.createElement('canvas');
@@ -42,6 +89,7 @@ export class AsciiRenderer {
     zoom(dir) { this.fontSize = Math.max(13, Math.min(25, this.fontSize + dir)); this.cellW = Math.round(this.fontSize * .83); this.cellH = this.fontSize + 5; this.resize(); }
     focus() { this.canvas.focus(); }
     draw(state) {
+        this.lastState = state;
         const ctx = this.ctx, w = VIEW_W * this.cellW, h = VIEW_H * this.cellH;
         const currentBiome = biomeAt(state.seed, state.player.x, state.player.y);
         ctx.globalAlpha = 1;
@@ -86,6 +134,23 @@ export class AsciiRenderer {
                 }
                 ctx.fillStyle = coordsForZone(state.zone) ? (tile === '.' || tile === '*' || tile === ',' ? def.palette : COLORS[tile]) : (tile === '#' ? '#506070' : tile === '.' ? '#839aab' : COLORS[tile]);
                 ctx.fillText(tile, px, py);
+                // Lighting never reveals fog-of-war tiles or changes the core simulation.
+                if (visible) {
+                    const distance = Math.hypot(x - state.player.x, y - state.player.y);
+                    const radius = timeNight ? 7 : 12;
+                    const dim = Math.min(timeNight ? .64 : .30, Math.max(0, (distance - radius * .35) / radius) * (timeNight ? .58 : .30));
+                    if (dim > 0) {
+                        ctx.globalAlpha = dim;
+                        ctx.fillStyle = '#020811';
+                        ctx.fillRect(cx * this.cellW, cy * this.cellH, this.cellW, this.cellH);
+                    }
+                    if (tile === 'T' || tile === 'o' || tile === '?' || tile === '+' || tile === '~') {
+                        const shimmer = this.reducedMotion ? .45 : .45 + .2 * Math.sin(this.ambience * .14 + x * .3 + y);
+                        ctx.globalAlpha = (tile === '~' ? .12 : .25) * shimmer;
+                        ctx.fillStyle = tile === '~' ? '#8fe8ef' : '#e4c89f';
+                        ctx.fillRect(cx * this.cellW + 1, cy * this.cellH - 2, this.cellW - 2, 2);
+                    }
+                }
             }
         ctx.globalAlpha = 1;
         for (const field of state.fields) {
@@ -96,8 +161,14 @@ export class AsciiRenderer {
                 continue;
             const def = FIELD_VISUALS[field.kind], px = cx * this.cellW, py = cy * this.cellH;
             ctx.fillStyle = field.kind === 'fire' ? '#70352b' : field.kind === 'electric' ? '#173e4c' : '#244830';
-            ctx.globalAlpha = .83;
+            ctx.globalAlpha = .72;
             ctx.fillRect(px, py, this.cellW, this.cellH);
+            if (!this.reducedMotion) {
+                const flicker = .18 + .13 * Math.sin(this.ambience * .8 + field.x * 2.3 + field.y);
+                ctx.fillStyle = def.color;
+                ctx.globalAlpha = flicker;
+                ctx.fillRect(px + 1, py + 1, this.cellW - 2, this.cellH - 2);
+            }
             ctx.globalAlpha = 1;
             ctx.fillStyle = def.color;
             ctx.fillText(def.glyph, px + this.cellW / 2, py + this.cellH / 2);
@@ -155,8 +226,23 @@ export class AsciiRenderer {
             ctx.fillStyle = (enemy.stunned ?? 0) > 0 ? '#e3aaf5' : def.color;
             ctx.fillText(def.glyph, px + this.cellW / 2, py + this.cellH / 2);
             ctx.shadowBlur = 0;
+            // Miniature health bar provides threat feedback without a separate modal.
+            const health = Math.max(0, Math.min(1, enemy.hp / def.hp));
+            if (health < 1) {
+                ctx.fillStyle = '#361c20';
+                ctx.fillRect(px + 1, py + this.cellH - 3, this.cellW - 2, 2);
+                ctx.fillStyle = health > .45 ? '#ddb878' : '#ee7373';
+                ctx.fillRect(px + 1, py + this.cellH - 3, (this.cellW - 2) * health, 2);
+            }
         }
         const px = (state.player.x - ox) * this.cellW, py = (state.player.y - oy) * this.cellH;
+        // Orientation glow emphasizes the errant without making hidden tiles visible.
+        const glow = ctx.createRadialGradient(px + this.cellW / 2, py + this.cellH / 2, 2, px + this.cellW / 2, py + this.cellH / 2, this.cellW * 3.5);
+        glow.addColorStop(0, '#f8b85a30');
+        glow.addColorStop(1, '#f8b85a00');
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = glow;
+        ctx.fillRect(px - this.cellW * 3, py - this.cellH * 2, this.cellW * 7, this.cellH * 5);
         ctx.shadowColor = state.stats.hp > 0 ? '#ffe29a' : '#c78487';
         ctx.shadowBlur = this.reducedMotion ? 5 : 9;
         ctx.fillStyle = state.stats.hp > 0 ? '#4c3825' : '#3e1b22';
@@ -185,6 +271,25 @@ export class AsciiRenderer {
                 ctx.fillStyle = weather === 'esporas' ? '#9fdca7' : weather === 'estatica' ? '#b5f5ec' : weather === 'distorsion' ? '#da8acc' : '#d9c49d';
                 ctx.fillRect(x, y, weather === 'polvo' ? 3 : 2, weather === 'polvo' ? 1 : 2);
             }
+        }
+        // Short-lived frame-driven feedback never changes simulation rules.
+        const remaining = this.effectUntil - performance.now();
+        if (remaining > 0 && !this.reducedMotion) {
+            const progress = 1 - remaining / 300;
+            const cx = px + this.cellW / 2, cy = py + this.cellH / 2;
+            const tint = this.effectKind === 'mutation' ? '#bda5ff' : this.effectKind === 'damage' ? '#ff6b74' : this.effectKind === 'attack' ? '#ffcb81' : '#8de3dc';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 7 + progress * 90, 0, Math.PI * 2);
+            ctx.strokeStyle = tint;
+            ctx.lineWidth = Math.max(.5, 2 * (1 - progress));
+            ctx.globalAlpha = Math.max(0, .8 * (1 - progress));
+            ctx.stroke();
+            for (let i = 0; i < 10; i++) {
+                const a = i * Math.PI / 5 + progress * .9, d = 11 + progress * 48;
+                ctx.fillStyle = tint;
+                ctx.fillRect(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 2, 2);
+            }
+            ctx.globalAlpha = 1;
         }
         ctx.globalAlpha = 1;
         const shade = ctx.createRadialGradient(w / 2, h / 2, h * .18, w / 2, h / 2, w * .68);

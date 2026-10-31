@@ -1,4 +1,4 @@
-import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, weatherAt, WEATHER, WIDTH, settlementCitizens, type GameState, type Tile } from '../../../packages/core/src/game.js';
+import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, weatherAt, WIDTH, settlementCitizens, type GameState, type Tile } from '../../../packages/core/src/game.js';
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';

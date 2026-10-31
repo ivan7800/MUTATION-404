@@ -1,61 +1,131 @@
-/** No external audio files; browser audio starts only after user clicks the sound button. */
+/** Opt-in WebAudio ambience with audible harmonic layers, controlled volume and test tone.
+ * No downloads, auto-play or unsafe cross-origin audio. */
 export class AtmosphereAudio {
     context = null;
-    oscillator = null;
-    overtone = null;
-    gain = null;
+    master = null;
+    ambience = null;
+    voices = [];
     enabled = false;
-    get active() { return this.enabled; }
+    volume = .55;
+    get active() { return this.enabled && this.context?.state === 'running'; }
+    get level() { return this.volume; }
+    setVolume(level) {
+        this.volume = Math.min(1, Math.max(0, Number.isFinite(level) ? level : .55));
+        if (this.master && this.context)
+            this.master.gain.setTargetAtTime(this.volume, this.context.currentTime, .06);
+    }
+    prepare() {
+        if (this.context)
+            return this.context;
+        const c = new AudioContext();
+        const master = c.createGain();
+        master.gain.value = this.volume;
+        master.connect(c.destination);
+        const ambience = c.createGain();
+        ambience.gain.value = 0;
+        ambience.connect(master);
+        this.context = c;
+        this.master = master;
+        this.ambience = ambience;
+        // An audible harmonic bed: several octaves, all low-pass filtered.
+        const frequencies = [72, 108, 144];
+        frequencies.forEach((hz, i) => {
+            const osc = c.createOscillator();
+            osc.type = i === 1 ? 'triangle' : 'sine';
+            osc.frequency.value = hz;
+            const voice = c.createGain();
+            voice.gain.value = [.13, .055, .025][i];
+            const filter = c.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 370;
+            osc.connect(filter);
+            filter.connect(voice);
+            voice.connect(ambience);
+            osc.start();
+            this.voices.push(osc);
+        });
+        return c;
+    }
     async toggle() {
         if (this.enabled) {
             this.enabled = false;
-            if (this.gain && this.context)
-                this.gain.gain.setTargetAtTime(0, this.context.currentTime, .12);
+            this.ambience?.gain.setTargetAtTime(0, this.context.currentTime, .1);
             return false;
-        }
-        if (!this.context) {
-            const context = new AudioContext();
-            this.context = context;
-            const gain = context.createGain();
-            gain.gain.value = 0;
-            gain.connect(context.destination);
-            this.gain = gain;
-            const oscillator = context.createOscillator();
-            oscillator.type = 'sine';
-            oscillator.frequency.value = 65;
-            oscillator.connect(gain);
-            oscillator.start();
-            this.oscillator = oscillator;
-            const overtone = context.createOscillator();
-            overtone.type = 'triangle';
-            overtone.frequency.value = 90;
-            const filter = context.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 220;
-            const quieter = context.createGain();
-            quieter.gain.value = .12;
-            overtone.connect(filter);
-            filter.connect(quieter);
-            quieter.connect(gain);
-            overtone.start();
-            this.overtone = overtone;
         }
         try {
-            await this.context.resume();
+            const c = this.prepare();
+            await c.resume();
+            if (c.state !== 'running')
+                return false;
+            this.enabled = true;
+            this.ambience?.gain.setTargetAtTime(.3, c.currentTime, .2);
+            this.testTone();
+            return true;
         }
-        catch {
+        catch (error) {
+            console.warn('Audio no disponible:', error);
             return false;
         }
-        this.enabled = true;
-        this.gain?.gain.setTargetAtTime(.04, this.context.currentTime, .3);
-        return true;
+    }
+    /** Audible diagnostic tone under user gesture. Never sounds when muted. */
+    testTone() {
+        if (!this.enabled || !this.context || !this.master)
+            return;
+        const c = this.context, t = c.currentTime, osc = c.createOscillator(), gain = c.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, t);
+        osc.frequency.linearRampToValueAtTime(660, t + .2);
+        gain.gain.setValueAtTime(.0001, t);
+        gain.gain.exponentialRampToValueAtTime(.2, t + .025);
+        gain.gain.exponentialRampToValueAtTime(.0001, t + .34);
+        osc.connect(gain);
+        gain.connect(this.master);
+        osc.start(t);
+        osc.stop(t + .36);
+    }
+    beep(start, end, duration, wave, level) {
+        if (!this.enabled || !this.context || !this.master)
+            return;
+        const c = this.context, now = c.currentTime, osc = c.createOscillator(), gain = c.createGain();
+        osc.type = wave;
+        osc.frequency.setValueAtTime(Math.max(30, start), now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(30, end), now + duration);
+        gain.gain.setValueAtTime(.0001, now);
+        gain.gain.exponentialRampToValueAtTime(level, now + .015);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(this.master);
+        osc.start(now);
+        osc.stop(now + duration + .02);
+    }
+    cue(kind) {
+        const voices = { attack: [210, 80, .17, 'sawtooth', .12], mutation: [510, 220, .23, 'triangle', .10], scan: [700, 320, .3, 'sine', .11], damage: [150, 55, .29, 'sawtooth', .14] };
+        const [a, b, d, w, v] = voices[kind];
+        this.beep(a, b, d, w, v);
+    }
+    /** Original non-autoplay boss stingers, respecting mute and master volume. */
+    bossCue(event) {
+        if (!this.enabled || !this.context || !this.master)
+            return;
+        const voices = {
+            awaken: [88, 176, .45, 'sawtooth', .11],
+            phase2: [190, 62, .55, 'triangle', .15],
+            phase3: [370, 49, .68, 'sawtooth', .15],
+            defeat: [250, 38, 1.05, 'sine', .17]
+        };
+        const [start, end, duration, wave, level] = voices[event];
+        this.beep(start, end, duration, wave, level);
+    }
+    mutationCue(id) {
+        const voices = { 'kinetic-pulse': [140, 46, .32, 'sawtooth', .16], 'neural-shock': [840, 170, .25, 'square', .09], pyrokinesis: [370, 75, .34, 'triangle', .14], 'phase-step': [90, 560, .36, 'sine', .14] };
+        const [a, b, d, w, v] = voices[id];
+        this.beep(a, b, d, w, v);
     }
     update(biome, weather) {
-        if (!this.context || !this.oscillator || !this.overtone)
+        if (!this.context || this.voices.length !== 3)
             return;
-        const pitch = { salinas: 68, ceniza: 53, hierro: 82, vidrio: 111, medula: 61, umbral: 43 };
-        const frequency = pitch[biome] + (weather === 'calma' ? 0 : 3);
-        this.oscillator.frequency.setTargetAtTime(frequency, this.context.currentTime, 1);
-        this.overtone.frequency.setTargetAtTime(frequency * 1.51, this.context.currentTime, 1.1);
+        const pitches = { salinas: 78, ceniza: 61, hierro: 93, vidrio: 123, medula: 70, umbral: 52 };
+        const hz = pitches[biome] + (weather === 'calma' ? 0 : 5), now = this.context.currentTime;
+        this.voices.forEach((osc, i) => osc.frequency.setTargetAtTime(hz * [1, 1.5, 2][i], now, 1.2));
     }
 }

@@ -1,6 +1,6 @@
 import { RECIPES, RESOURCE_INFO, seedResources, initialEcology, ecologicalPulse, type EcologyState } from './ecology.js';
-import {campaignProgress, campaignObjective, endingStory, FINAL_GUARDIAN_ID, nacarPhase, nacarStrikeOffsets, nacarMark, NACAR_MARK_PREFIX, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
-import { TASKS, GOODS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior, generateInterior, type Citizen } from './civilizations.js';
+import {campaignProgress, endingStory, FINAL_GUARDIAN_ID, nacarPhase, nacarStrikeOffsets, nacarMark, NACAR_MARK_PREFIX, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
+import { TASKS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior, generateInterior, type Citizen } from './civilizations.js';
 import { SECTORS, coordsForZone, generateSector, sectorName, zoneForSector } from './frontier.js';
 import { generateDepth, generateRuin, ruinId, ruinName, parseRuin, themeForRuin, ZONE_NAMES, type ZoneId, type ZoneMemory } from './depths.js';
 import { MUTATIONS, initialGenome, knows, tickCooldowns, unlock, type Genome, type MutationId } from './mutations.js';
@@ -9,7 +9,7 @@ import { AMBIENT_ECHOES, biomeAt, BIOMES, hazardAt, terrainHash, WEATHER, weathe
 import { ACTORS, generateWorld, HEIGHT, index, LANDMARKS, passable, WIDTH, within, type Actor, type Tile } from './world.js';
 import { computeVisibility } from './fov.js';
 import { SeededRng } from './rng.js';
-import { addStack, ENEMY_DEFS, eqArmor, INITIAL_EQUIPMENT, INITIAL_INVENTORY, INITIAL_STATS, ITEM_DEFS, inFaro, manhattan, removeStack, spawnEnemies, stackCount, takeEnemyTurn, xpNeeded, type Enemy, type Equipment, type GroundItem, type ItemId, type ItemStack, type PlayerStats } from './combat.js';
+import { addStack, ENEMY_DEFS, INITIAL_EQUIPMENT, INITIAL_INVENTORY, INITIAL_STATS, ITEM_DEFS, inFaro, manhattan, removeStack, spawnEnemies, stackCount, takeEnemyTurn, xpNeeded, type Enemy, type Equipment, type GroundItem, type ItemId, type ItemStack, type PlayerStats } from './combat.js';
 import { hasLineOfSight } from './fov.js';
 export { ENEMY_DEFS, ITEM_DEFS, stackCount, xpNeeded } from './combat.js';
 export { MUTATIONS, knows } from './mutations.js';
@@ -389,7 +389,6 @@ export function dispatch(s:GameState, command:Command):ActionResult {
   if(command.type==='harvest'){
     if(!coordsForZone(s.zone))return reply(false,0,'Solo puedes recolectar en la superficie.');
     if(!s.ecology.seededZones.includes(s.zone)){
-      const coords=coordsForZone(s.zone)!;
       const nodes=seedResources(s.seed,s.zone,s.tiles,(x,y)=>biomeAt(s.seed,x,y));
       s.ecology.nodes.push(...nodes);s.ecology.seededZones.push(s.zone);
     }
@@ -738,7 +737,9 @@ export function dispatch(s:GameState, command:Command):ActionResult {
 }
 export function formatClock(tick:number):string { const mins=Math.floor(tick/100);return `${String((7+Math.floor(mins/60))%24).padStart(2,'0')}:${String(mins%60).padStart(2,'0')}`; }
 export function serialize(s:GameState):string{
-  const {visible: _visible,dialogue: _dialogue,...stored}=s;
+  const {visible,dialogue,...stored}=s;
+  void visible;
+  void dialogue;
   return JSON.stringify(stored);
 }
 /** Migration keeps all v0.1 terrain, discovery, quest state and world clock. */

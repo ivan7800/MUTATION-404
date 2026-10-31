@@ -88,7 +88,7 @@ export function nextRandom(s) {
     return rng;
 }
 /** Pathfind a single move; BFS is bounded to a local search envelope (performance). */
-export function nextStep(tiles, from, to, occupied, maxSearch = 240) {
+export function nextStep(tiles, from, to, occupied, maxSearch = 240, hazards = new Set(), protectFaro = true) {
     const start = index(from.x, from.y), dest = index(to.x, to.y);
     if (start === dest)
         return undefined;
@@ -100,7 +100,7 @@ export function nextStep(tiles, from, to, occupied, maxSearch = 240) {
         const x = v % WIDTH, y = Math.floor(v / WIDTH);
         for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
             const nx = x + dx, ny = y + dy, ni = index(nx, ny);
-            if (!within(nx, ny) || parents.has(ni) || !passable(tiles[ni]) || inFaro({ x: nx, y: ny }) || occupied.has(`${nx},${ny}`))
+            if (!within(nx, ny) || parents.has(ni) || !passable(tiles[ni]) || (protectFaro && inFaro({ x: nx, y: ny })) || occupied.has(`${nx},${ny}`) || (hazards.has(`${nx},${ny}`) && ni !== dest))
                 continue;
             parents.set(ni, v);
             q.push(ni);
@@ -114,10 +114,13 @@ export function nextStep(tiles, from, to, occupied, maxSearch = 240) {
     return { x: cursor % WIDTH, y: Math.floor(cursor / WIDTH) };
 }
 export function takeEnemyTurn(s, report) {
-    if (s.stats.hp <= 0 || inFaro(s.player))
+    const protectFaro = s.zone === undefined || s.zone === 'surface';
+    if (s.stats.hp <= 0 || (protectFaro && inFaro(s.player)))
         return;
     const rng = nextRandom(s);
-    const blocked = new Set(ACTORS.map(a => `${a.x},${a.y}`));
+    const blocked = new Set(protectFaro ? ACTORS.map(a => `${a.x},${a.y}`) : []);
+    // Avoid hazardous ground unless no safe route exists; spores remain safe for their own species.
+    const hazards = new Set((s.fields ?? []).filter(f => f.ttl > 0 && f.kind !== 'spores').map(f => `${f.x},${f.y}`));
     for (const enemy of s.enemies)
         if (enemy.hp > 0)
             blocked.add(`${enemy.x},${enemy.y}`);
@@ -137,6 +140,27 @@ export function takeEnemyTurn(s, report) {
             e.lastKnown = { ...s.player };
             e.searchTurns = 3;
         }
+        // Unique elite drones issue a visible two-cell electrical warning.
+        // No save-schema extension: elite identity comes from its persistent id.
+        if (e.id.startsWith('elite-') && canSee && dist >= 2 && dist <= 6 && s.fields && s.tick !== undefined && Math.floor(s.tick / 100) % 4 === 0) {
+            const dx = Math.sign(s.player.x - e.x), dy = Math.sign(s.player.y - e.y);
+            placeField(s.fields, { x: s.player.x, y: s.player.y, kind: 'electric', ttl: 3 });
+            const tx = s.player.x + dx, ty = s.player.y + dy;
+            if (within(tx, ty) && passable(s.tiles[index(tx, ty)]))
+                placeField(s.fields, { x: tx, y: ty, kind: 'electric', ttl: 3 });
+            report('ÉLITE // El custodio de Nácar sobrecarga dos casillas: sal del área antes del siguiente turno.');
+            continue;
+        }
+        // Warden sentinels force movement with a delayed electrical trap; the
+        // environmental phase processes it on the player's next turn.
+        if (e.kind === 'sentinel' && canSee && dist >= 2 && dist <= 4 && s.fields && s.tick !== undefined && Math.floor(s.tick / 100) % 6 === 0) {
+            placeField(s.fields, { x: s.player.x, y: s.player.y, kind: 'electric', ttl: 3 });
+            report('AVISO // El vigía de cobre marca el suelo con un arco eléctrico. Muévete antes del próximo turno.');
+            continue;
+        }
+        // Wounded shepherds retreat to scatter spores instead of fighting to death.
+        if (e.kind === 'spore' && e.hp <= 4 && canSee && dist > 1)
+            e.mode = 'fleeing';
         if (e.kind === 'crawler' && e.hp <= 3 && canSee)
             e.mode = 'fleeing';
         if (e.mode === 'hunting' && !canSee)
@@ -207,11 +231,14 @@ export function takeEnemyTurn(s, report) {
         }
         let to;
         if (e.mode === 'fleeing') {
+            // Exhausted wounded enemies pause every other turn: melee pursuit remains possible.
+            if (e.kind === 'crawler' && s.tick !== undefined && Math.floor(s.tick / 100) % 2 === 1)
+                continue;
             const candidates = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-            to = candidates.map(([dx, dy]) => ({ x: e.x + dx, y: e.y + dy })).filter(p => within(p.x, p.y) && passable(s.tiles[index(p.x, p.y)]) && !inFaro(p) && !blocked.has(`${p.x},${p.y}`)).sort((a, b) => manhattan(b, s.player) - manhattan(a, s.player))[0];
+            to = candidates.map(([dx, dy]) => ({ x: e.x + dx, y: e.y + dy })).filter(p => within(p.x, p.y) && passable(s.tiles[index(p.x, p.y)]) && !(protectFaro && inFaro(p)) && !blocked.has(`${p.x},${p.y}`) && !hazards.has(`${p.x},${p.y}`)).sort((a, b) => manhattan(b, s.player) - manhattan(a, s.player))[0];
         }
         else if ((e.mode === 'hunting' || e.mode === 'searching') && e.lastKnown) {
-            to = nextStep(s.tiles, e, e.lastKnown, blocked);
+            to = nextStep(s.tiles, e, e.lastKnown, blocked, 240, hazards, protectFaro) ?? nextStep(s.tiles, e, e.lastKnown, blocked, 240, new Set(), protectFaro);
             if (e.mode === 'searching' && manhattan(e, e.lastKnown) === 0) {
                 e.mode = 'idle';
                 delete e.lastKnown;
@@ -221,7 +248,7 @@ export function takeEnemyTurn(s, report) {
             const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
             const [dx, dy] = dirs[rng.int(0, 3)];
             const p = { x: e.x + dx, y: e.y + dy };
-            if (within(p.x, p.y) && passable(s.tiles[index(p.x, p.y)]) && !inFaro(p) && !blocked.has(`${p.x},${p.y}`))
+            if (within(p.x, p.y) && passable(s.tiles[index(p.x, p.y)]) && !(protectFaro && inFaro(p)) && !blocked.has(`${p.x},${p.y}`) && !hazards.has(`${p.x},${p.y}`))
                 to = p;
         }
         if (to && !(to.x === s.player.x && to.y === s.player.y)) {

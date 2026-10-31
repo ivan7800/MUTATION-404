@@ -12,7 +12,7 @@
     "build": "tsc -p tsconfig.play.json --noEmit && vite build --config apps/web/vite.config.ts",
     "build:offline": "tsc -p tsconfig.play.json && node scripts/build-offline.mjs",
     "typecheck": "tsc -p tsconfig.play.json --noEmit",
-    "test": "node --test tests/*.test.mjs",
+    "test": "tsc -p tsconfig.core.json && node --test tests/*.test.mjs",
     "test:core": "tsc -p tsconfig.core.json && node --test tests/*.test.mjs",
     "lint": "eslint .",
     "start": "node scripts/server.mjs"

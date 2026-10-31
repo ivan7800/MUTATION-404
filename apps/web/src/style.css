@@ -110,13 +110,8 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 @media(prefers-reduced-motion:reduce){.world-canvas{filter:none;box-shadow:0 0 0 1px #5b8776}.viewport:before{display:none}}
 
 /* v2.0 vertical slice: an accessible, actual rendering mode switch */
-#art-mode-btn{min-width:134px;padding:7px 12px;min-height:38px;border:1px solid #b59c64;border-radius:5px;color:#ffdf9e;background:linear-gradient(130deg,#192b2b,#2b2838);font-size:11px;font-weight:800;letter-spacing:.04em;cursor:pointer}
-#art-mode-btn[aria-pressed="true"]{border-color:#e8c983;box-shadow:inset 0 0 0 1px #d8bb6c33,0 0 14px #ceb4701a}
-#art-mode-btn:hover{background:#30423d}
-#art-mode-btn:focus-visible{outline:2px solid #ffe5a6;outline-offset:3px}
-#viewport[data-art-mode="pixel"] .pixi-canvas{image-rendering:pixelated;filter:contrast(1.04) saturate(1.16)}
+.art-badge{display:inline-flex;align-items:center;min-height:38px;padding:7px 12px;border:1px solid #b59c64;border-radius:5px;color:#ffdf9e;background:#192b2b;font:800 11px ui-monospace,monospace;letter-spacing:.04em}
 #viewport[data-art-mode="ascii"] .pixi-canvas{image-rendering:crisp-edges;filter:contrast(1.13)}
-@media(max-width:540px){#art-mode-btn{min-width:110px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){#viewport .pixi-canvas{filter:none!important}}
 
 /* v2.4 danger-first field console: severity is visible even without animations */
@@ -195,3 +190,4 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .epilogue-stage .epilogue-credits{margin-top:20px;border-color:var(--ending-color);font-size:11px;letter-spacing:.11em}
 @media(prefers-reduced-motion:no-preference){.epilogue-sigil{animation:nacar-epilogue-glow 3.5s ease-in-out infinite alternate}}
 @keyframes nacar-epilogue-glow{from{opacity:.75}to{opacity:1}}
+.world-canvas{transform:perspective(1100px) rotateX(16deg) rotateZ(-1deg) skewX(-5deg);transform-origin:center 54%;image-rendering:crisp-edges;box-shadow:0 22px 28px #0008}

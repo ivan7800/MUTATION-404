@@ -1,4 +1,4 @@
-import { createGame, deserialize, dispatch, RECIPES, RESOURCE_INFO, MUTATIONS, biomeAt, BIOMES, weatherAt, WEATHER, ENEMY_DEFS, formatClock, HEIGHT, ITEM_DEFS, LANDMARKS, MARKET, ZONE_NAMES, ruinName, SECTORS, coordsForZone, sectorName, serialize, stackCount, WIDTH, xpNeeded, TASKS, GOODS, priceFor, settlementCitizens, exteriorForInterior, campaignProgress, campaignObjective, campaignArchiveList, endingStory, type Command, type GameState, type ItemId, type MutationId } from '../../../packages/core/src/game.js';
+import { createGame, deserialize, dispatch, RECIPES, RESOURCE_INFO, MUTATIONS, biomeAt, BIOMES, weatherAt, WEATHER, ENEMY_DEFS, formatClock, HEIGHT, ITEM_DEFS, LANDMARKS, MARKET, ruinName, SECTORS, coordsForZone, sectorName, serialize, stackCount, WIDTH, xpNeeded, TASKS, GOODS, priceFor, settlementCitizens, exteriorForInterior, campaignProgress, campaignObjective, campaignArchiveList, endingStory, type Command, type GameState, type ItemId, type MutationId } from '../../../packages/core/src/game.js';
 import { index } from '../../../packages/core/src/world.js';
 import { parseRuin, themeForRuin } from '../../../packages/core/src/depths.js';
 import { AsciiRenderer } from './renderer.js';
@@ -15,7 +15,7 @@ root.innerHTML=`
 <div class="hero-strip"><span><span id="biome-strip">REGIÓN / SALINAS DE VÉRTICE</span></span><span id="clock">07:00</span><span id="coords">X:32 Y:32</span><span class="strip-accent" id="exploration">EXPLORACIÓN 0%</span></div>
 <main class="layout">
 <section class="game-column" aria-label="Área de juego">
-<div class="panel-heading"><div><span class="tiny-label">VISTA DE EXPLORACIÓN / COMBATE TÁCTICO</span><h1 id="location">Faro Ciego</h1></div><div class="zoom"><button id="zoom-out" aria-label="Reducir mapa">−</button><button id="art-mode-btn" type="button" aria-label="Alternar entre modo píxel y ASCII" aria-pressed="true">PÍXEL / ASCII</button><button id="zoom-in" aria-label="Ampliar mapa">+</button></div></div>
+<div class="panel-heading"><div><span class="tiny-label">VISTA ASCII ISOMÉTRICA / COMBATE TÁCTICO</span><h1 id="location">Faro Ciego</h1></div><div class="zoom"><span class="art-badge" aria-label="Dirección artística ASCII unificada">ASCII ISOMÉTRICO</span><button id="zoom-out" aria-label="Reducir mapa">−</button><button id="zoom-in" aria-label="Ampliar mapa">+</button></div></div>
 <div class="biome-story" aria-live="polite">
   <div class="biome-emblem">◈</div>
   <div class="biome-story-text"><span class="tiny-label" id="biome-subtitle">EL DESIERTO QUE ESCUCHA</span><p id="biome-description">La sal conserva ecos de quienes desaparecieron.</p></div>
@@ -63,7 +63,7 @@ root.innerHTML=`
     </div>
     <p id="start-save-info" class="start-save-info">Buscando datos guardados…</p>
     <p id="start-message" role="status" aria-live="polite"></p>
-    <div class="start-footer">WASD / FLECHAS PARA EXPLORAR · Z PARA ALTERNAR PÍXEL / ASCII</div>
+    <div class="start-footer">WASD / FLECHAS PARA EXPLORAR · ASCII ISOMÉTRICO UNIFICADO</div>
   </div>
 </div>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-header"><span id="modal-caption">TRANSMISIÓN LOCAL</span><button id="modal-close" aria-label="Cerrar diálogo">✕</button></div><h2 id="modal-title">Registro</h2><div id="modal-content"></div><div id="modal-options"></div></div></div>`;
@@ -371,7 +371,6 @@ window.addEventListener('keydown',e=>{
   if(['1','2','3','4'].includes(key)){e.preventDefault();const powers:MutationId[]=['kinetic-pulse','neural-shock','pyrokinesis','phase-step'];act({type:'cast',mutation:powers[Number(key)-1]});return;}
   if(key==='b'){e.preventDefault();inventory();return;}
   if(key==='v'){e.preventDefault();regions();return;}
-  if(key==='z'){e.preventDefault();$('#art-mode-btn').click();return;}
   if(key==='m'){e.preventDefault();atlas();return;}
   if(key==='?' ){e.preventDefault();help();return;}
   const command=keymap[key];if(!command)return;
@@ -394,17 +393,6 @@ $('#harvest-btn').addEventListener('click',()=>act({type:'harvest'}));$('#craft-
 $('#inventory-btn').addEventListener('click',inventory);$('#journal-btn').addEventListener('click',journal);$('#help-btn').addEventListener('click',help);
 $('#modal-close').addEventListener('click',closeModal);
 $('#modal').addEventListener('click',ev=>{if(ev.target===$('#modal'))closeModal();});
-$('#art-mode-btn').addEventListener('click',()=>{
-  if(renderer instanceof AsciiRenderer){
-    state.log.push('GRÁFICOS // Modo pixel art disponible con WebGL.');
-    draw();return;
-  }
-  const mode=renderer.toggleArt();
-  $('#art-mode-btn').setAttribute('aria-pressed',String(mode==='pixel'));
-  $('#viewport').dataset.artMode=mode;
-  state.log.push(mode==='pixel'?'GRÁFICOS // Atlas pixel art original activado.':'GRÁFICOS // Vista ASCII clásica activada.');
-  draw();
-});
 $('#zoom-in').addEventListener('click',()=>{renderer.zoom(2);draw();});$('#zoom-out').addEventListener('click',()=>{renderer.zoom(-2);draw();});
 function startStatus(text:string):void{write('#start-message',text);}
 function updateStartMenu():void{
@@ -470,7 +458,7 @@ write('#start-volume-value',String(Math.round(audio.level*100))+'%');
 $<HTMLInputElement>('#start-volume').addEventListener('input',()=>{
   const n=Number($<HTMLInputElement>('#start-volume').value)/100;
   audio.setVolume(n);write('#start-volume-value',String(Math.round(n*100))+'%');
-  try{localStorage.setItem(AUDIO_SETTINGS_KEY,String(n));}catch{}
+  try{localStorage.setItem(AUDIO_SETTINGS_KEY,String(n));}catch{/* storage can be unavailable in private contexts */}
 });
 function updateAudioButtons(active:boolean):void{
   write('#audio-btn',active?'♫ SILENCIAR':'♫ ACTIVAR SONIDO');
@@ -525,14 +513,12 @@ void import('./pixi-renderer.js').then(async ({PixiAsciiRenderer})=>{
   renderer.pauseAmbience();
   renderer=candidate;
   $('#viewport').dataset.renderer='pixi-webgl';
-  $('#viewport').dataset.artMode='pixel';
-  $('#art-mode-btn').setAttribute('aria-pressed','true');
+  $('#viewport').dataset.artMode='ascii';
   state.log.push('GRÁFICOS // Renderizado PixiJS WebGL activado.');
   draw();if(gameStarted){renderer.startAmbience();renderer.focus();}
 }).catch(error=>{
   $('#viewport').dataset.renderer='canvas2d';
   $('#viewport').dataset.artMode='ascii';
-  $('#art-mode-btn').setAttribute('aria-pressed','false');
   state.log.push('GRÁFICOS // WebGL no disponible; motor Canvas 2D operativo.');
   console.warn('PixiJS WebGL fallback:',error);
   draw();

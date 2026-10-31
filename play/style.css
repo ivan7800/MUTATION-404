@@ -72,3 +72,122 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .eventpanel{background:linear-gradient(160deg,#0e1d1e,#0b1418)}
 #log{scrollbar-color:#567568 #101b1c;scrollbar-width:thin}
 @media(prefers-reduced-motion:reduce){.action:hover:not(:disabled),.action:active:not(:disabled){transform:none}.viewport:before{display:none}}
+
+/* v1.2 — legibility, depth and responsive console polish */
+:root{color-scheme:dark;--ui-gold:#e5c47f;--ui-line:#426459}
+.shell{max-width:1600px}
+.viewport{position:relative;border-color:#7a8c70;box-shadow:0 0 0 1px #14221f,inset 0 0 80px #020908,0 18px 55px #0009}
+.viewport::after{content:"";pointer-events:none;position:absolute;inset:8px;border:1px solid #e0c88624;box-shadow:inset 0 0 24px #0007}
+.world-canvas{filter:contrast(1.07) saturate(1.14)}
+.eventpanel,.side-card,.combatbar{border-color:#3e5d53;box-shadow:0 15px 34px #0005}
+.section-title{color:var(--ui-gold)}
+.action,.icon-btn,.system-actions button,.zoom button,.modal-option{transition:background-color .12s ease,border-color .12s ease,box-shadow .12s ease}
+.action:active,.icon-btn:active,.zoom button:active,.system-actions button:active{transform:translateY(1px)}
+.action:focus-visible,.icon-btn:focus-visible,.system-actions button:focus-visible,.modal-option:focus-visible,.zoom button:focus-visible{outline:2px solid #ffe1a0;outline-offset:2px;box-shadow:0 0 0 4px #08110e}
+#log p.latest{background:linear-gradient(90deg,#b38b3417,transparent);padding-block:4px}
+.meter{height:8px;overflow:hidden;background:#061412}
+.meter i{box-shadow:0 0 10px #91dbb366}
+.modal-card{border-color:#ddbb73;box-shadow:0 35px 100px #000e,0 0 45px #ad8c3420}
+@media(min-width:1180px){.sidebar{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;scrollbar-width:thin}}
+@media(max-width:800px){.shell{padding-inline:12px}.layout{gap:12px}.top-controls{gap:8px}.brand{gap:10px}.hero-strip{letter-spacing:.06em}.viewport{min-height:330px}.toolbar{overflow-wrap:anywhere}.actionbar{gap:6px}}
+@media(max-width:440px){.topbar{flex-wrap:wrap;padding-block:10px}.top-controls{width:100%;justify-content:flex-end}.panel-heading{flex-wrap:wrap}.action{min-height:44px}.modal-card{max-height:87dvh}}
+@media(prefers-reduced-motion:reduce){.action,.icon-btn,.system-actions button,.zoom button,.modal-option{transition:none}.world-canvas{filter:none}}
+
+/* v1.8 — Nácar atmosférico: clearer navigation and legible environmental console */
+:root{--signal-light:#f0dcad;--quiet-text:#bdd0c5}
+.viewport{background:radial-gradient(ellipse at center,#132c2a 0%,#060d13 80%);border:1px solid #8caa8d;scrollbar-color:#66887d #071414}
+.world-canvas{outline-offset:3px;box-shadow:0 0 0 1px #5b8776,0 0 35px #6daf8530,0 20px 60px #0009}
+.panel-heading h1{text-wrap:balance}
+.action{min-height:42px;line-height:1.35}
+.action.gene{border-color:#8674ad}
+.action.discovery{border-color:#4e8791}
+.eventpanel{border-left:3px solid #b79f69}
+#log p.latest{color:var(--signal-light);border-left-color:#ebce8c}
+.stat,.pairs{color:var(--quiet-text)}
+.biome-story{border-left:3px solid var(--biome-accent)}
+.modal-card{scrollbar-color:#657f6c #091518}
+@media(max-width:620px){.toolbar{line-height:1.75}.actionbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.action{width:100%;font-size:10px;min-height:46px}.viewport{scrollbar-width:thin}}
+@media(prefers-reduced-motion:reduce){.world-canvas{filter:none;box-shadow:0 0 0 1px #5b8776}.viewport:before{display:none}}
+
+/* v2.0 vertical slice: an accessible, actual rendering mode switch */
+.art-badge{display:inline-flex;align-items:center;min-height:38px;padding:7px 12px;border:1px solid #b59c64;border-radius:5px;color:#ffdf9e;background:#192b2b;font:800 11px ui-monospace,monospace;letter-spacing:.04em}
+#viewport[data-art-mode="ascii"] .pixi-canvas{image-rendering:crisp-edges;filter:contrast(1.13)}
+@media(prefers-reduced-motion:reduce){#viewport .pixi-canvas{filter:none!important}}
+
+/* v2.4 danger-first field console: severity is visible even without animations */
+#threat-note{font-weight:700;letter-spacing:.045em;transition:color .15s ease}
+#threat-note[data-level="contact"]{color:#ffb8b6;text-shadow:0 0 10px #bc424255}
+#threat-note[data-level="near"]{color:#f5c791}
+#threat-note[data-level="enemy"]{color:#f4deae}
+#threat-note[data-level="clear"]{color:#b0c5b5}
+@media(prefers-reduced-motion:reduce){#threat-note{transition:none;text-shadow:none!important}}
+
+/* v2.6 survival readiness: persistent, compact status above tactical actions */
+.survival-strip{padding:8px 12px;margin:5px 0;border:1px solid #4a7166;background:#111f22;color:#cbe4d0;font-size:11px;font-weight:700;letter-spacing:.03em;line-height:1.65;border-radius:5px;font-variant-numeric:tabular-nums}
+.survival-strip[data-risk="warning"]{border-color:#bd9d60;color:#f1d5a0}
+.survival-strip[data-risk="critical"]{border-color:#bd676b;color:#ffe0de;background:#311d27}
+@media(max-width:620px){.survival-strip{font-size:10px;padding:9px 10px}}
+@media(prefers-reduced-motion:reduce){.survival-strip{animation:none;transition:none}}
+
+/* v2.7 full-screen title screen, mouse/keyboard friendly and responsive */
+.start-menu{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;overflow:auto;padding:26px 14px;background:radial-gradient(ellipse at 50% 29%,#204339f0 0%,#080f17f9 47%,#05080d 85%);backdrop-filter:blur(12px);color:#f2dfb7}
+.start-menu.hidden,.start-settings.hidden{display:none}
+.start-menu-card{width:min(100%,560px);max-height:min(96dvh,900px);overflow:auto;padding:clamp(20px,4vw,44px);border:1px solid #8e9f75;background:linear-gradient(157deg,#1a312ddf,#0b1822f5 69%,#161627f3);box-shadow:0 0 0 6px #080c13a1,0 25px 110px #000c,inset 0 1px #ead5a129;border-radius:12px;text-align:center}
+.start-eyebrow,.start-footer{font-size:10px;letter-spacing:.19em;color:#a5c7b2}
+.start-sigil{margin:12px auto 0;font-size:62px;line-height:1.1;color:#b6d2b8;text-shadow:0 0 30px #a4dca966}
+.start-menu-card h1{font-size:clamp(31px,5vw,48px);margin:8px 0;letter-spacing:.11em;color:#f4e8c9;line-height:1.2}
+.start-menu-card h1 em{font-style:normal;color:#efbf7d}
+.start-tagline{font-size:13px;font-weight:800;letter-spacing:.13em;color:#d9ccaa}
+.start-description{font-size:13px;line-height:1.8;color:#aebfb8;max-width:405px;margin:13px auto 22px}
+.start-actions{display:grid;gap:10px}
+.start-actions button,.start-settings button{min-height:46px;padding:12px;border:1px solid #607f70;border-radius:5px;background:#1c342f;color:#e2e9d1;font-weight:800;letter-spacing:.08em;cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .1s ease}
+.start-actions button:hover:not(:disabled),.start-settings button:hover{border-color:#e0ba79;background:#34483d}
+.start-actions button:active{transform:translateY(1px)}
+.start-actions .start-primary{border-color:#eac58b;background:linear-gradient(120deg,#87623a,#69513a);color:#fff2d3}
+.start-actions button:disabled{cursor:not-allowed;opacity:.38}
+.start-menu button:focus-visible,.start-menu input:focus-visible{outline:3px solid #f6dd9e;outline-offset:3px}
+.start-settings{margin-top:14px;padding:18px;border:1px solid #5d7b6e;background:#0b181f;border-radius:7px;text-align:left}
+.start-settings label{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:.07em;color:#d9e3ce}
+.start-settings input[type=range]{width:100%;min-height:33px;accent-color:#e9be78}
+.start-settings button{width:100%;margin-top:12px}
+.start-settings p,.start-save-info,#start-message{font-size:12px;line-height:1.7;color:#c3d0b8}
+.start-save-info{margin-top:16px;color:#d7c598}
+#start-message{min-height:18px;color:#ffcaa3}
+.start-footer{margin-top:13px;font-size:9px;line-height:1.7}
+@media(max-height:740px){.start-menu{align-items:flex-start}.start-menu-card{max-height:none}}
+@media(prefers-reduced-motion:reduce){.start-actions button,.start-settings button{transition:none}}
+
+/* v2.8 campaign completion and long-form narrative credits */
+.epilogue-credits{padding:20px 14px;text-align:center;border:1px solid #c4a46b;background:radial-gradient(ellipse at top,#3c332a,#121820 70%);letter-spacing:.24em;line-height:2.2;color:#f1dbad;font-weight:800}
+.mission-card #quest-text{line-height:1.75}
+.mission-card #quest-state{letter-spacing:.02em;line-height:1.6}
+#modal-content h3{margin-top:20px;color:#e7d09b}
+#modal-content li{line-height:1.7;margin-bottom:5px}
+
+/* v2.9 P0: a living player must never see the death warning. */
+.death-banner.hidden{display:none}
+
+/* v2.9 boss focus: explicit phase text + full-health bar, accessible without motion. */
+.nacar-boss{margin:9px 0 12px;padding:12px 15px;border:1px solid var(--nacar-color,#8fe8f2);background:linear-gradient(100deg,#121d27,#1d1725);box-shadow:inset 0 0 22px #070d17}
+.nacar-boss.hidden{display:none}
+.nacar-boss-title{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;color:var(--nacar-color,#8fe8f2);font:700 12px/1.5 ui-monospace,monospace;letter-spacing:.075em}
+.nacar-boss-title strong{font-weight:750}
+.nacar-boss-meter{height:7px;margin-top:9px;background:#29313b;border:1px solid #56616c;overflow:hidden}
+.nacar-boss-meter i{display:block;width:100%;height:100%;background:var(--nacar-color,#8fe8f2);transition:width .16s linear}
+@media(prefers-reduced-motion:reduce){.nacar-boss-meter i{transition:none}}
+
+/* v2.9: explicit accessible pre-impact warning in the live-boss HUD. */
+.nacar-boss-warning{margin-top:8px;font:700 11px/1.5 ui-monospace,monospace;letter-spacing:.03em;color:var(--nacar-color,#8fe8f2)}
+
+/* Final chamber: semantic conclusion presentation, still readable in reduced motion. */
+.epilogue-stage{--ending-color:#a4ddd2;position:relative;padding:clamp(15px,3vw,30px);border:1px solid var(--ending-color);background:radial-gradient(ellipse at 50% 11%,#233d41 0%,#101b23 53%,#090e17 100%);color:#e8e4d5;text-align:center}
+.epilogue-stage[data-ending=release]{--ending-color:#a8e8b6;background:radial-gradient(ellipse at 50% 11%,#244832 0%,#111d1e 53%,#090e17 100%)}
+.epilogue-stage[data-ending=erase]{--ending-color:#e3a6bd;background:radial-gradient(ellipse at 50% 11%,#452337 0%,#201823 53%,#090e17 100%)}
+.epilogue-kicker{font:700 10px/1.8 ui-monospace,monospace;letter-spacing:.15em;color:var(--ending-color)}
+.epilogue-sigil{font-size:clamp(56px,10vw,90px);line-height:1.25;color:var(--ending-color);text-shadow:0 0 35px #a5c6c54d}
+.epilogue-stage .modal-lead{text-align:left;line-height:1.8;max-width:60ch;margin:14px auto}
+.epilogue-verdict{border-top:1px solid var(--ending-color);padding:13px 0 4px;font:700 11px/1.5 ui-monospace,monospace;color:var(--ending-color);letter-spacing:.09em}
+.epilogue-stage .epilogue-credits{margin-top:20px;border-color:var(--ending-color);font-size:11px;letter-spacing:.11em}
+@media(prefers-reduced-motion:no-preference){.epilogue-sigil{animation:nacar-epilogue-glow 3.5s ease-in-out infinite alternate}}
+@keyframes nacar-epilogue-glow{from{opacity:.75}to{opacity:1}}
+.world-canvas{transform:perspective(1100px) rotateX(16deg) rotateZ(-1deg) skewX(-5deg);transform-origin:center 54%;image-rendering:crisp-edges;box-shadow:0 22px 28px #0008}

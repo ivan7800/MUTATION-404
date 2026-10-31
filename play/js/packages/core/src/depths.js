@@ -51,6 +51,9 @@ export function generateRuin(seed, x, y, depth) {
     generated.tiles[index(10, 10)] = '+';
     generated.tiles[index(14, 10)] = depth === 1 ? 'T' : 'o';
     generated.tiles[index(20, 12)] = 'o';
+    // A second, optional chamber contains one persistent world-changing choice.
+    generated.tiles[index(21, 12)] = ':';
+    generated.tiles[index(22, 12)] = '?';
     // Distinct hazards are persistent per zone, not reset when revisited.
     generated.tiles[index(25, 12)] = ':';
     generated.fields.push({ x: 25, y: 12, kind: theme.hazard, ttl: 35 });
@@ -60,8 +63,21 @@ export function generateRuin(seed, x, y, depth) {
             continue;
         generated.fields.push({ x: xx, y: yy, kind: theme.hazard, ttl: 20 + i * 5 });
     }
+    // Distinctive connected encounter chamber, one elite per deep regional ruin.
+    if (depth === 2) {
+        for (let xx = 22; xx <= 32; xx++)
+            generated.tiles[index(xx, 12)] = ':';
+        for (let yy = 9; yy <= 16; yy++)
+            for (let xx = 27; xx <= 33; xx++)
+                generated.tiles[index(xx, yy)] = '.';
+        generated.tiles[index(22, 12)] = '?'; // preserve existing resonance after corridor carving
+        generated.tiles[index(26, 12)] = 'o';
+        generated.enemies = generated.enemies.filter(e => !(e.x >= 25 && e.x <= 34 && e.y >= 8 && e.y <= 17));
+        generated.enemies.push({ id: `elite-${x}-${y}-${depth}`, kind: 'drone', x: 30, y: 12, hp: ENEMY_DEFS.drone.hp, mode: 'idle', searchTurns: 0 });
+    }
     for (const e of generated.enemies)
-        e.id = `ruin-${x}-${y}-${depth}-${e.id}`;
+        if (!e.id.startsWith('elite-'))
+            e.id = `ruin-${x}-${y}-${depth}-${e.id}`;
     return generated;
 }
 export const DEPTHS = ['surface', 'zero-1', 'zero-2', 'zero-3'];
