@@ -4,7 +4,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, weatherAt, 
 import { index, passable, within } from '../../../packages/core/src/world.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
-import { paintComposition } from './ascii-art.js';
+import { CAMERA_SCALE, paintComposition } from './ascii-art.js';
 /**
  * Real PixiJS v8 sprite renderer. Tiles are GPU sprites based on a reusable glyph
  * atlas generated from canvas, not one DOM/canvas text draw call per game frame.
@@ -91,7 +91,7 @@ export class PixiAsciiRenderer {
         result.layers.sortableChildren = true;
         // A true affine isometric basis for every glyph, floor tile and effect.
         // Game coordinates stay Cartesian so pathfinding and saves remain stable.
-        result.view.setFromMatrix(new Matrix(.5, .25, -.5, .25, 352, 120));
+        result.view.setFromMatrix(new Matrix(CAMERA_SCALE, CAMERA_SCALE * .5, -CAMERA_SCALE, CAMERA_SCALE * .5, 352, 310));
         result.app.stage.addChild(result.view);
         result.mount.appendChild(result.app.canvas);
         // Hide, but never destroy, the fallback before the WebGL view is ready.
@@ -481,7 +481,7 @@ export class PixiAsciiRenderer {
         const ox = Math.max(0, Math.min(WIDTH - this.viewW, state.player.x - Math.floor(this.viewW / 2)));
         const oy = Math.max(0, Math.min(HEIGHT - this.viewH, state.player.y - Math.floor(this.viewH / 2)));
         const anchorX = (state.player.x - ox + .5) * this.cellW, anchorY = (state.player.y - oy + .5) * this.cellH;
-        this.view.setFromMatrix(new Matrix(1, .5, -1, .5, this.viewW * this.cellW / 2 - anchorX + anchorY, this.viewH * this.cellH / 2 - (anchorX + anchorY) / 2));
+        this.view.setFromMatrix(new Matrix(CAMERA_SCALE, CAMERA_SCALE * .5, -CAMERA_SCALE, CAMERA_SCALE * .5, this.viewW * this.cellW / 2 - CAMERA_SCALE * anchorX + CAMERA_SCALE * anchorY, this.viewH * this.cellH / 2 - CAMERA_SCALE * (anchorX + anchorY) / 2));
         const night = Math.floor(state.tick / 6000) % 4 >= 2;
         this.backdrop.clear();
         if (this.terrainSeed !== state.seed) {
@@ -779,7 +779,7 @@ export class PixiAsciiRenderer {
         this.cellH = this.fontSize + 5;
         this.floorKey = '';
         this.app.renderer.resize(this.viewW * this.cellW, this.viewH * this.cellH);
-        this.view.setFromMatrix(new Matrix(.5, .25, -.5, .25, this.viewW * this.cellW / 2, 120));
+        this.view.setFromMatrix(new Matrix(CAMERA_SCALE, CAMERA_SCALE * .5, -CAMERA_SCALE, CAMERA_SCALE * .5, this.viewW * this.cellW / 2, this.viewH * this.cellH / 2));
         if (this.state)
             this.draw(this.state);
     }

@@ -44,10 +44,12 @@ El menú valida cada archivo antes de ofrecer «Continuar». Si el slot principa
 
 Ciudadanos de Faro Ciego y asentamientos, depósitos de los cuatro recursos, botín y campos de fuego/electricidad/esporas usan ahora claves visuales semánticas y composiciones de varios caracteres en Canvas y WebGL. Esto evita que el glifo `$` de un mercader se confunda visualmente con el botín o que `!` de un vigía comparta silueta con terreno peligroso. El atlas WebGL se amplió a 80 píxeles y se centra en 40, de acuerdo con su matriz de escala, para no recortar los dibujos nuevos. Typecheck, lint, build offline, 151 tests, comprobación Pages y QA de Chromium de 13 escenas pasaron. La captura de WebGL se inspeccionó: el mapa visible continúa ocupando una porción reducida del visor y el lenguaje volumétrico todavía es básico. No afirmar calidad premium final ni FPS físicos.
 
+La siguiente iteración amplía la escala de cámara compartida a 1,45 en ambas matrices isométricas, sin modificar visión, colisiones ni coordenadas guardadas. Las capturas de WebGL, Canvas y móvil se inspeccionaron: el área explorada ocupa más espacio y permanece centrada. Typecheck, lint, build offline, 151 tests, QA de navegador y prueba offline en subruta pasaron. La composición sigue siendo una proyección de la cuadrícula y falta volumen/oclusión de nivel premium; el rendimiento físico no está medido.
+
 ## Fases siguientes concretas
 
 1. Completar estados visuales de caminar/ataque/daño/muerte/mutación/interacción del héroe y ataques específicos de cada enemigo; hoy hay poses cíclicas y efectos existentes, no toda esa matriz de animaciones.
-2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Mejorar tamaño del mapa en el visor, oclusión y escala Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
+2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Perfeccionar oclusión y escala Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
 4. Ampliar tests de actualización del SW con dos builds, descarga fallida y recursos ausentes; implementar exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.
 5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y reducción dinámica de movimiento.

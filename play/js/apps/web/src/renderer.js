@@ -2,7 +2,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, 
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
-import { paintComposition } from './ascii-art.js';
+import { CAMERA_SCALE, paintComposition } from './ascii-art.js';
 const VIEW_W = 47, VIEW_H = 27;
 const COLORS = {
     '#': '#63796e', '.': '#9a9580', ':': '#d3b783', '~': '#63afc3', '^': '#c0dbec',
@@ -100,7 +100,7 @@ export class AsciiRenderer {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         ctx.save();
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        paintComposition(ctx, glyph, sx / dpr, sy / dpr, this.fontSize, this.reducedMotion ? 0 : Math.floor(this.ambience / 5));
+        paintComposition(ctx, glyph, sx / dpr, sy / dpr, this.fontSize * CAMERA_SCALE, this.reducedMotion ? 0 : Math.floor(this.ambience / 5));
         ctx.restore();
     }
     draw(state) {
@@ -117,7 +117,8 @@ export class AsciiRenderer {
         const ox = Math.max(0, Math.min(WIDTH - VIEW_W, state.player.x - Math.floor(VIEW_W / 2)));
         const oy = Math.max(0, Math.min(HEIGHT - VIEW_H, state.player.y - Math.floor(VIEW_H / 2)));
         const anchorX = (state.player.x - ox + .5) * this.cellW, anchorY = (state.player.y - oy + .5) * this.cellH;
-        ctx.setTransform(dpr, dpr * .5, -dpr, dpr * .5, dpr * (w / 2 - anchorX + anchorY), dpr * (h / 2 - (anchorX + anchorY) / 2));
+        const scale = dpr * CAMERA_SCALE;
+        ctx.setTransform(scale, scale * .5, -scale, scale * .5, dpr * w / 2 - scale * anchorX + scale * anchorY, dpr * h / 2 - scale * (anchorX + anchorY) / 2);
         const timeNight = Math.floor(state.tick / 6000) % 4 >= 2;
         ctx.font = `${this.fontSize}px "DejaVu Sans Mono","Liberation Mono",monospace`;
         ctx.shadowBlur = 0;

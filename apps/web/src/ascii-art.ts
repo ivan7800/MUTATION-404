@@ -1,4 +1,5 @@
 /** Shared original ASCII compositions. Pure data: no world state, DOM or RNG. */
+export const CAMERA_SCALE=1.45;
 const ACTORS:Record<string,readonly string[][]>={
   '@':[[' o ','/|\\','/ \\'],[' o ','/|>',' /\\']],
   s:[[' __','/oo\\','/\\/\\'],[' __','/oo\\','\\/\\/']],
