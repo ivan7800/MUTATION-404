@@ -34,3 +34,10 @@ test('save serialization still preserves game state while excluding transient vi
   assert.equal('visible' in saved, false);
   assert.equal('dialogue' in saved, false);
 });
+
+test('offline delivery includes the service worker without changing the game entrypoint', () => {
+  const worker = readFileSync('apps/web/public/sw.js', 'utf8');
+  assert.match(worker, /self\.addEventListener\('install'/);
+  assert.match(worker, /caches\.open\(CACHE\)/);
+  assert.match(worker, /self\.addEventListener\('fetch'/);
+});

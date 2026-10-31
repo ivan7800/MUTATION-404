@@ -30,6 +30,9 @@ test('standalone server serves playable files without npm dependencies', async t
   const css=await fetch(new URL(styleMatch[1],`http://127.0.0.1:${port}/`));
   assert.equal(css.status,200);
   assert.match(css.headers.get('content-type')||'',/text\/css/);
+  const worker=await fetch(new URL('./sw.js',`http://127.0.0.1:${port}/`));
+  assert.equal(worker.status,200);
+  assert.match(await worker.text(),/mutation404-pages-v1/);
   const notFound=await fetch(`http://127.0.0.1:${port}/secret.txt`);
   assert.equal(notFound.status,404);
 });

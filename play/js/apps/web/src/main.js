@@ -9,6 +9,8 @@ const SAVE_KEY = 'mutation404.v10.save', V09_KEY = 'mutation404.v09.save', V08_K
 const root = document.querySelector('#app');
 if (!root)
     throw new Error('Falta #app');
+if ('serviceWorker' in navigator)
+    window.addEventListener('load', () => { void navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => { }); });
 root.innerHTML = `
 <div class="shell">
 <header class="topbar"><div class="brand"><span class="brand-mark">◈</span><div><div class="brand-title">MUTATION <em>404</em></div><div class="brand-sub">NÁCAR // ARCHIVO 11 — ECOS DE NÁCAR</div></div></div><div class="top-controls"><span class="live"><span class="live-dot"></span>SEÑAL INESTABLE</span><button class="icon-btn" id="menu-btn">☰ MENÚ</button><button class="icon-btn" id="audio-btn" aria-pressed="false">♫ ACTIVAR SONIDO</button><button class="icon-btn" id="help-btn">? AYUDA</button></div></header>

@@ -190,4 +190,4 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 .epilogue-stage .epilogue-credits{margin-top:20px;border-color:var(--ending-color);font-size:11px;letter-spacing:.11em}
 @media(prefers-reduced-motion:no-preference){.epilogue-sigil{animation:nacar-epilogue-glow 3.5s ease-in-out infinite alternate}}
 @keyframes nacar-epilogue-glow{from{opacity:.75}to{opacity:1}}
-.world-canvas{transform:perspective(1100px) rotateX(16deg) rotateZ(-1deg) skewX(-5deg);transform-origin:center 54%;image-rendering:crisp-edges;box-shadow:0 22px 28px #0008}
+.world-canvas{transform:none;image-rendering:crisp-edges;box-shadow:0 22px 28px #0008}

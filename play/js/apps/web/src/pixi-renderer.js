@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Sprite, Texture } from 'pixi.js';
+import { Application, Container, Graphics, Matrix, Sprite, Texture } from 'pixi.js';
 import { nacarPhase, nacarMark } from '../../../packages/core/src/campaign.js';
 import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, weatherAt, WIDTH, settlementCitizens } from '../../../packages/core/src/game.js';
 import { index, passable, within } from '../../../packages/core/src/world.js';
@@ -87,6 +87,9 @@ export class PixiAsciiRenderer {
         result.app.canvas.setAttribute('aria-label', 'Mapa WebGL ASCII interactivo. Flechas/WASD para moverse; E para interactuar; X para atacar.');
         result.app.canvas.dataset.renderer = 'pixi-webgl';
         result.view.addChild(result.terrainFloor, result.backdrop, result.layers);
+        // A true affine isometric basis for every glyph, floor tile and effect.
+        // Game coordinates stay Cartesian so pathfinding and saves remain stable.
+        result.view.setFromMatrix(new Matrix(.5, .25, -.5, .25, 352, 18));
         result.app.stage.addChild(result.view);
         result.mount.appendChild(result.app.canvas);
         // Hide, but never destroy, the fallback before the WebGL view is ready.

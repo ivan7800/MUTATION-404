@@ -92,9 +92,14 @@ export class AsciiRenderer {
         this.lastState = state;
         const ctx = this.ctx, w = VIEW_W * this.cellW, h = VIEW_H * this.cellH;
         const currentBiome = biomeAt(state.seed, state.player.x, state.player.y);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.globalAlpha = 1;
         ctx.fillStyle = coordsForZone(state.zone) ? BIOMES[currentBiome].shadow : '#080c16';
         ctx.fillRect(0, 0, w, h);
+        // Project the logical grid into a diamond lattice. Simulation coordinates
+        // remain orthogonal; only the presentation uses the isometric basis.
+        ctx.setTransform(dpr * .5, dpr * .25, dpr * -.5, dpr * .25, dpr * w * .5, dpr * 18);
         const ox = Math.max(0, Math.min(WIDTH - VIEW_W, state.player.x - Math.floor(VIEW_W / 2)));
         const oy = Math.max(0, Math.min(HEIGHT - VIEW_H, state.player.y - Math.floor(VIEW_H / 2)));
         const timeNight = Math.floor(state.tick / 6000) % 4 >= 2;
