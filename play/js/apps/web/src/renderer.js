@@ -22,6 +22,8 @@ export class AsciiRenderer {
     heroAction = null;
     heroUntil = 0;
     heroTimer = 0;
+    enemyHits = new Map();
+    enemyHitTimer = 0;
     effectFrame = 0;
     ambientFrame = 0;
     ambientLast = 0;
@@ -57,6 +59,10 @@ export class AsciiRenderer {
             if (this.heroTimer)
                 clearTimeout(this.heroTimer);
             this.heroTimer = 0;
+            if (this.enemyHitTimer)
+                clearTimeout(this.enemyHitTimer);
+            this.enemyHitTimer = 0;
+            this.enemyHits.clear();
             if (this.effectFrame)
                 cancelAnimationFrame(this.effectFrame);
             this.effectFrame = 0;
@@ -72,6 +78,26 @@ export class AsciiRenderer {
         if (this.heroTimer)
             clearTimeout(this.heroTimer);
         this.heroTimer = window.setTimeout(() => { this.heroTimer = 0; if (this.lastState)
+            this.draw(this.lastState); }, 340);
+        this.draw(state);
+    }
+    combatFeedback(previous, state) {
+        if (this.reducedMotion)
+            return;
+        const now = performance.now();
+        let hit = false;
+        for (const enemy of state.enemies) {
+            const before = previous.get(enemy.id);
+            if (before && enemy.hp > 0 && enemy.hp < before.hp) {
+                this.enemyHits.set(enemy.id, now + 320);
+                hit = true;
+            }
+        }
+        if (!hit)
+            return;
+        if (this.enemyHitTimer)
+            clearTimeout(this.enemyHitTimer);
+        this.enemyHitTimer = window.setTimeout(() => { this.enemyHitTimer = 0; if (this.lastState)
             this.draw(this.lastState); }, 340);
         this.draw(state);
     }
@@ -135,6 +161,10 @@ export class AsciiRenderer {
     }
     draw(state) {
         this.lastState = state;
+        const frameTime = performance.now();
+        for (const [id, until] of this.enemyHits)
+            if (until <= frameTime)
+                this.enemyHits.delete(id);
         const ctx = this.ctx, w = VIEW_W * this.cellW, h = VIEW_H * this.cellH;
         const currentBiome = biomeAt(state.seed, state.player.x, state.player.y);
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -274,8 +304,10 @@ export class AsciiRenderer {
                 ctx.lineWidth = 1.5;
                 ctx.strokeRect(px + 1, py + 1, this.cellW - 2, this.cellH - 2);
             }
-            ctx.fillStyle = (enemy.stunned ?? 0) > 0 ? '#e3aaf5' : def.color;
-            this.glyph(enemy.id === 'campaign-heart-custodian' ? '✺' : def.glyph, px + this.cellW / 2, py + this.cellH / 2);
+            const glyph = enemy.id === 'campaign-heart-custodian' ? '✺' : enemy.id.startsWith('elite-') ? '◆' : def.glyph;
+            const hit = this.enemyHits.has(enemy.id);
+            ctx.fillStyle = hit ? '#ff9d91' : (enemy.stunned ?? 0) > 0 ? '#e3aaf5' : def.color;
+            this.glyph(hit ? `enemy:hurt:${glyph}` : glyph, px + this.cellW / 2, py + this.cellH / 2);
             ctx.shadowBlur = 0;
             // Miniature health bar provides threat feedback without a separate modal.
             const health = Math.max(0, Math.min(1, enemy.hp / def.hp));

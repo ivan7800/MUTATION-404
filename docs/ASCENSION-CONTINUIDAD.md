@@ -52,9 +52,11 @@ El protagonista dispone ahora de estados visuales ASCII de caminar, atacar, dañ
 
 Una prueba funcional de dos versiones del service worker instala v1 y v2 sobre el mismo scope, comprueba que v1 permanece hasta la activación de v2, que v2 sirve su propio index offline y que cachés de otra ruta y aplicación sobreviven. Aún falta reproducir el cambio de build con dos pestañas reales en Chromium.
 
+Canvas y WebGL comparten ahora siluetas de herida para las seis especies originales, élites y Nácar. Canvas recibe la comparación de PV tras cada turno aceptado y borra los impactos expirados; Pixi usa su registro de impactos existente para elegir la misma composición. No se alteraron daño, IA, turnos ni guardados. La prueba del catálogo ASCII verifica las ocho heridas; build y 154 tests pasaron tras el ajuste final de limpieza. QA de Chromium y prueba offline pasaron antes de ese ajuste menor. Quedan ataques, muerte y coreografía específica de enemigos y revisión humana de legibilidad.
+
 ## Fases siguientes concretas
 
-1. Afinar la legibilidad y duración de los nuevos estados visuales del héroe con revisión humana; completar ataques, daño y muerte específicos de cada enemigo, incluido Nácar.
+1. Afinar la legibilidad y duración de los estados visuales del héroe y heridas de enemigos con revisión humana; completar ataques y muerte específicos de cada enemigo, incluido Nácar.
 2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Perfeccionar oclusión y escala Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
 4. Probar actualización del SW con dos builds y pestañas reales en Chromium, recursos ausentes y recuperación tras red intermitente; implementar exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.

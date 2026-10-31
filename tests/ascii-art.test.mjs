@@ -12,3 +12,11 @@ test('hero actions retain distinct printable ASCII silhouettes in the shipped re
   }
   assert.notDeepEqual(composition('hero:attack',0),composition('hero:attack',1));
 });
+test('all original enemy types and boss have a visible ASCII wound pose',()=>{
+  for(const glyph of ['s','V','l','p','D','f','✺','◆']){
+    const idle=composition(glyph),hurt=composition(`enemy:hurt:${glyph}`);
+    assert.ok(hurt.length>=3,`${glyph} wound pose missing`);
+    assert.notDeepEqual(hurt,idle,`${glyph} wound pose must differ from idle`);
+    for(const row of hurt)assert.match(row,/^[\x20-\x7e]+$/);
+  }
+});

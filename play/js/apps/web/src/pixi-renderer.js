@@ -656,7 +656,8 @@ export class PixiAsciiRenderer {
             else if (flash)
                 this.flashes.delete(enemy.id);
             const pose = (this.reducedMotion ? 0 : Math.floor(this.ambience / 6 + enemy.x + enemy.y) % 2);
-            used = this.artMode === 'pixel' ? this.drawCreature(used, nacar ? 'nacar' : elite ? 'elite' : enemy.kind, x, y, pose) : this.drawGlyph(used, nacar ? '✺' : elite ? '◆' : def.glyph, x, y, nacar ? 0x92f9ef : elite ? 0xecb9ff : this.color(def.color));
+            const creatureGlyph = nacar ? '✺' : elite ? '◆' : def.glyph;
+            used = this.artMode === 'pixel' ? this.drawCreature(used, nacar ? 'nacar' : elite ? 'elite' : enemy.kind, x, y, pose) : this.drawGlyph(used, flash && flash.until > performance.now() ? `enemy:hurt:${creatureGlyph}` : creatureGlyph, x, y, flash && flash.until > performance.now() ? 0xff9d91 : nacar ? 0x92f9ef : elite ? 0xecb9ff : this.color(def.color));
             const health = Math.max(0, Math.min(1, enemy.hp / (nacar ? def.hp * 3 : def.hp)));
             if (health < 1) {
                 this.backdrop.rect(x * this.cellW + 1, y * this.cellH - 3, this.cellW - 2, 2).fill(0x492c33);
