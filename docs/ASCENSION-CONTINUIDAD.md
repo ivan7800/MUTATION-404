@@ -12,7 +12,7 @@ La fase técnica añade lockfile, npm ci, lanzador compartido, instalación bajo
 
 Matriz detallada: ASCENSION.md. qa-conservation.mjs compila el núcleo de e0a9094 en un directorio temporal y compara siete catálogos y 2.500 transiciones de cinco semillas con sus respuestas y guardados exactos. No prueba todas las combinaciones de toda la campaña.
 
-Suites completas: 151 tests; pruebas anteriores que buscan texto se mantienen identificadas como guardas, no acreditan funciones. Las pruebas nuevas del worker ejecutan activación, fallo de descarga e aislamiento de requests en VM. qa-offline.mjs usa Chromium real: instala en /MUTATION-404/, corta la red, recarga, continúa guardado y mueve con WebGL y chunks dinámicos disponibles. qa-browser.mjs comprueba WebGL/Canvas, móvil/tableta, menús, guardado, jefe y final; añade pulsaciones rápidas, backup de guardado, foco de modales y centrado del visor móvil. Evidencias regenerables en qa-evidence, ignoradas en Git.
+Suites completas: 153 tests tras la prueba de dos versiones del worker; pruebas anteriores que buscan texto se mantienen identificadas como guardas, no acreditan funciones. Las pruebas del worker ejecutan instalación, activación, fallo de descarga, aislamiento de requests y cambio de versión en VM. qa-offline.mjs usa Chromium real: instala en /MUTATION-404/, corta la red, recarga, continúa guardado y mueve con WebGL y chunks dinámicos disponibles. qa-browser.mjs comprueba WebGL/Canvas, móvil/tableta, menús, guardado, jefe y final; añade pulsaciones rápidas, backup de guardado, foco de modales y centrado del visor móvil. Evidencias regenerables en qa-evidence, ignoradas en Git.
 
 Comandos: npm ci, npm run typecheck, npm run lint, npm run build, npm run build:offline, npm run test:core, npm test, node scripts/check-pages.mjs, node scripts/balance-audit.mjs, node scripts/qa-conservation.mjs, node scripts/qa-browser.mjs, node scripts/qa-offline.mjs. CHROME_PATH permite elegir navegador. En el sandbox actual algunas pruebas de procesos/HTTP requieren escalado autorizado. Linux: bash -n INICIAR-LINUX.sh y node scripts/launch.mjs --prepare-only. Windows no ejecutado.
 
@@ -50,12 +50,14 @@ La preferencia del sistema de movimiento reducido se escucha ahora durante la pa
 
 El protagonista dispone ahora de estados visuales ASCII de caminar, atacar, daño, mutación, interacción y muerte en ambos renderizadores. Son transitorios y se activan sólo tras acciones aceptadas; la muerte se deriva de los puntos de vida. La lógica y los guardados no cambian. Build offline, 152 tests y QA de navegador pasaron. La prueba nueva comprueba las composiciones ASCII empaquetadas; la QA de navegador comprueba acciones y renderizadores, pero no certifica aún la lectura humana de cada fotograma.
 
+Una prueba funcional de dos versiones del service worker instala v1 y v2 sobre el mismo scope, comprueba que v1 permanece hasta la activación de v2, que v2 sirve su propio index offline y que cachés de otra ruta y aplicación sobreviven. Aún falta reproducir el cambio de build con dos pestañas reales en Chromium.
+
 ## Fases siguientes concretas
 
 1. Afinar la legibilidad y duración de los nuevos estados visuales del héroe con revisión humana; completar ataques, daño y muerte específicos de cada enemigo, incluido Nácar.
 2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Perfeccionar oclusión y escala Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
-4. Ampliar tests de actualización del SW con dos builds, descarga fallida y recursos ausentes; implementar exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.
+4. Probar actualización del SW con dos builds y pestañas reales en Chromium, recursos ausentes y recuperación tras red intermitente; implementar exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.
 5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y revisar todos los efectos CSS y sonoros bajo la preferencia dinámica.
 6. Validar Windows, sesión larga, memoria y GPU física. Publicar preview aislada sólo tras restablecer permisos y confirmar configuración estable. Validar la URL antes de pedir autorización final de integración.
 
