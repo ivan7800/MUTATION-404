@@ -159,7 +159,7 @@ export class PixiAsciiRenderer {
         if (texture)
             return texture;
         const canvas = document.createElement('canvas');
-        canvas.width = 40;
+        canvas.width = 80;
         canvas.height = 52;
         const ctx = canvas.getContext('2d');
         if (!ctx)
@@ -168,7 +168,7 @@ export class PixiAsciiRenderer {
         ctx.textBaseline = 'middle';
         ctx.font = 'bold 37px monospace';
         ctx.fillStyle = '#fff';
-        paintComposition(ctx, character, 20, 26, 37, frame);
+        paintComposition(ctx, character, 40, 26, 37, frame);
         texture = Texture.from(canvas);
         this.glyphs.set(key, texture);
         return texture;
@@ -597,7 +597,7 @@ export class PixiAsciiRenderer {
                 continue;
             const def = FIELD_VISUALS[field.kind], color = this.color(def.color);
             this.backdrop.rect(x * this.cellW, y * this.cellH, this.cellW, this.cellH).fill({ color, alpha: this.reducedMotion ? .18 : .19 + .07 * Math.sin(this.ambience * .4 + x) });
-            used = this.drawGlyph(used, def.glyph, x, y, color);
+            used = this.drawGlyph(used, `field:${field.kind}`, x, y, color);
         }
         for (const node of state.ecology.nodes) {
             if (node.zone !== state.zone || node.quantity <= 0 || state.visible[index(node.x, node.y)] !== 1)
@@ -605,7 +605,7 @@ export class PixiAsciiRenderer {
             const x = node.x - ox, y = node.y - oy;
             if (x < 0 || y < 0 || x >= this.viewW || y >= this.viewH)
                 continue;
-            used = this.drawGlyph(used, node.kind === 'mineral' ? '¤' : node.kind === 'fiber' ? '♣' : node.kind === 'spores' ? '*' : '◇', x, y, node.kind === 'crystal' ? 0xd6b5ff : 0x9fe9b4);
+            used = this.drawGlyph(used, `resource:${node.kind}`, x, y, node.kind === 'crystal' ? 0xd6b5ff : 0x9fe9b4);
         }
         for (const item of state.ground) {
             if (state.visible[index(item.x, item.y)] !== 1)
@@ -613,7 +613,7 @@ export class PixiAsciiRenderer {
             const x = item.x - ox, y = item.y - oy;
             if (x < 0 || y < 0 || x >= this.viewW || y >= this.viewH)
                 continue;
-            used = this.drawGlyph(used, '$', x, y, 0xf6d48d);
+            used = this.drawGlyph(used, 'loot', x, y, 0xf6d48d);
         }
         for (const npc of [...(state.zone === 'surface' ? ACTORS : []), ...settlementCitizens(state.zone, state.tick)]) {
             if (state.visible[index(npc.x, npc.y)] !== 1)
@@ -621,7 +621,7 @@ export class PixiAsciiRenderer {
             const x = npc.x - ox, y = npc.y - oy;
             if (x < 0 || y < 0 || x >= this.viewW || y >= this.viewH)
                 continue;
-            used = this.artMode === 'pixel' ? this.drawCreature(used, 'npc', x, y, this.reducedMotion ? 0 : (Math.floor(this.ambience / 5) % 2)) : this.drawGlyph(used, npc.glyph, x, y, this.color(npc.color));
+            used = this.artMode === 'pixel' ? this.drawCreature(used, 'npc', x, y, this.reducedMotion ? 0 : (Math.floor(this.ambience / 5) % 2)) : this.drawGlyph(used, `npc:${npc.glyph}`, x, y, this.color(npc.color));
         }
         for (const enemy of state.enemies) {
             if (enemy.hp <= 0 || state.visible[index(enemy.x, enemy.y)] !== 1)

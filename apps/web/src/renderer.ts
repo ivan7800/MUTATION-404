@@ -158,27 +158,26 @@ export class AsciiRenderer {
         ctx.fillStyle=def.color;ctx.globalAlpha=flicker;
         ctx.fillRect(px+1,py+1,this.cellW-2,this.cellH-2);
       }
-      ctx.globalAlpha=1;ctx.fillStyle=def.color;ctx.fillText(def.glyph,px+this.cellW/2,py+this.cellH/2);
+      ctx.globalAlpha=1;ctx.fillStyle=def.color;this.glyph(`field:${field.kind}`,px+this.cellW/2,py+this.cellH/2);
     }
     // Naturally occurring materials are visible once their sector has been surveyed.
     for(const node of state.ecology.nodes){
       if(node.zone!==state.zone||node.quantity<=0||state.visible[index(node.x,node.y)]!==1)continue;
       const cx=node.x-ox,cy=node.y-oy;
       if(cx<0||cy<0||cx>=VIEW_W||cy>=VIEW_H)continue;
-      const glyph=node.kind==='mineral'?'¤':node.kind==='fiber'?'♣':node.kind==='spores'?'*':'◇';
       ctx.globalAlpha=1;ctx.fillStyle=node.kind==='mineral'?'#e2ba83':node.kind==='crystal'?'#deb9fa':'#8be6b3';
-      ctx.fillText(glyph,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2);
+      this.glyph(`resource:${node.kind}`,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2);
     }
     for(const drop of state.ground){
       if(state.visible[index(drop.x,drop.y)]!==1)continue;
       const cx=drop.x-ox,cy=drop.y-oy;if(cx<0||cy<0||cx>=VIEW_W||cy>=VIEW_H)continue;
-      ctx.fillStyle='#f7d991';ctx.fillText('$',cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2);
+      ctx.fillStyle='#f7d991';this.glyph('loot',cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2);
     }
     for(const npc of [...(state.zone==='surface'?ACTORS:[]),...settlementCitizens(state.zone,state.tick)]){
       if(state.visible[index(npc.x,npc.y)]!==1)continue;
       const cx=npc.x-ox,cy=npc.y-oy;if(cx<0||cy<0||cx>=VIEW_W||cy>=VIEW_H)continue;
       ctx.fillStyle='#0c1b1c';ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
-      ctx.fillStyle=npc.color;ctx.fillText(npc.glyph,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2);
+      ctx.fillStyle=npc.color;this.glyph(`npc:${npc.glyph}`,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2);
     }
     for(const enemy of state.enemies){
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
