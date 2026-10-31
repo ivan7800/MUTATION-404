@@ -97,6 +97,24 @@ try{
     results.push(info);
     await context.close();
   }
+  // Private or restricted browsers may deny every storage call. A session must
+  // still start, and saving must report the failure instead of crashing.
+  {
+    const context=await browser.newContext({viewport:{width:1000,height:740}});
+    await context.addInitScript(()=>{
+      for(const name of ['getItem','setItem'])Object.defineProperty(Storage.prototype,name,{value(){throw new DOMException('Storage denied','SecurityError');}});
+    });
+    const page=await context.newPage(),errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(base,{waitUntil:'networkidle',timeout:45000});
+    assert.equal(await page.locator('#start-continue').isDisabled(),true);
+    await page.locator('#start-new').click();
+    await page.locator('#save-btn').click();
+    assert.equal(await page.locator('#save-status').textContent(),'Error de guardado');
+    assert.deepEqual(errors,[],'storage denial must not crash the game');
+    results.push({scene:'storage-denied',status:'passed',errors});
+    await context.close();
+  }
   // Production audit: exercise the on-screen D-pad at phone and tablet sizes.
   // Record actual viewport overflow instead of assuming the desktop checks cover it.
   for(const [width,height] of [[390,844],[768,1024]]){

@@ -38,14 +38,14 @@ No hay Windows ni GPU/dispositivos físicos, revisión externa ni jugador humano
 
 ## Fase de recuperación de guardados posterior
 
-El menú valida cada archivo antes de ofrecer «Continuar». Si el slot principal está corrupto, busca una copia de rescate y luego los slots históricos; muestra el origen recuperable sin modificar el archivo averiado. El siguiente guardado repara el principal y nunca sustituye una copia válida por datos inválidos. La importación también conserva la versión anterior válida. QA de Chromium comprobó la recuperación, las coordenadas y la integridad de la copia en WebGL y Canvas. No hay aún interfaz para exportar la copia ni prueba de almacenamiento completamente bloqueado.
+El menú valida cada archivo antes de ofrecer «Continuar». Si el slot principal está corrupto, busca una copia de rescate y luego los slots históricos; muestra el origen recuperable sin modificar el archivo averiado. El siguiente guardado repara el principal y nunca sustituye una copia válida por datos inválidos. La importación también conserva la versión anterior válida. QA de Chromium comprobó la recuperación, las coordenadas y la integridad de la copia en WebGL y Canvas. Un contexto que deniega todas las llamadas a localStorage pudo iniciar partida y mostró error al guardar sin excepciones. No hay aún interfaz para exportar la copia.
 
 ## Fases siguientes concretas
 
 1. Completar estados visuales de caminar/ataque/daño/muerte/mutación/interacción del héroe y ataques específicos de cada enemigo; hoy hay poses cíclicas y efectos existentes, no toda esa matriz de animaciones.
 2. Completar composición de ciudadanos, recursos, objetos y FX exclusivamente con ASCII; algunos glifos siguen individuales y permanecen formas Graphics de efectos. Homogeneizar oclusión y tamaño Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
-4. Ampliar tests de actualización del SW con dos builds, descarga fallida y recursos ausentes; probar almacenamiento bloqueado y exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.
+4. Ampliar tests de actualización del SW con dos builds, descarga fallida y recursos ausentes; implementar exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.
 5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y reducción dinámica de movimiento.
 6. Validar Windows, sesión larga, memoria y GPU física. Publicar preview aislada sólo tras restablecer permisos y confirmar configuración estable. Validar la URL antes de pedir autorización final de integración.
 
