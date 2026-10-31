@@ -78,6 +78,18 @@ try{
     assert.equal(await page.locator('#start-menu').isVisible(),false,'continue must resume gameplay');
     assert.equal(await page.locator('#coords').textContent(),after,'continue must restore last saved player coordinates');
     await page.locator('#load-btn').click();
+    // Simulate a truncated current slot while keeping the previous valid save.
+    // beforeunload autosaves the active game; corrupt only after the next document starts.
+    await page.addInitScript(()=>localStorage.setItem('mutation404.v10.save','{"version":'));
+    await page.reload({waitUntil:'networkidle'});
+    assert.match(await page.locator('#start-save-info').textContent(),/COPIA DE RESCATE DISPONIBLE/);
+    const rescue=await page.evaluate(()=>localStorage.getItem('mutation404.v10.save.backup'));
+    await page.locator('#start-continue').click();
+    assert.equal(await page.locator('#coords').textContent(),after,'backup must restore the saved position');
+    await page.locator('#save-btn').click();
+    assert.ok(await page.evaluate(raw=>localStorage.getItem('mutation404.v10.save.backup')===raw,rescue),'corrupt primary must not replace valid backup');
+    const repaired=await page.evaluate(()=>localStorage.getItem('mutation404.v10.save'));
+    assert.doesNotThrow(()=>JSON.parse(repaired),'saving the recovered session must repair the current slot');
     const png=`qa-evidence/${mode}.png`;
     await page.screenshot({path:png,fullPage:true,animations:'disabled'});
     assert.deepEqual(errors,[],'unhandled browser exceptions');

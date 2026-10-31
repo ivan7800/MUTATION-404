@@ -77,18 +77,34 @@ const audio = new AtmosphereAudio();
 const AUDIO_SETTINGS_KEY = 'mutation404.audio.v27';
 let gameStarted = false;
 const saveKeys = [SAVE_KEY, V09_KEY, V08_KEY, V07_KEY, LAST_KEY, OLDER_KEY, OLD_KEY, PREVIOUS_KEY, LEGACY_KEY, FIRST_KEY];
-function savedRaw() {
-    for (const key of saveKeys) {
+function storedSave() {
+    // A damaged current save must not hide a usable backup or older compatible slot.
+    for (const key of [SAVE_KEY, SAVE_KEY + '.backup', ...saveKeys.slice(1)]) {
         try {
             const raw = localStorage.getItem(key);
-            if (raw)
-                return raw;
+            if (raw) {
+                deserialize(raw);
+                return { raw, key };
+            }
         }
-        catch {
-            return null;
-        }
+        catch { /* Invalid data or storage denied: leave the original bytes untouched. */ }
     }
     return null;
+}
+function savedRaw() { return storedSave()?.raw ?? null; }
+function storeCurrent(raw) {
+    const previous = localStorage.getItem(SAVE_KEY);
+    if (previous) {
+        let valid = false;
+        try {
+            deserialize(previous);
+            valid = true;
+        }
+        catch { /* Never replace a good backup with damaged data. */ }
+        if (valid)
+            localStorage.setItem(SAVE_KEY + '.backup', previous);
+    }
+    localStorage.setItem(SAVE_KEY, raw);
 }
 function safeVolume() {
     try {
@@ -125,10 +141,7 @@ function currentLocation() {
 }
 function save(silent = false) {
     try {
-        const previous = localStorage.getItem(SAVE_KEY);
-        if (previous)
-            localStorage.setItem(SAVE_KEY + '.backup', previous);
-        localStorage.setItem(SAVE_KEY, serialize(state));
+        storeCurrent(serialize(state));
         if (!silent)
             state.log.push('SISTEMA // Partida guardada en este navegador.');
         write('#save-status', `Guardado v1.0 · ${formatClock(state.tick)}`);
@@ -618,10 +631,10 @@ $('#zoom-in').addEventListener('click', () => { renderer.zoom(2); draw(); });
 $('#zoom-out').addEventListener('click', () => { renderer.zoom(-2); draw(); });
 function startStatus(text) { write('#start-message', text); }
 function updateStartMenu() {
-    const available = !!savedRaw();
+    const found = storedSave(), available = !!found;
     $('#start-continue').disabled = !available;
     $('#start-load').disabled = !available;
-    write('#start-save-info', available ? 'ARCHIVO LOCAL DETECTADO // Puedes continuar tu partida.' : 'SIN GUARDADO LOCAL // Empieza una nueva partida o importa un archivo.');
+    write('#start-save-info', available ? (found.key === SAVE_KEY + '.backup' ? 'COPIA DE RESCATE DISPONIBLE // El guardado principal está dañado; puedes continuar desde la copia.' : 'ARCHIVO LOCAL DETECTADO // Puedes continuar tu partida.') : 'SIN GUARDADO VÁLIDO // Empieza una nueva partida o importa un archivo.');
     write('#start-audio', audio.active ? '♫ SILENCIAR SONIDO' : '♫ ACTIVAR SONIDO Y PROBAR');
     $('#start-audio').setAttribute('aria-pressed', String(audio.active));
 }
@@ -658,13 +671,17 @@ $('#menu-btn').addEventListener('click', () => {
 });
 $('#start-new').addEventListener('click', confirmNewGame);
 $('#start-continue').addEventListener('click', () => {
-    const raw = savedRaw();
-    if (!raw) {
-        startStatus('No hay una partida guardada.');
+    const found = storedSave();
+    if (!found) {
+        startStatus('No hay una partida guardada válida.');
         return;
     }
     try {
-        loadRaw(raw);
+        loadRaw(found.raw);
+        if (found.key === SAVE_KEY + '.backup') {
+            state.log.push('SISTEMA // Recuperada copia de rescate. El archivo dañado se conserva hasta el próximo guardado.');
+            draw();
+        }
     }
     catch (error) {
         startStatus('Error de guardado: ' + (error instanceof Error ? error.message : String(error)));
@@ -683,7 +700,7 @@ $('#start-file').addEventListener('change', async () => {
         // Import is a non-destructive preview until the game is successfully restored.
         loadRaw(raw);
         try {
-            localStorage.setItem(SAVE_KEY, raw);
+            storeCurrent(raw);
         }
         catch {
             state.log.push('AVISO // Partida importada, pero el navegador no permite almacenarla.');
