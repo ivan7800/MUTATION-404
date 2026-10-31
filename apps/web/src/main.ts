@@ -9,7 +9,7 @@ import {nacarPhase,NACAR_PHASES,FINAL_GUARDIAN_ID,nacarMark} from '../../../pack
 
 const SAVE_KEY='mutation404.v10.save',V09_KEY='mutation404.v09.save',V08_KEY='mutation404.v08.save',V07_KEY='mutation404.v07.save',LAST_KEY='mutation404.v06.save',OLDER_KEY='mutation404.v05.save',OLD_KEY='mutation404.v04.save',PREVIOUS_KEY='mutation404.v03.save',LEGACY_KEY='mutation404.v02.save',FIRST_KEY='mutation404.v01.save';
 const root=document.querySelector<HTMLElement>('#app');if(!root)throw new Error('Falta #app');
-if('serviceWorker' in navigator)window.addEventListener('load',()=>{void navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{/* offline development can disable workers */});});
+if(!import.meta.url.includes('/src/')&&'serviceWorker' in navigator)window.addEventListener('load',()=>{void navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(()=>{/* offline development can disable workers */});});
 root.innerHTML=`
 <div class="shell">
 <header class="topbar"><div class="brand"><span class="brand-mark">◈</span><div><div class="brand-title">MUTATION <em>404</em></div><div class="brand-sub">NÁCAR // ARCHIVO 11 — ECOS DE NÁCAR</div></div></div><div class="top-controls"><span class="live"><span class="live-dot"></span>SEÑAL INESTABLE</span><button class="icon-btn" id="menu-btn">☰ MENÚ</button><button class="icon-btn" id="audio-btn" aria-pressed="false">♫ ACTIVAR SONIDO</button><button class="icon-btn" id="help-btn">? AYUDA</button></div></header>
@@ -100,6 +100,8 @@ function currentLocation():string{
 }
 function save(silent=false):void{
   try{
+    const previous=localStorage.getItem(SAVE_KEY);
+    if(previous)localStorage.setItem(SAVE_KEY+'.backup',previous);
     localStorage.setItem(SAVE_KEY,serialize(state));
     if(!silent)state.log.push('SISTEMA // Partida guardada en este navegador.');
     write('#save-status',`Guardado v1.0 · ${formatClock(state.tick)}`);
@@ -348,7 +350,14 @@ function help():void{
 const keymap:Record<string,Command>={arrowup:{type:'move',dx:0,dy:-1},w:{type:'move',dx:0,dy:-1},arrowdown:{type:'move',dx:0,dy:1},s:{type:'move',dx:0,dy:1},arrowleft:{type:'move',dx:-1,dy:0},a:{type:'move',dx:-1,dy:0},arrowright:{type:'move',dx:1,dy:0},d:{type:'move',dx:1,dy:0},' ':{type:'wait'},e:{type:'interact'},i:{type:'inspect'},t:{type:'target'},x:{type:'attack'},f:{type:'fire'},g:{type:'pickup'},h:{type:'heal'},q:{type:'swap'},r:{type:'scan'}};
 let lastMove=0;
 window.addEventListener('keydown',e=>{
-  if(e.ctrlKey||e.metaKey||e.altKey||e.target instanceof HTMLInputElement)return;
+  const dialog=modalMode?$('#modal'):!gameStarted?$('#start-menu'):null;
+  if(dialog&&e.key==='Tab'){
+    const items=Array.from(dialog.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(.hidden),[tabindex="0"]')).filter(el=>el.getClientRects().length>0);
+    const at=items.indexOf(document.activeElement as HTMLElement);
+    if(items.length){e.preventDefault();items[(at+(e.shiftKey?-1:1)+items.length)%items.length].focus();}
+    return;
+  }
+  if(e.ctrlKey||e.metaKey||e.altKey||e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement||e.target instanceof HTMLSelectElement||(e.target instanceof HTMLElement&&e.target.isContentEditable))return;
   const key=e.key.toLowerCase();
   if(!gameStarted)return;
   if(!modalMode&&key==='escape'){e.preventDefault();$('#menu-btn').click();return;}
@@ -376,7 +385,7 @@ window.addEventListener('keydown',e=>{
   if(key==='?' ){e.preventDefault();help();return;}
   const command=keymap[key];if(!command)return;
   e.preventDefault();
-  const now=performance.now();if(command.type==='move'&&now-lastMove<65)return;
+  const now=performance.now();if(command.type==='move'&&e.repeat&&now-lastMove<65)return;
   if(command.type==='move')lastMove=now;
   act(command);
 });

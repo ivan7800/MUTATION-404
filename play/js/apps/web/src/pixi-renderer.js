@@ -4,6 +4,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, weatherAt, 
 import { index, passable, within } from '../../../packages/core/src/world.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
+import { paintComposition } from './ascii-art.js';
 /**
  * Real PixiJS v8 sprite renderer. Tiles are GPU sprites based on a reusable glyph
  * atlas generated from canvas, not one DOM/canvas text draw call per game frame.
@@ -87,9 +88,10 @@ export class PixiAsciiRenderer {
         result.app.canvas.setAttribute('aria-label', 'Mapa WebGL ASCII interactivo. Flechas/WASD para moverse; E para interactuar; X para atacar.');
         result.app.canvas.dataset.renderer = 'pixi-webgl';
         result.view.addChild(result.terrainFloor, result.backdrop, result.layers);
+        result.layers.sortableChildren = true;
         // A true affine isometric basis for every glyph, floor tile and effect.
         // Game coordinates stay Cartesian so pathfinding and saves remain stable.
-        result.view.setFromMatrix(new Matrix(.5, .25, -.5, .25, 352, 18));
+        result.view.setFromMatrix(new Matrix(.5, .25, -.5, .25, 352, 120));
         result.app.stage.addChild(result.view);
         result.mount.appendChild(result.app.canvas);
         // Hide, but never destroy, the fallback before the WebGL view is ready.
@@ -151,8 +153,9 @@ export class PixiAsciiRenderer {
             this.bossBursts.shift();
         this.draw(state);
     }
-    texture(character) {
-        let texture = this.glyphs.get(character);
+    texture(character, frame = 0) {
+        const key = character + ':' + frame;
+        let texture = this.glyphs.get(key);
         if (texture)
             return texture;
         const canvas = document.createElement('canvas');
@@ -165,9 +168,9 @@ export class PixiAsciiRenderer {
         ctx.textBaseline = 'middle';
         ctx.font = 'bold 37px monospace';
         ctx.fillStyle = '#fff';
-        ctx.fillText(character, 20, 26);
+        paintComposition(ctx, character, 20, 26, 37, frame);
         texture = Texture.from(canvas);
-        this.glyphs.set(character, texture);
+        this.glyphs.set(key, texture);
         return texture;
     }
     /** Original hand-programmed 16-bit-inspired tile atlas, generated once per tile identity.
@@ -459,13 +462,15 @@ export class PixiAsciiRenderer {
     }
     drawGlyph(i, glyph, x, y, color, opacity = 1) {
         const sprite = this.spriteAt(i);
-        sprite.texture = this.texture(glyph);
+        sprite.texture = this.texture(glyph, this.reducedMotion ? 0 : Math.floor(this.ambience / 5) % 2);
         sprite.tint = color;
         sprite.alpha = opacity;
-        sprite.x = x * this.cellW + this.cellW / 2;
-        sprite.y = y * this.cellH + this.cellH / 2;
-        sprite.width = this.cellW;
-        sprite.height = this.cellH;
+        // Counter-project glyphs while their anchors follow the diamond lattice.
+        // Letters stay upright; terrain surfaces and lighting retain isometric depth.
+        const scale = glyph === '✺' ? 1.7 : 1;
+        const width = this.cellW * scale, height = this.cellH * scale;
+        sprite.setFromMatrix(new Matrix(width / 80, -width / 80, height / 52, height / 52, x * this.cellW + this.cellW / 2, y * this.cellH + this.cellH / 2));
+        sprite.zIndex = x + y;
         sprite.visible = true;
         return i + 1;
     }
@@ -475,6 +480,8 @@ export class PixiAsciiRenderer {
         this.state = state;
         const ox = Math.max(0, Math.min(WIDTH - this.viewW, state.player.x - Math.floor(this.viewW / 2)));
         const oy = Math.max(0, Math.min(HEIGHT - this.viewH, state.player.y - Math.floor(this.viewH / 2)));
+        const anchorX = (state.player.x - ox + .5) * this.cellW, anchorY = (state.player.y - oy + .5) * this.cellH;
+        this.view.setFromMatrix(new Matrix(1, .5, -1, .5, this.viewW * this.cellW / 2 - anchorX + anchorY, this.viewH * this.cellH / 2 - (anchorX + anchorY) / 2));
         const night = Math.floor(state.tick / 6000) % 4 >= 2;
         this.backdrop.clear();
         if (this.terrainSeed !== state.seed) {
@@ -772,10 +779,14 @@ export class PixiAsciiRenderer {
         this.cellH = this.fontSize + 5;
         this.floorKey = '';
         this.app.renderer.resize(this.viewW * this.cellW, this.viewH * this.cellH);
+        this.view.setFromMatrix(new Matrix(.5, .25, -.5, .25, this.viewW * this.cellW / 2, 120));
         if (this.state)
             this.draw(this.state);
     }
-    focus() { this.app.canvas.focus(); }
+    focus() {
+        this.app.canvas.focus({ preventScroll: true });
+        this.mount.scrollLeft = Math.max(0, (this.app.canvas.clientWidth - this.mount.clientWidth) / 2);
+    }
     effect(state, kind) {
         if (this.reducedMotion)
             return;

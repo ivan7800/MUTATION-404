@@ -56,14 +56,23 @@ try{
     await page.keyboard.press('ArrowRight');
     const after=await page.locator('#coords').textContent();
     assert.notEqual(after,before,'movement input did not update player position');
+    // Distinct fast presses must not be dropped by the repeat-key throttle.
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowLeft');
+    assert.equal(await page.locator('#coords').textContent(),after,'fast opposite key presses must both execute');
     await page.locator('#zoom-in').click();
     await page.locator('#zoom-out').click();
     await page.locator('#help-btn').click();
     assert.ok(await page.locator('#modal').isVisible(),'help modal did not open');
+    for(let tab=0;tab<5;tab++){
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(()=>!!document.activeElement?.closest('#modal')),true,'modal focus escaped into gameplay');
+    }
     await page.locator('#modal-close').click();
     await page.locator('#save-btn').click();
     await page.locator('#menu-btn').click();
     assert.ok(await page.locator('#start-menu').isVisible(),'menu button must pause into title screen');
+    assert.ok(await page.evaluate(()=>localStorage.getItem('mutation404.v10.save.backup')),'saving twice must preserve a previous save');
     assert.equal(await page.locator('#start-continue').isEnabled(),true,'save must enable continue');
     await page.locator('#start-continue').click();
     assert.equal(await page.locator('#start-menu').isVisible(),false,'continue must resume gameplay');
@@ -87,6 +96,7 @@ try{
     await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
     const before=await page.locator('#coords').textContent();
     if(width===390){
+      assert.ok(await page.locator('#viewport').evaluate(el=>el.scrollLeft>0),'mobile camera must center the player inside the scroll viewport');
       assert.ok(await page.locator('.touch-controls').isVisible(),'mobile D-pad must be visible');
       await page.locator('[data-move="right"]').click();
       assert.notEqual(await page.locator('#coords').textContent(),before,'touch D-pad did not move character');

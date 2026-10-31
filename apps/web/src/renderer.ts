@@ -2,6 +2,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, 
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
+import {paintComposition} from './ascii-art.js';
 
 const VIEW_W=47, VIEW_H=27;
 const COLORS:Record<Tile,string>={
@@ -71,7 +72,19 @@ export class AsciiRenderer {
     this.ctx.setTransform(dpr,0,0,dpr,0,0);this.ctx.textAlign='center';this.ctx.textBaseline='middle';
   }
   zoom(dir:number):void{this.fontSize=Math.max(13,Math.min(25,this.fontSize+dir));this.cellW=Math.round(this.fontSize*.83);this.cellH=this.fontSize+5;this.resize();}
-  focus():void{this.canvas.focus();}
+  focus():void{
+    this.canvas.focus({preventScroll:true});
+    const mount=this.canvas.parentElement;
+    if(mount)mount.scrollLeft=Math.max(0,(this.canvas.clientWidth-mount.clientWidth)/2);
+  }
+  private glyph(glyph:string,x:number,y:number):void{
+    const ctx=this.ctx,t=ctx.getTransform();
+    const sx=t.a*x+t.c*y+t.e,sy=t.b*x+t.d*y+t.f;
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);
+    paintComposition(ctx,glyph,sx/dpr,sy/dpr,this.fontSize,this.reducedMotion?0:Math.floor(this.ambience/5));
+    ctx.restore();
+  }
   draw(state:GameState):void{
     this.lastState=state;
     const ctx=this.ctx,w=VIEW_W*this.cellW,h=VIEW_H*this.cellH;
@@ -81,9 +94,10 @@ export class AsciiRenderer {
     ctx.globalAlpha=1;ctx.fillStyle=coordsForZone(state.zone)?BIOMES[currentBiome].shadow:'#080c16';ctx.fillRect(0,0,w,h);
     // Project the logical grid into a diamond lattice. Simulation coordinates
     // remain orthogonal; only the presentation uses the isometric basis.
-    ctx.setTransform(dpr*.5,dpr*.25,dpr*-.5,dpr*.25,dpr*w*.5,dpr*18);
     const ox=Math.max(0,Math.min(WIDTH-VIEW_W,state.player.x-Math.floor(VIEW_W/2)));
     const oy=Math.max(0,Math.min(HEIGHT-VIEW_H,state.player.y-Math.floor(VIEW_H/2)));
+    const anchorX=(state.player.x-ox+.5)*this.cellW,anchorY=(state.player.y-oy+.5)*this.cellH;
+    ctx.setTransform(dpr,dpr*.5,-dpr,dpr*.5,dpr*(w/2-anchorX+anchorY),dpr*(h/2-(anchorX+anchorY)/2));
     const timeNight=Math.floor(state.tick/6000)%4>=2;
     ctx.font=`${this.fontSize}px "DejaVu Sans Mono","Liberation Mono",monospace`;
     ctx.shadowBlur=0;
@@ -117,7 +131,7 @@ export class AsciiRenderer {
         ctx.fillStyle=this.ambience%2?'#622738':'#43212a';ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
       }
       ctx.fillStyle=coordsForZone(state.zone)?(tile==='.'||tile==='*'||tile===','?def.palette:COLORS[tile]):(tile==='#'?'#506070':tile==='.'?'#839aab':COLORS[tile]);
-      ctx.fillText(tile,px,py);
+      this.glyph(tile,px,py);
       // Lighting never reveals fog-of-war tiles or changes the core simulation.
       if(visible){
         const distance=Math.hypot(x-state.player.x,y-state.player.y);
@@ -173,7 +187,7 @@ export class AsciiRenderer {
       ctx.fillStyle=state.targetId===enemy.id?'#6b2f2d':'#261a1b';ctx.fillRect(px,py,this.cellW,this.cellH);
       if(state.targetId===enemy.id){ctx.shadowBlur=11;ctx.shadowColor='#f6b76e';}
       if(state.targetId===enemy.id){ctx.strokeStyle='#ffcb72';ctx.lineWidth=1.5;ctx.strokeRect(px+1,py+1,this.cellW-2,this.cellH-2);}
-      ctx.fillStyle=(enemy.stunned??0)>0?'#e3aaf5':def.color;ctx.fillText(def.glyph,px+this.cellW/2,py+this.cellH/2);ctx.shadowBlur=0;
+      ctx.fillStyle=(enemy.stunned??0)>0?'#e3aaf5':def.color;this.glyph(enemy.id==='campaign-heart-custodian'?'✺':def.glyph,px+this.cellW/2,py+this.cellH/2);ctx.shadowBlur=0;
       // Miniature health bar provides threat feedback without a separate modal.
       const health=Math.max(0,Math.min(1,enemy.hp/def.hp));
       if(health<1){ctx.fillStyle='#361c20';ctx.fillRect(px+1,py+this.cellH-3,this.cellW-2,2);ctx.fillStyle=health>.45?'#ddb878':'#ee7373';ctx.fillRect(px+1,py+this.cellH-3,(this.cellW-2)*health,2);}
@@ -186,7 +200,7 @@ export class AsciiRenderer {
     ctx.globalAlpha=1;ctx.fillStyle=glow;ctx.fillRect(px-this.cellW*3,py-this.cellH*2,this.cellW*7,this.cellH*5);
     ctx.shadowColor=state.stats.hp>0?'#ffe29a':'#c78487';ctx.shadowBlur=this.reducedMotion?5:9;
     ctx.fillStyle=state.stats.hp>0?'#4c3825':'#3e1b22';ctx.fillRect(px,py,this.cellW,this.cellH);
-    ctx.fillStyle=state.stats.hp>0?'#ffe29a':'#c78487';ctx.fillText('@',px+this.cellW/2,py+this.cellH/2);
+    ctx.fillStyle=state.stats.hp>0?'#ffe29a':'#c78487';this.glyph('@',px+this.cellW/2,py+this.cellH/2);
     ctx.shadowBlur=0;
     // The unexplored world stays dark; the near-field gets a subtle readable frame.
     ctx.strokeStyle='rgba(175,210,197,.45)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,this.cellW-1,this.cellH-1);
