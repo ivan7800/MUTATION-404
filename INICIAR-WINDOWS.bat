@@ -7,5 +7,5 @@ if errorlevel 1 (
  pause
  exit /b 1
 )
-node scripts\server.mjs
+node scripts\launch.mjs %*
 if errorlevel 1 pause

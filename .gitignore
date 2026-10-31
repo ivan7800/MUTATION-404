@@ -3,3 +3,4 @@ apps/*/node_modules/
 dist/
 qa-evidence/
 .mutation404-cache/
+launch.log

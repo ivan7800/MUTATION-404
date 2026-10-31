@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "vite --config apps/web/vite.config.ts",
-    "build": "tsc -p tsconfig.play.json --noEmit && vite build --config apps/web/vite.config.ts",
+    "build": "tsc -p tsconfig.play.json --noEmit && vite build --config apps/web/vite.config.ts && node scripts/cache-manifest.mjs dist/web",
     "build:offline": "tsc -p tsconfig.play.json && node scripts/build-offline.mjs",
     "typecheck": "tsc -p tsconfig.play.json --noEmit",
     "test": "tsc -p tsconfig.core.json && node --test tests/*.test.mjs",
@@ -21,6 +21,7 @@
     "pixi.js": "^8.0.0"
   },
   "devDependencies": {
+    "globals": "14.0.0",
     "typescript": "^5.0.0",
     "vite": "^7.0.0",
     "playwright-core": "^1.56.1",

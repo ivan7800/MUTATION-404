@@ -2,6 +2,8 @@ name: MUTATION 404 — Validate and deploy Pages
 
 on:
   push:
+    branches: [main, codex/mutation-404-premium]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -24,9 +26,13 @@ jobs:
         with:
           node-version: '22'
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Type check
         run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Build offline for server integration tests
+        run: npm run build:offline
       - name: Core tests
         run: npm run test:core
       - name: Deterministic balance and resource telemetry
@@ -48,6 +54,10 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: node scripts/qa-browser.mjs
+      - name: Verify offline installation under a Pages subpath
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: node scripts/qa-offline.mjs
       - name: Upload combat balance telemetry
         if: always()
         uses: actions/upload-artifact@v4
@@ -67,6 +77,7 @@ jobs:
           path: play/
 
   deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     name: Deploy game to GitHub Pages
     needs: validate
     runs-on: ubuntu-latest

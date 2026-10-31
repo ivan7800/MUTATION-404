@@ -6,4 +6,4 @@ if ! command -v node >/dev/null 2>&1; then
   read -r -p "Pulsa Intro para cerrar..." _ || true
   exit 1
 fi
-node scripts/server.mjs
+node scripts/launch.mjs "$@"
