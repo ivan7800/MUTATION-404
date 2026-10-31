@@ -68,6 +68,9 @@ export class PixiAsciiRenderer {
     fieldBursts = [];
     bossBursts = [];
     effectKind = 'scan';
+    heroAction = null;
+    heroUntil = 0;
+    heroTimer = 0;
     mutationEffect = null;
     reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     viewW = 47;
@@ -668,7 +671,7 @@ export class PixiAsciiRenderer {
             this.backdrop.circle(px * this.cellW + this.cellW / 2, py * this.cellH + this.cellH / 2, this.cellW * .44).fill({ color: 0xf6d593, alpha: .24 });
         }
         const heroPose = (this.reducedMotion ? 0 : Math.floor(this.ambience / 6) % 2);
-        used = this.artMode === 'pixel' ? this.drawCreature(used, 'hero', px, py, heroPose) : this.drawGlyph(used, '@', px, py, state.stats.hp > 0 ? 0xffe1a0 : 0xc78487);
+        used = this.artMode === 'pixel' ? this.drawCreature(used, 'hero', px, py, heroPose) : this.drawGlyph(used, state.stats.hp <= 0 ? 'hero:death' : this.heroAction && performance.now() < this.heroUntil ? `hero:${this.heroAction}` : '@', px, py, state.stats.hp > 0 ? 0xffe1a0 : 0xc78487);
         const timeLeft = this.effectUntil - performance.now();
         if (timeLeft > 0 && this.mutationEffect && !this.reducedMotion) {
             const progress = Math.min(1, Math.max(0, 1 - timeLeft / 420));
@@ -826,6 +829,10 @@ export class PixiAsciiRenderer {
         if (value) {
             this.pauseAmbience();
             this.effectUntil = 0;
+            this.heroUntil = 0;
+            if (this.heroTimer)
+                clearTimeout(this.heroTimer);
+            this.heroTimer = 0;
             this.flashes.clear();
             this.echoes.length = 0;
             this.fieldBursts.length = 0;
@@ -833,6 +840,17 @@ export class PixiAsciiRenderer {
         }
         if (this.state)
             this.draw(this.state);
+    }
+    heroFeedback(state, action) {
+        if (this.reducedMotion)
+            return;
+        this.heroAction = action;
+        this.heroUntil = performance.now() + 320;
+        if (this.heroTimer)
+            clearTimeout(this.heroTimer);
+        this.heroTimer = window.setTimeout(() => { this.heroTimer = 0; if (this.state)
+            this.draw(this.state); }, 340);
+        this.draw(state);
     }
     renderMinimap(state, canvas) { this.old.renderMinimap(state, canvas); }
 }

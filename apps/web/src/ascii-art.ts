@@ -1,7 +1,14 @@
 /** Shared original ASCII compositions. Pure data: no world state, DOM or RNG. */
 export const CAMERA_SCALE=1.45;
+export type HeroAction='walk'|'attack'|'damage'|'mutation'|'interact';
 const ACTORS:Record<string,readonly string[][]>={
   '@':[[' o ','/|\\','/ \\'],[' o ','/|>',' /\\']],
+  'hero:walk':[[' o ','/|\\',' /\\'],[' o ','/|\\','/ \\']],
+  'hero:attack':[[' o ','/|==','/ \\'],[' o ','==|\\','/ \\']],
+  'hero:damage':[[' x ','\\|/',' /\\']],
+  'hero:mutation':[['\\o/','{#}','/ \\'],['/o\\','{#}','/ \\']],
+  'hero:interact':[[' o/','/| ','/ \\']],
+  'hero:death':[['___','x_x','/ \\']],
   s:[[' __','/oo\\','/\\/\\'],[' __','/oo\\','\\/\\/']],
   V:[['[o]','/V\\','| |'],['[o]','<V>','/ \\']],
   l:[[' _ ','(oo','/==~'],[' _ ','(oo','~==\\']],

@@ -22,7 +22,7 @@ Comandos: npm ci, npm run typecheck, npm run lint, npm run build, npm run build:
 - Jugabilidad: las pulsaciones independientes rápidas ya no se pierden; el límite se aplica sólo a repetición sostenida. El resto de reglas se conserva.
 - Narrativa: sin alteraciones de historia ni contenido. Queda mejorar su puesta en escena.
 - Audio: procedural existente conservado. No se añade música ni se certifica escucha humana.
-- UX/accesibilidad: Tab queda contenido en menús/modales; textarea, select y edición de texto no accionan el juego. Guardado conserva la revisión local anterior en .backup antes de sobrescribir. Falta UI de recuperación de ese backup.
+- UX/accesibilidad: Tab queda contenido en menús/modales; textarea, select y edición de texto no accionan el juego. Guardado conserva la revisión local anterior en .backup y el menú permite continuar desde ella si el principal está corrupto. Falta exportación explícita de la copia.
 - Rendimiento: atlas de dos poses y pooling retenidos. Se eliminan bundles obsoletos automáticamente. Mediciones de QA describen construcción JS/RAF bajo SwiftShader, no FPS garantizados en GPU física.
 - Entrega: CI ahora valida push experimental y PR, usa npm ci y añade offline. Sólo main puede ejecutar deploy. No se configura una falsa URL de preview.
 
@@ -46,11 +46,13 @@ Ciudadanos de Faro Ciego y asentamientos, depósitos de los cuatro recursos, bot
 
 La siguiente iteración amplía la escala de cámara compartida a 1,45 en ambas matrices isométricas, sin modificar visión, colisiones ni coordenadas guardadas. Las capturas de WebGL, Canvas y móvil se inspeccionaron: el área explorada ocupa más espacio y permanece centrada. Typecheck, lint, build offline, 151 tests, QA de navegador y prueba offline en subruta pasaron. La composición sigue siendo una proyección de la cuadrícula y falta volumen/oclusión de nivel premium; el rendimiento físico no está medido.
 
-La preferencia del sistema de movimiento reducido se escucha ahora durante la partida. Canvas y Pixi cancelan la animación ambiental y los efectos temporales al activarla, redibujan una imagen estática y pueden reanudarla si se desactiva. El retorno a una pestaña visible sólo inicia animación si hay partida activa. Chromium comprobó el cambio en WebGL y Canvas mediante capturas estables en dos momentos; typecheck, lint, build offline, 151 tests y QA offline pasaron. La prueba automática no sustituye revisión humana de accesibilidad.
+La preferencia del sistema de movimiento reducido se escucha ahora durante la partida. Canvas y Pixi cancelan la animación ambiental y los efectos temporales al activarla, redibujan una imagen estática y pueden reanudarla si se desactiva. El retorno a una pestaña visible sólo inicia animación si hay partida activa. Chromium comprobó el cambio en WebGL y Canvas mediante capturas estables en dos momentos; typecheck, lint, build offline, 151 tests y QA offline pasaron en esa fase. La prueba automática no sustituye revisión humana de accesibilidad.
+
+El protagonista dispone ahora de estados visuales ASCII de caminar, atacar, daño, mutación, interacción y muerte en ambos renderizadores. Son transitorios y se activan sólo tras acciones aceptadas; la muerte se deriva de los puntos de vida. La lógica y los guardados no cambian. Build offline, 152 tests y QA de navegador pasaron. La prueba nueva comprueba las composiciones ASCII empaquetadas; la QA de navegador comprueba acciones y renderizadores, pero no certifica aún la lectura humana de cada fotograma.
 
 ## Fases siguientes concretas
 
-1. Completar estados visuales de caminar/ataque/daño/muerte/mutación/interacción del héroe y ataques específicos de cada enemigo; hoy hay poses cíclicas y efectos existentes, no toda esa matriz de animaciones.
+1. Afinar la legibilidad y duración de los nuevos estados visuales del héroe con revisión humana; completar ataques, daño y muerte específicos de cada enemigo, incluido Nácar.
 2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Perfeccionar oclusión y escala Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
 4. Ampliar tests de actualización del SW con dos builds, descarga fallida y recursos ausentes; implementar exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.

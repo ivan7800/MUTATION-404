@@ -19,6 +19,9 @@ export class AsciiRenderer {
     lastState = null;
     effectUntil = 0;
     effectKind = 'scan';
+    heroAction = null;
+    heroUntil = 0;
+    heroTimer = 0;
     effectFrame = 0;
     ambientFrame = 0;
     ambientLast = 0;
@@ -50,12 +53,27 @@ export class AsciiRenderer {
         if (value) {
             this.pauseAmbience();
             this.effectUntil = 0;
+            this.heroUntil = 0;
+            if (this.heroTimer)
+                clearTimeout(this.heroTimer);
+            this.heroTimer = 0;
             if (this.effectFrame)
                 cancelAnimationFrame(this.effectFrame);
             this.effectFrame = 0;
         }
         if (this.lastState)
             this.draw(this.lastState);
+    }
+    heroFeedback(state, action) {
+        if (this.reducedMotion)
+            return;
+        this.heroAction = action;
+        this.heroUntil = performance.now() + 320;
+        if (this.heroTimer)
+            clearTimeout(this.heroTimer);
+        this.heroTimer = window.setTimeout(() => { this.heroTimer = 0; if (this.lastState)
+            this.draw(this.lastState); }, 340);
+        this.draw(state);
     }
     /** Cosmetic-only bursts: never advance simulation time or consume RNG. */
     effect(state, kind) {
@@ -281,7 +299,7 @@ export class AsciiRenderer {
         ctx.fillStyle = state.stats.hp > 0 ? '#4c3825' : '#3e1b22';
         ctx.fillRect(px, py, this.cellW, this.cellH);
         ctx.fillStyle = state.stats.hp > 0 ? '#ffe29a' : '#c78487';
-        this.glyph('@', px + this.cellW / 2, py + this.cellH / 2);
+        this.glyph(state.stats.hp <= 0 ? 'hero:death' : this.heroAction && performance.now() < this.heroUntil ? `hero:${this.heroAction}` : '@', px + this.cellW / 2, py + this.cellH / 2);
         ctx.shadowBlur = 0;
         // The unexplored world stays dark; the near-field gets a subtle readable frame.
         ctx.strokeStyle = 'rgba(175,210,197,.45)';

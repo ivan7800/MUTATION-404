@@ -352,6 +352,9 @@ function act(command) {
         }
     }
     if (result.accepted) {
+        const heroAction = state.stats.hp < beforeHp ? 'damage' : command.type === 'move' ? 'walk' : command.type === 'attack' || command.type === 'fire' ? 'attack' : command.type === 'cast' ? 'mutation' : command.type === 'interact' ? 'interact' : null;
+        if (heroAction)
+            renderer.heroFeedback(state, heroAction);
         const kind = state.stats.hp < beforeHp ? 'damage' : command.type === 'cast' ? 'mutation' : command.type === 'scan' ? 'scan' : (['attack', 'fire'].includes(command.type) ? 'attack' : null);
         if (kind) {
             renderer.effect(state, kind);

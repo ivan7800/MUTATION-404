@@ -5,6 +5,7 @@ import { AsciiRenderer } from './renderer.js';
 import type { PixiAsciiRenderer } from './pixi-renderer.js';
 import { AtmosphereAudio } from './audio.js';
 import { tacticalSignal } from './tactical.js';
+import type {HeroAction} from './ascii-art.js';
 import {nacarPhase,NACAR_PHASES,FINAL_GUARDIAN_ID,nacarMark} from '../../../packages/core/src/campaign.js';
 
 const SAVE_KEY='mutation404.v10.save',V09_KEY='mutation404.v09.save',V08_KEY='mutation404.v08.save',V07_KEY='mutation404.v07.save',LAST_KEY='mutation404.v06.save',OLDER_KEY='mutation404.v05.save',OLD_KEY='mutation404.v04.save',PREVIOUS_KEY='mutation404.v03.save',LEGACY_KEY='mutation404.v02.save',FIRST_KEY='mutation404.v01.save';
@@ -264,6 +265,8 @@ function act(command:Command):void{
     }
   }
   if(result.accepted){
+    const heroAction:HeroAction|null=state.stats.hp<beforeHp?'damage':command.type==='move'?'walk':command.type==='attack'||command.type==='fire'?'attack':command.type==='cast'?'mutation':command.type==='interact'?'interact':null;
+    if(heroAction)renderer.heroFeedback(state,heroAction);
     const kind=state.stats.hp<beforeHp?'damage':command.type==='cast'?'mutation':command.type==='scan'?'scan':(['attack','fire'].includes(command.type)?'attack':null);
     if(kind){
       renderer.effect(state,kind);

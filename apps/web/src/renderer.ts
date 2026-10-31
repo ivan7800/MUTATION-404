@@ -2,7 +2,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, 
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
-import {CAMERA_SCALE,paintComposition} from './ascii-art.js';
+import {CAMERA_SCALE,paintComposition,type HeroAction} from './ascii-art.js';
 
 const VIEW_W=47, VIEW_H=27;
 const COLORS:Record<Tile,string>={
@@ -20,6 +20,9 @@ export class AsciiRenderer {
   private lastState:GameState|null=null;
   private effectUntil=0;
   private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
+  private heroAction:HeroAction|null=null;
+  private heroUntil=0;
+  private heroTimer=0;
   private effectFrame=0;
   private ambientFrame=0;
   private ambientLast=0;
@@ -44,8 +47,15 @@ export class AsciiRenderer {
   }
   setReducedMotion(value:boolean):void{
     this.reducedMotion=value;
-    if(value){this.pauseAmbience();this.effectUntil=0;if(this.effectFrame)cancelAnimationFrame(this.effectFrame);this.effectFrame=0;}
+    if(value){this.pauseAmbience();this.effectUntil=0;this.heroUntil=0;if(this.heroTimer)clearTimeout(this.heroTimer);this.heroTimer=0;if(this.effectFrame)cancelAnimationFrame(this.effectFrame);this.effectFrame=0;}
     if(this.lastState)this.draw(this.lastState);
+  }
+  heroFeedback(state:GameState,action:HeroAction):void{
+    if(this.reducedMotion)return;
+    this.heroAction=action;this.heroUntil=performance.now()+320;
+    if(this.heroTimer)clearTimeout(this.heroTimer);
+    this.heroTimer=window.setTimeout(()=>{this.heroTimer=0;if(this.lastState)this.draw(this.lastState);},340);
+    this.draw(state);
   }
   /** Cosmetic-only bursts: never advance simulation time or consume RNG. */
   effect(state:GameState,kind:'attack'|'mutation'|'scan'|'damage'):void{
@@ -205,7 +215,7 @@ export class AsciiRenderer {
     ctx.globalAlpha=1;ctx.fillStyle=glow;ctx.fillRect(px-this.cellW*3,py-this.cellH*2,this.cellW*7,this.cellH*5);
     ctx.shadowColor=state.stats.hp>0?'#ffe29a':'#c78487';ctx.shadowBlur=this.reducedMotion?5:9;
     ctx.fillStyle=state.stats.hp>0?'#4c3825':'#3e1b22';ctx.fillRect(px,py,this.cellW,this.cellH);
-    ctx.fillStyle=state.stats.hp>0?'#ffe29a':'#c78487';this.glyph('@',px+this.cellW/2,py+this.cellH/2);
+    ctx.fillStyle=state.stats.hp>0?'#ffe29a':'#c78487';this.glyph(state.stats.hp<=0?'hero:death':this.heroAction&&performance.now()<this.heroUntil?`hero:${this.heroAction}`:'@',px+this.cellW/2,py+this.cellH/2);
     ctx.shadowBlur=0;
     // The unexplored world stays dark; the near-field gets a subtle readable frame.
     ctx.strokeStyle='rgba(175,210,197,.45)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,this.cellW-1,this.cellH-1);

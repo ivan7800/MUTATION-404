@@ -5,7 +5,7 @@ import {index,passable,within} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
-import {CAMERA_SCALE,paintComposition} from './ascii-art.js';
+import {CAMERA_SCALE,paintComposition,type HeroAction} from './ascii-art.js';
 
 /**
  * Real PixiJS v8 sprite renderer. Tiles are GPU sprites based on a reusable glyph
@@ -64,6 +64,9 @@ export class PixiAsciiRenderer {
   private readonly fieldBursts:{x:number;y:number;kind:'fire'|'electric'|'spores';until:number}[]=[];
   private readonly bossBursts:{x:number;y:number;until:number;color:number}[]=[];
   private effectKind:'attack'|'mutation'|'scan'|'damage'='scan';
+  private heroAction:HeroAction|null=null;
+  private heroUntil=0;
+  private heroTimer=0;
   private mutationEffect:'kinetic-pulse'|'neural-shock'|'pyrokinesis'|'phase-step'|null=null;
   private reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private readonly viewW=47;
@@ -505,7 +508,7 @@ export class PixiAsciiRenderer {
       this.backdrop.circle(px*this.cellW+this.cellW/2,py*this.cellH+this.cellH/2,this.cellW*.44).fill({color:0xf6d593,alpha:.24});
     }
     const heroPose=(this.reducedMotion?0:Math.floor(this.ambience/6)%2) as 0|1;
-    used=this.artMode==='pixel'?this.drawCreature(used,'hero',px,py,heroPose):this.drawGlyph(used,'@',px,py,state.stats.hp>0?0xffe1a0:0xc78487);
+    used=this.artMode==='pixel'?this.drawCreature(used,'hero',px,py,heroPose):this.drawGlyph(used,state.stats.hp<=0?'hero:death':this.heroAction&&performance.now()<this.heroUntil?`hero:${this.heroAction}`:'@',px,py,state.stats.hp>0?0xffe1a0:0xc78487);
     const timeLeft=this.effectUntil-performance.now();
     if(timeLeft>0&&this.mutationEffect&&!this.reducedMotion){
       const progress=Math.min(1,Math.max(0,1-timeLeft/420));
@@ -632,8 +635,15 @@ export class PixiAsciiRenderer {
   pauseAmbience():void{if(this.ambientFrame)cancelAnimationFrame(this.ambientFrame);this.ambientFrame=0;}
   setReducedMotion(value:boolean):void{
     this.reducedMotion=value;
-    if(value){this.pauseAmbience();this.effectUntil=0;this.flashes.clear();this.echoes.length=0;this.fieldBursts.length=0;this.bossBursts.length=0;}
+    if(value){this.pauseAmbience();this.effectUntil=0;this.heroUntil=0;if(this.heroTimer)clearTimeout(this.heroTimer);this.heroTimer=0;this.flashes.clear();this.echoes.length=0;this.fieldBursts.length=0;this.bossBursts.length=0;}
     if(this.state)this.draw(this.state);
+  }
+  heroFeedback(state:GameState,action:HeroAction):void{
+    if(this.reducedMotion)return;
+    this.heroAction=action;this.heroUntil=performance.now()+320;
+    if(this.heroTimer)clearTimeout(this.heroTimer);
+    this.heroTimer=window.setTimeout(()=>{this.heroTimer=0;if(this.state)this.draw(this.state);},340);
+    this.draw(state);
   }
   renderMinimap(state:GameState,canvas:HTMLCanvasElement):void{this.old.renderMinimap(state,canvas);}
 }
