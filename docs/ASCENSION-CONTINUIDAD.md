@@ -46,13 +46,15 @@ Ciudadanos de Faro Ciego y asentamientos, depósitos de los cuatro recursos, bot
 
 La siguiente iteración amplía la escala de cámara compartida a 1,45 en ambas matrices isométricas, sin modificar visión, colisiones ni coordenadas guardadas. Las capturas de WebGL, Canvas y móvil se inspeccionaron: el área explorada ocupa más espacio y permanece centrada. Typecheck, lint, build offline, 151 tests, QA de navegador y prueba offline en subruta pasaron. La composición sigue siendo una proyección de la cuadrícula y falta volumen/oclusión de nivel premium; el rendimiento físico no está medido.
 
+La preferencia del sistema de movimiento reducido se escucha ahora durante la partida. Canvas y Pixi cancelan la animación ambiental y los efectos temporales al activarla, redibujan una imagen estática y pueden reanudarla si se desactiva. El retorno a una pestaña visible sólo inicia animación si hay partida activa. Chromium comprobó el cambio en WebGL y Canvas mediante capturas estables en dos momentos; typecheck, lint, build offline, 151 tests y QA offline pasaron. La prueba automática no sustituye revisión humana de accesibilidad.
+
 ## Fases siguientes concretas
 
 1. Completar estados visuales de caminar/ataque/daño/muerte/mutación/interacción del héroe y ataques específicos de cada enemigo; hoy hay poses cíclicas y efectos existentes, no toda esa matriz de animaciones.
 2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Perfeccionar oclusión y escala Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
 4. Ampliar tests de actualización del SW con dos builds, descarga fallida y recursos ausentes; implementar exportación manual de la copia. La prueba offline actual no certifica todo el ciclo de actualización real.
-5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y reducción dinámica de movimiento.
+5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y revisar todos los efectos CSS y sonoros bajo la preferencia dinámica.
 6. Validar Windows, sesión larga, memoria y GPU física. Publicar preview aislada sólo tras restablecer permisos y confirmar configuración estable. Validar la URL antes de pedir autorización final de integración.
 
 ## Valoración provisional, no certificación

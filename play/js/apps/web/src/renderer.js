@@ -45,6 +45,18 @@ export class AsciiRenderer {
             cancelAnimationFrame(this.ambientFrame);
         this.ambientFrame = 0;
     }
+    setReducedMotion(value) {
+        this.reducedMotion = value;
+        if (value) {
+            this.pauseAmbience();
+            this.effectUntil = 0;
+            if (this.effectFrame)
+                cancelAnimationFrame(this.effectFrame);
+            this.effectFrame = 0;
+        }
+        if (this.lastState)
+            this.draw(this.lastState);
+    }
     /** Cosmetic-only bursts: never advance simulation time or consume RNG. */
     effect(state, kind) {
         if (this.reducedMotion)

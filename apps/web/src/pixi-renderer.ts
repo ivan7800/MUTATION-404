@@ -630,5 +630,10 @@ export class PixiAsciiRenderer {
     this.ambientFrame=requestAnimationFrame(loop);
   }
   pauseAmbience():void{if(this.ambientFrame)cancelAnimationFrame(this.ambientFrame);this.ambientFrame=0;}
+  setReducedMotion(value:boolean):void{
+    this.reducedMotion=value;
+    if(value){this.pauseAmbience();this.effectUntil=0;this.flashes.clear();this.echoes.length=0;this.fieldBursts.length=0;this.bossBursts.length=0;}
+    if(this.state)this.draw(this.state);
+  }
   renderMinimap(state:GameState,canvas:HTMLCanvasElement):void{this.old.renderMinimap(state,canvas);}
 }

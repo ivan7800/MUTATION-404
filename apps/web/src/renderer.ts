@@ -42,6 +42,11 @@ export class AsciiRenderer {
     if(this.ambientFrame)cancelAnimationFrame(this.ambientFrame);
     this.ambientFrame=0;
   }
+  setReducedMotion(value:boolean):void{
+    this.reducedMotion=value;
+    if(value){this.pauseAmbience();this.effectUntil=0;if(this.effectFrame)cancelAnimationFrame(this.effectFrame);this.effectFrame=0;}
+    if(this.lastState)this.draw(this.lastState);
+  }
   /** Cosmetic-only bursts: never advance simulation time or consume RNG. */
   effect(state:GameState,kind:'attack'|'mutation'|'scan'|'damage'):void{
     if(this.reducedMotion)return;

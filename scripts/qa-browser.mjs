@@ -50,6 +50,13 @@ try{
     await page.waitForFunction(value=>document.querySelector('#viewport')?.getAttribute('data-renderer')===value,expected,{timeout:25000});
     assert.equal(await page.locator('#viewport').getAttribute('data-renderer'),expected);
     assert.ok(await page.locator('#viewport canvas:visible').count()>0,'visible world canvas missing');
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await page.waitForTimeout(200);
+    const stillA=await page.locator('#viewport canvas:visible').screenshot({animations:'disabled'});
+    await page.waitForTimeout(400);
+    const stillB=await page.locator('#viewport canvas:visible').screenshot({animations:'disabled'});
+    assert.deepEqual(stillB,stillA,'reduced motion must freeze ambient canvas frames after a live preference change');
+    await page.emulateMedia({reducedMotion:'no-preference'});
     assert.match(await page.locator('#survival-strip').textContent(),/PV .*AMPOLLAS .*PÚAS/);
     assert.equal(await page.locator('#survival-strip').getAttribute('data-risk'),'stable');
     const before=await page.locator('#coords').textContent();

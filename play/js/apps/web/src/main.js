@@ -780,9 +780,15 @@ document.addEventListener('visibilitychange', () => {
             save(true);
     }
     else {
-        renderer.startAmbience();
+        if (gameStarted)
+            renderer.startAmbience();
         draw();
     }
+});
+window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener('change', event => {
+    renderer.setReducedMotion(event.matches);
+    if (gameStarted && document.visibilityState === 'visible')
+        renderer.startAmbience();
 });
 window.addEventListener('pagehide', () => { if (gameStarted && state.stats.hp > 0)
     save(true); });

@@ -821,5 +821,18 @@ export class PixiAsciiRenderer {
     }
     pauseAmbience() { if (this.ambientFrame)
         cancelAnimationFrame(this.ambientFrame); this.ambientFrame = 0; }
+    setReducedMotion(value) {
+        this.reducedMotion = value;
+        if (value) {
+            this.pauseAmbience();
+            this.effectUntil = 0;
+            this.flashes.clear();
+            this.echoes.length = 0;
+            this.fieldBursts.length = 0;
+            this.bossBursts.length = 0;
+        }
+        if (this.state)
+            this.draw(this.state);
+    }
     renderMinimap(state, canvas) { this.old.renderMinimap(state, canvas); }
 }
