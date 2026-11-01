@@ -38,7 +38,7 @@ No hay Windows ni GPU/dispositivos físicos, revisión externa ni jugador humano
 
 ## Fase de recuperación de guardados posterior
 
-El menú valida cada archivo antes de ofrecer «Continuar». Si el slot principal está corrupto, busca una copia de rescate y luego los slots históricos; muestra el origen recuperable sin modificar el archivo averiado. El siguiente guardado repara el principal y nunca sustituye una copia válida por datos inválidos. La importación también conserva la versión anterior válida. QA de Chromium comprobó la recuperación, las coordenadas y la integridad de la copia en WebGL y Canvas. Un contexto que deniega todas las llamadas a localStorage pudo iniciar partida y mostró error al guardar sin excepciones. No hay aún interfaz para exportar la copia.
+El menú valida cada archivo antes de ofrecer «Continuar». Si el slot principal está corrupto, busca una copia de rescate y luego los slots históricos; muestra el origen recuperable sin modificar el archivo averiado. El siguiente guardado repara el principal y nunca sustituye una copia válida por datos inválidos. La importación también conserva la versión anterior válida. El menú inicial y el panel de sistema permiten exportar la copia válida como JSON `mutation404-rescate-<semilla>.json`; la exportación usa un Blob descargable y registra la acción. QA de Chromium comprobó la creación del Blob JSON, la recuperación, las coordenadas y la integridad de la copia en WebGL y Canvas. Un contexto que deniega todas las llamadas a localStorage pudo iniciar partida y mostró error al guardar sin excepciones. El evento de descarga nativo no se pudo observar en Chromium headless.
 
 ## Fase de composición ambiental posterior
 
@@ -63,7 +63,7 @@ La iteración siguiente añade marcas de muerte ASCII distintas para las mismas 
 1. Afinar la legibilidad y duración de los estados visuales del héroe, heridas y muertes de enemigos con revisión humana; completar ataques específicos de cada enemigo, incluido Nácar.
 2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Perfeccionar oclusión y escala Canvas/Pixi, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
-4. Probar actualización del SW con dos builds completos y assets diferentes, varias pestañas reales, recursos ausentes y recuperación tras red intermitente; implementar exportación manual de la copia.
+4. Probar actualización del SW con dos builds completos y assets diferentes, varias pestañas reales, recursos ausentes y recuperación tras red intermitente; probar la descarga manual en un navegador no headless.
 5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y revisar todos los efectos CSS y sonoros bajo la preferencia dinámica.
 6. Validar Windows, sesión larga, memoria y GPU física. Publicar preview aislada sólo tras restablecer permisos y confirmar configuración estable. Validar la URL antes de pedir autorización final de integración.
 

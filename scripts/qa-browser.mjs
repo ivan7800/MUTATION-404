@@ -77,6 +77,13 @@ try{
     }
     await page.locator('#modal-close').click();
     await page.locator('#save-btn').click();
+    await page.evaluate(()=>{
+      const original=URL.createObjectURL;
+      URL.createObjectURL=blob=>{window.__mutation404ExportType=blob.type;return original.call(URL,blob);};
+    });
+    await page.locator('#export-btn').click();
+    assert.equal(await page.evaluate(()=>window.__mutation404ExportType),'application/json','save export must create a JSON blob');
+    assert.match(await page.locator('#log').textContent(),/Copia .*exportada/,'save export must record the action');
     await page.locator('#menu-btn').click();
     assert.ok(await page.locator('#start-menu').isVisible(),'menu button must pause into title screen');
     assert.ok(await page.evaluate(()=>localStorage.getItem('mutation404.v10.save.backup')),'saving twice must preserve a previous save');

@@ -39,7 +39,7 @@ root.innerHTML=`
 <div class="side-card"><div class="section-title">CARTOGRAFÍA <span>SECTOR 01</span></div><canvas id="minimap" class="minimap" aria-label="Minimapa y amenazas visibles"></canvas><div class="map-caption">Los enemigos se muestran al entrar en tu campo de visión.</div></div>
 <div class="side-card mission-card"><div class="section-title">MISIÓN EN CURSO <span>PRINCIPAL</span></div><h3 id="quest-name">Eco bajo la sal</h3><p id="quest-text">Habla con Mara Venn, en la plaza.</p><div class="quest-state" id="quest-state">● SIN INICIAR</div></div>
 <div class="side-card"><div class="section-title">EQUIPO Y SUMINISTROS <span>W3</span></div><div id="equipment-summary" class="equipment-summary"></div></div>
-<div class="side-card"><div class="section-title">SISTEMA <span>v1.0</span></div><div class="system-actions"><button id="save-btn">GUARDAR</button><button id="load-btn">CARGAR</button><button id="new-btn">NUEVA PARTIDA</button></div><div class="save-status" id="save-status">Autoguardado local activado.</div></div></aside></main>
+<div class="side-card"><div class="section-title">SISTEMA <span>v1.0</span></div><div class="system-actions"><button id="save-btn">GUARDAR</button><button id="load-btn">CARGAR</button><button id="export-btn">EXPORTAR COPIA</button><button id="new-btn">NUEVA PARTIDA</button></div><div class="save-status" id="save-status">Autoguardado local activado.</div></div></aside></main>
 <footer><span>FARO CIEGO / NACAR_404</span><span>W13 — ECOS DE NÁCAR</span><span>JUGABLE SIN CONEXIÓN EXTERNA</span></footer>
 </div>
 <div id="start-menu" class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
@@ -54,6 +54,7 @@ root.innerHTML=`
       <button id="start-new" type="button">NUEVA PARTIDA</button>
       <button id="start-load" type="button">CARGAR PARTIDA GUARDADA</button>
       <button id="start-import" type="button">IMPORTAR GUARDADO (.JSON)</button>
+      <button id="start-export" type="button">EXPORTAR COPIA DE RESCATE</button>
       <button id="start-options" type="button" aria-expanded="false">OPCIONES</button>
     </div>
     <input id="start-file" class="hidden" type="file" accept=".json,application/json" aria-label="Archivo de partida guardada"/>
@@ -93,6 +94,14 @@ function storeCurrent(raw:string):void{
     if(valid)localStorage.setItem(SAVE_KEY+'.backup',previous);
   }
   localStorage.setItem(SAVE_KEY,raw);
+}
+function exportSave():void{
+  const found=storedSave();
+  if(!found){startStatus('No hay una copia válida para exportar.');return;}
+  const blob=new Blob([found.raw],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=`mutation404-rescate-${state.seed}.json`;a.hidden=true;document.body.appendChild(a);a.click();
+  window.setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},0);
+  state.log.push(`SISTEMA // Copia ${found.key===SAVE_KEY+'.backup'?'de rescate ':''}exportada.`);draw();
 }
 function safeVolume():number{
   try{const raw=localStorage.getItem(AUDIO_SETTINGS_KEY);if(raw===null)return .55;const n=Number(raw);return Number.isFinite(n)&&n>=0&&n<=1?n:.55;}catch{return .55;}
@@ -462,6 +471,7 @@ $('#start-continue').addEventListener('click',()=>{
 });
 $('#start-load').addEventListener('click',()=>$('#start-continue').click());
 $('#start-import').addEventListener('click',()=>$<HTMLInputElement>('#start-file').click());
+$('#start-export').addEventListener('click',exportSave);
 $<HTMLInputElement>('#start-file').addEventListener('change',async()=>{
   const input=$<HTMLInputElement>('#start-file'),file=input.files?.[0];
   if(!file)return;
@@ -503,6 +513,7 @@ $('#start-audio').addEventListener('click',()=>{void toggleGameAudio();});
 updateStartMenu();
 
 $('#save-btn').addEventListener('click',()=>{save();draw();});
+$('#export-btn').addEventListener('click',exportSave);
 $('#load-btn').addEventListener('click',()=>{
   try{const raw=savedRaw();if(!raw)throw new Error('Todavía no hay ninguna partida guardada.');loadRaw(raw);}
   catch(err){state.log.push(`ERROR // ${err instanceof Error?err.message:'No se pudo cargar.'}`);draw();}
