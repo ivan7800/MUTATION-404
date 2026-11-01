@@ -19,6 +19,12 @@ function isoVolume(ctx:CanvasRenderingContext2D,cx:number,cy:number,w:number,h:n
   ctx.moveTo(cx-w*.5,cy);ctx.lineTo(cx,cy+h*.5);ctx.lineTo(cx,cy+h*.5+depth);ctx.lineTo(cx-w*.5,cy+depth);ctx.closePath();ctx.fill();
   ctx.beginPath();ctx.moveTo(cx,cy+h*.5);ctx.lineTo(cx+w*.5,cy);ctx.lineTo(cx+w*.5,cy+depth);ctx.lineTo(cx,cy+h*.5+depth);ctx.closePath();ctx.fill();ctx.restore();
 }
+function terrainHeight(tile:Tile,seed:number):number{
+  if(tile==='#')return 7+Math.floor(seed*7);
+  if(tile==='%'||tile==='=')return 5+Math.floor(seed*5);
+  if(tile==='^'||tile==='T')return 2+Math.floor(seed*3);
+  return 0;
+}
 export class AsciiRenderer {
   private canvas:HTMLCanvasElement;
   private ctx:CanvasRenderingContext2D;
@@ -162,7 +168,8 @@ export class AsciiRenderer {
       ctx.globalAlpha=visible?(timeNight?.62:1):.28;
       ctx.fillStyle=coordsForZone(state.zone)?def.shadow:'#101722';
       isoDiamond(ctx,px,py,this.cellW,this.cellH,ctx.fillStyle,ctx.globalAlpha);
-      if(tile==='#'||tile==='%'||tile==='=')isoVolume(ctx,px,py,this.cellW,this.cellH,Math.max(3,this.cellH*.28),ctx.fillStyle);
+      const height=terrainHeight(tile,terrainHash(state.seed+119,x,y));
+      if(height>0)isoVolume(ctx,px,py,this.cellW,this.cellH,height,ctx.fillStyle);
       if(visible){
         const grain=terrainHash(state.seed+801,x,y);
         ctx.globalAlpha=grain>.7?.11:.045;
