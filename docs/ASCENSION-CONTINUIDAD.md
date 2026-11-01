@@ -62,10 +62,12 @@ La siguiente mejora convierte el vocabulario principal del terreno (`.`, `:`, `,
 
 Las losetas con variantes usan ahora el hash determinista del mundo para seleccionar desgaste y pequeñas diferencias de altura visual. Canvas y Pixi reciben la misma variante por coordenada y semilla, por lo que las capturas y partidas siguen siendo reproducibles. La prueba de arte compara variantes distintas, y la validación completa alcanzó 157 tests, QA de Chromium y QA offline. Todavía no existe una capa de oclusión real entre volúmenes.
 
+Canvas dibuja ahora las celdas por diagonales `x + y`, de atrás hacia delante, para que una loseta frontal cubra la parte baja de una loseta trasera. Esto alinea su orden de profundidad con `zIndex=x+y` en Pixi y no toca visibilidad, coordenadas ni colisiones. Build offline, 157 tests, QA de ambos renderizadores y QA offline pasaron. Las sombras siguen siendo estilizadas y la oclusión de personajes sobre estructuras requiere una fase posterior.
+
 ## Fases siguientes concretas
 
 1. Afinar la legibilidad y duración de los estados visuales del héroe, heridas y muertes de enemigos con revisión humana; completar ataques específicos de cada enemigo, incluido Nácar.
-2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Añadir oclusión y sombras entre volúmenes, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
+2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Añadir sombras proyectadas y oclusión de personajes sobre estructuras, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
 4. Probar actualización del SW con dos builds completos y assets diferentes, varias pestañas reales, recursos ausentes y recuperación tras red intermitente; probar la descarga manual en un navegador no headless.
 5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y revisar todos los efectos CSS y sonoros bajo la preferencia dinámica.

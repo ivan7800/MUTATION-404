@@ -199,8 +199,12 @@ export class AsciiRenderer {
         const timeNight = Math.floor(state.tick / 6000) % 4 >= 2;
         ctx.font = `${this.fontSize}px "DejaVu Sans Mono","Liberation Mono",monospace`;
         ctx.shadowBlur = 0;
-        for (let cy = 0; cy < VIEW_H; cy++)
+        // Draw far isometric diagonals first so front cells occlude rear volume.
+        for (let depth = 0; depth < VIEW_W + VIEW_H - 1; depth++)
             for (let cx = 0; cx < VIEW_W; cx++) {
+                const cy = depth - cx;
+                if (cy < 0 || cy >= VIEW_H)
+                    continue;
                 const x = ox + cx, y = oy + cy, i = index(x, y), tile = state.tiles[i];
                 if (!state.seen[i])
                     continue;

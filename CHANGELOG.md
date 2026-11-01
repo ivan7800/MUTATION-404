@@ -13,6 +13,7 @@
 - Exportación manual de la copia de rescate en JSON desde el menú inicial y el panel de sistema.
 - Terreno ASCII volumétrico compartido para suelos, rocas, agua, vegetación y contaminación.
 - Variantes deterministas de desgaste y altura visual por coordenada y semilla.
+- Orden de profundidad diagonal en Canvas para alinear la oclusión con WebGL.
 - Pulsaciones rápidas independientes, foco contenido en modales y recuperación desde una copia de guardado válida si el archivo principal está dañado.
 - Instalación reproducible mediante lockfile y npm ci; lanzadores incrementales.
 - Caché versionada por build y scope, assets precargados, manifiesto y prueba offline en subruta.
