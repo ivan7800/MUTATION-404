@@ -9,6 +9,51 @@ const COLORS = {
     '*': '#7ca67d', '+': '#f3c17a', '=': '#b9d4cf', 'o': '#cba3e9', 'T': '#ffd085', 'x': '#f0bc91',
     ',': '#bdb092', ';': '#cd8c74', 'v': '#ceafe9', '&': '#a3e0a3', '%': '#8ac8d3', '?': '#eda4d8', '!': '#ff6f86'
 };
+function isoDiamond(ctx, cx, cy, w, h, color, alpha = 1) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - h * .5);
+    ctx.lineTo(cx + w * .5, cy);
+    ctx.lineTo(cx, cy + h * .5);
+    ctx.lineTo(cx - w * .5, cy);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+function isoVolume(ctx, cx, cy, w, h, depth, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = .72;
+    ctx.beginPath();
+    ctx.moveTo(cx - w * .5, cy);
+    ctx.lineTo(cx, cy + h * .5);
+    ctx.lineTo(cx, cy + h * .5 + depth);
+    ctx.lineTo(cx - w * .5, cy + depth);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + h * .5);
+    ctx.lineTo(cx + w * .5, cy);
+    ctx.lineTo(cx + w * .5, cy + depth);
+    ctx.lineTo(cx, cy + h * .5 + depth);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+function terrainHeight(tile, seed) {
+    if (tile === '#')
+        return 7 + Math.floor(seed * 7);
+    if (tile === '%' || tile === '=')
+        return 5 + Math.floor(seed * 5);
+    if (tile === '^' || tile === 'T')
+        return 2 + Math.floor(seed * 3);
+    return 0;
+}
+function actorLift(state, x, y) {
+    return terrainHeight(state.tiles[index(x, y)], terrainHash(state.seed + 119, x, y)) * .35;
+}
 export class AsciiRenderer {
     canvas;
     ctx;
@@ -213,12 +258,15 @@ export class AsciiRenderer {
                 const biome = biomeAt(state.seed, x, y), def = BIOMES[biome];
                 ctx.globalAlpha = visible ? (timeNight ? .62 : 1) : .28;
                 ctx.fillStyle = coordsForZone(state.zone) ? def.shadow : '#101722';
-                ctx.fillRect(cx * this.cellW, cy * this.cellH, this.cellW, this.cellH);
+                isoDiamond(ctx, px, py, this.cellW, this.cellH, ctx.fillStyle, ctx.globalAlpha);
+                const height = terrainHeight(tile, terrainHash(state.seed + 119, x, y));
+                if (height > 0)
+                    isoVolume(ctx, px, py, this.cellW, this.cellH, height, ctx.fillStyle);
                 if (visible) {
                     const grain = terrainHash(state.seed + 801, x, y);
                     ctx.globalAlpha = grain > .7 ? .11 : .045;
                     ctx.fillStyle = def.palette;
-                    ctx.fillRect(cx * this.cellW, cy * this.cellH, this.cellW, this.cellH);
+                    isoDiamond(ctx, px, py, this.cellW * .88, this.cellH * .82, ctx.fillStyle, ctx.globalAlpha);
                 }
                 ctx.globalAlpha = visible ? 1 : .28;
                 // Material highlights: seeded, deterministic and independent of game state.
@@ -227,13 +275,13 @@ export class AsciiRenderer {
                     if (shimmer > .73) {
                         ctx.globalAlpha = .10;
                         ctx.fillStyle = tile === '~' ? '#7de7eb' : tile === '^' ? '#e9edff' : def.palette;
-                        ctx.fillRect(cx * this.cellW + 2, cy * this.cellH + 2, Math.max(2, this.cellW - 5), 2);
+                        isoDiamond(ctx, px, py, this.cellW * .62, 2, ctx.fillStyle, ctx.globalAlpha);
                     }
                 }
                 ctx.globalAlpha = visible ? 1 : .28;
                 if (tile === '!' && visible) {
                     ctx.fillStyle = this.ambience % 2 ? '#622738' : '#43212a';
-                    ctx.fillRect(cx * this.cellW, cy * this.cellH, this.cellW, this.cellH);
+                    isoDiamond(ctx, px, py, this.cellW * .94, this.cellH * .88, ctx.fillStyle, ctx.globalAlpha);
                 }
                 ctx.fillStyle = coordsForZone(state.zone) ? (tile === '.' || tile === '*' || tile === ',' ? def.palette : COLORS[tile]) : (tile === '#' ? '#506070' : tile === '.' ? '#839aab' : COLORS[tile]);
                 this.glyph(terrainComposition(tile, Math.floor(terrainHash(state.seed + 917, x, y) * 3)), px, py);
@@ -274,7 +322,7 @@ export class AsciiRenderer {
             }
             ctx.globalAlpha = 1;
             ctx.fillStyle = def.color;
-            this.glyph(`field:${field.kind}`, px + this.cellW / 2, py + this.cellH / 2);
+            this.glyph(`field:${field.kind}`, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, field.x, field.y));
         }
         // Naturally occurring materials are visible once their sector has been surveyed.
         for (const node of state.ecology.nodes) {
@@ -285,7 +333,7 @@ export class AsciiRenderer {
                 continue;
             ctx.globalAlpha = 1;
             ctx.fillStyle = node.kind === 'mineral' ? '#e2ba83' : node.kind === 'crystal' ? '#deb9fa' : '#8be6b3';
-            this.glyph(`resource:${node.kind}`, cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2);
+            this.glyph(`resource:${node.kind}`, cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, node.x, node.y));
         }
         for (const drop of state.ground) {
             if (state.visible[index(drop.x, drop.y)] !== 1)
@@ -294,7 +342,7 @@ export class AsciiRenderer {
             if (cx < 0 || cy < 0 || cx >= VIEW_W || cy >= VIEW_H)
                 continue;
             ctx.fillStyle = '#f7d991';
-            this.glyph('loot', cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2);
+            this.glyph('loot', cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, drop.x, drop.y));
         }
         for (const npc of [...(state.zone === 'surface' ? ACTORS : []), ...settlementCitizens(state.zone, state.tick)]) {
             if (state.visible[index(npc.x, npc.y)] !== 1)
@@ -310,7 +358,7 @@ export class AsciiRenderer {
             ctx.fillStyle = '#0c1b1c';
             ctx.fillRect(cx * this.cellW, cy * this.cellH, this.cellW, this.cellH);
             ctx.fillStyle = npc.color;
-            this.glyph(`npc:${npc.glyph}`, cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2);
+            this.glyph(`npc:${npc.glyph}`, cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, npc.x, npc.y));
         }
         for (const enemy of state.enemies) {
             if (enemy.hp <= 0 || state.visible[index(enemy.x, enemy.y)] !== 1)
@@ -338,7 +386,7 @@ export class AsciiRenderer {
             const glyph = enemy.id === 'campaign-heart-custodian' ? '✺' : enemy.id.startsWith('elite-') ? '◆' : def.glyph;
             const hit = this.enemyHits.has(enemy.id);
             ctx.fillStyle = hit ? '#ff9d91' : (enemy.stunned ?? 0) > 0 ? '#e3aaf5' : def.color;
-            this.glyph(hit ? `enemy:hurt:${glyph}` : glyph, px + this.cellW / 2, py + this.cellH / 2);
+            this.glyph(hit ? `enemy:hurt:${glyph}` : glyph, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, enemy.x, enemy.y));
             ctx.shadowBlur = 0;
             // Miniature health bar provides threat feedback without a separate modal.
             const health = Math.max(0, Math.min(1, enemy.hp / def.hp));
@@ -391,7 +439,7 @@ export class AsciiRenderer {
         ctx.fillStyle = state.stats.hp > 0 ? '#4c3825' : '#3e1b22';
         ctx.fillRect(px, py, this.cellW, this.cellH);
         ctx.fillStyle = state.stats.hp > 0 ? '#ffe29a' : '#c78487';
-        this.glyph(state.stats.hp <= 0 ? 'hero:death' : this.heroAction && performance.now() < this.heroUntil ? `hero:${this.heroAction}` : '@', px + this.cellW / 2, py + this.cellH / 2);
+        this.glyph(state.stats.hp <= 0 ? 'hero:death' : this.heroAction && performance.now() < this.heroUntil ? `hero:${this.heroAction}` : '@', px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, state.player.x, state.player.y));
         ctx.shadowBlur = 0;
         // The unexplored world stays dark; the near-field gets a subtle readable frame.
         ctx.strokeStyle = 'rgba(175,210,197,.45)';

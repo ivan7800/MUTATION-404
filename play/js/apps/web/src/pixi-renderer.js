@@ -5,6 +5,15 @@ import { index, passable, within } from '../../../packages/core/src/world.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { CAMERA_SCALE, isOccludingTerrain, paintComposition, terrainComposition } from './ascii-art.js';
+function terrainLift(tile, seed) {
+    if (tile === '#')
+        return 7 + Math.floor(seed * 7);
+    if (tile === '%' || tile === '=')
+        return 5 + Math.floor(seed * 5);
+    if (tile === '^' || tile === 'T')
+        return 2 + Math.floor(seed * 3);
+    return 0;
+}
 /**
  * Real PixiJS v8 sprite renderer. Tiles are GPU sprites based on a reusable glyph
  * atlas generated from canvas, not one DOM/canvas text draw call per game frame.
@@ -463,7 +472,7 @@ export class PixiAsciiRenderer {
             throw new Error('Sprite pool exhausted');
         return sprite;
     }
-    drawGlyph(i, glyph, x, y, color, opacity = 1) {
+    drawGlyph(i, glyph, x, y, color, opacity = 1, lift = 0) {
         const sprite = this.spriteAt(i);
         sprite.texture = this.texture(glyph, this.reducedMotion ? 0 : Math.floor(this.ambience / 5) % 2);
         sprite.tint = color;
@@ -472,8 +481,8 @@ export class PixiAsciiRenderer {
         // Letters stay upright; terrain surfaces and lighting retain isometric depth.
         const scale = glyph === '✺' ? 1.7 : 1;
         const width = this.cellW * scale, height = this.cellH * scale;
-        sprite.setFromMatrix(new Matrix(width / 80, -width / 80, height / 52, height / 52, x * this.cellW + this.cellW / 2, y * this.cellH + this.cellH / 2));
-        sprite.zIndex = x + y;
+        sprite.setFromMatrix(new Matrix(width / 80, -width / 80, height / 52, height / 52, x * this.cellW + this.cellW / 2, y * this.cellH + this.cellH / 2 - lift));
+        sprite.zIndex = x + y + lift * .02;
         sprite.visible = true;
         return i + 1;
     }
@@ -535,7 +544,7 @@ export class PixiAsciiRenderer {
                     sprite.visible = true;
                 }
                 else {
-                    used = this.drawGlyph(used, terrainComposition(glyph, terrain.variant), cx, cy, this.color(palette), alpha);
+                    used = this.drawGlyph(used, terrainComposition(glyph, terrain.variant), cx, cy, this.color(palette), alpha, terrainLift(glyph, terrainHash(state.seed + 119, x, y)));
                 }
                 if (visible && (glyph === 'o' || glyph === 'T' || glyph === '?')) {
                     const shimmer = this.reducedMotion ? 0.13 : 0.12 + 0.06 * Math.sin(this.ambience * .3 + x);
