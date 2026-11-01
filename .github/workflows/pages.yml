@@ -39,6 +39,8 @@ jobs:
         run: node scripts/balance-audit.mjs
       - name: Build static web release
         run: npm run build:offline
+      - name: Audit campaign progression contracts
+        run: node scripts/qa-campaign.mjs
       - name: Verify Pages entry point
         run: |
           test -f play/index.html

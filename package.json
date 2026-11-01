@@ -14,6 +14,7 @@
     "typecheck": "tsc -p tsconfig.play.json --noEmit",
     "test": "tsc -p tsconfig.core.json && node --test tests/*.test.mjs",
     "test:core": "tsc -p tsconfig.core.json && node --test tests/*.test.mjs",
+    "qa:campaign": "npm run test:core && node scripts/qa-campaign.mjs",
     "lint": "eslint .",
     "start": "node scripts/server.mjs"
   },

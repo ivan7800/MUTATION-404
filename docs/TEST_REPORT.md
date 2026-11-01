@@ -17,3 +17,5 @@ Regresión específica de campaña: **11/11 PASS**. Comprueba acto inicial, ocho
 - Windows físico, GPU física, lector de pantalla y partida humana prolongada: NO COMPROBADO.
 
 Las capturas regenerables se almacenan en `qa-evidence/` y no forman parte del producto publicado.
+
+La auditoría reproducible también está disponible con `npm run qa:campaign`. Recorre los hitos persistentes y los tres desenlaces tras serialización; es cobertura de contratos deterministas y mantiene `humanPlaythrough: false`, por lo que no sustituye una partida humana prolongada.
