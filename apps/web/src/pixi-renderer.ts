@@ -316,11 +316,11 @@ export class PixiAsciiRenderer {
     this.tiles.set(key,texture);
     return texture;
   }
-  private drawCreature(i:number,kind:string,x:number,y:number,frame:0|1):number{
+  private drawCreature(i:number,kind:string,x:number,y:number,frame:0|1,lift=0):number{
     const sprite=this.spriteAt(i);
     sprite.texture=this.creatureTexture(kind,frame);
     sprite.tint=0xffffff;sprite.alpha=1;
-    sprite.x=x*this.cellW+this.cellW/2;sprite.y=y*this.cellH+this.cellH/2;
+    sprite.x=x*this.cellW+this.cellW/2;sprite.y=y*this.cellH+this.cellH/2-lift;
     sprite.width=this.cellW;sprite.height=this.cellH;sprite.visible=true;
     return i+1;
   }
@@ -478,7 +478,8 @@ export class PixiAsciiRenderer {
       if(state.visible[index(npc.x,npc.y)]!==1)continue;
       const x=npc.x-ox,y=npc.y-oy;if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
       this.backdrop.ellipse((x+.5)*this.cellW,(y+.76)*this.cellH,this.cellW*.48,this.cellH*.12).fill({color:0x020608,alpha:.28});
-      used=this.artMode==='pixel'?this.drawCreature(used,'npc',x,y,this.reducedMotion?0:(Math.floor(this.ambience/5)%2) as 0|1):this.drawGlyph(used,`npc:${npc.glyph}`,x,y,this.color(npc.color),1,terrainLift(state.tiles[index(npc.x,npc.y)],terrainHash(state.seed+119,npc.x,npc.y))*.35);
+      const npcLift=terrainLift(state.tiles[index(npc.x,npc.y)],terrainHash(state.seed+119,npc.x,npc.y))*.35;
+      used=this.artMode==='pixel'?this.drawCreature(used,'npc',x,y,this.reducedMotion?0:(Math.floor(this.ambience/5)%2) as 0|1,npcLift):this.drawGlyph(used,`npc:${npc.glyph}`,x,y,this.color(npc.color),1,npcLift);
     }
     for(const enemy of state.enemies){
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
@@ -506,7 +507,8 @@ export class PixiAsciiRenderer {
       }else if(flash)this.flashes.delete(enemy.id);
       const pose=(this.reducedMotion?0:Math.floor(this.ambience/6+enemy.x+enemy.y)%2) as 0|1;
       const creatureGlyph=nacar?'✺':elite?'◆':def.glyph;
-      used=this.artMode==='pixel'?this.drawCreature(used,nacar?'nacar':elite?'elite':enemy.kind,x,y,pose):this.drawGlyph(used,flash&&flash.until>performance.now()?`enemy:hurt:${creatureGlyph}`:creatureGlyph,x,y,flash&&flash.until>performance.now()?0xff9d91:nacar?0x92f9ef:elite?0xecb9ff:this.color(def.color),1,terrainLift(state.tiles[index(enemy.x,enemy.y)],terrainHash(state.seed+119,enemy.x,enemy.y))*.35);
+      const enemyLift=terrainLift(state.tiles[index(enemy.x,enemy.y)],terrainHash(state.seed+119,enemy.x,enemy.y))*.35;
+      used=this.artMode==='pixel'?this.drawCreature(used,nacar?'nacar':elite?'elite':enemy.kind,x,y,pose,enemyLift):this.drawGlyph(used,flash&&flash.until>performance.now()?`enemy:hurt:${creatureGlyph}`:creatureGlyph,x,y,flash&&flash.until>performance.now()?0xff9d91:nacar?0x92f9ef:elite?0xecb9ff:this.color(def.color),1,enemyLift);
       const health=Math.max(0,Math.min(1,enemy.hp/(nacar?def.hp*3:def.hp)));
       if(health<1){this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,this.cellW-2,2).fill(0x492c33);this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,(this.cellW-2)*health,2).fill(health>.45?0xdcbf83:0xee7373);}
     }
@@ -525,7 +527,8 @@ export class PixiAsciiRenderer {
       this.backdrop.circle(px*this.cellW+this.cellW/2,py*this.cellH+this.cellH/2,this.cellW*.44).fill({color:0xf6d593,alpha:.24});
     }
     const heroPose=(this.reducedMotion?0:Math.floor(this.ambience/6)%2) as 0|1;
-    used=this.artMode==='pixel'?this.drawCreature(used,'hero',px,py,heroPose):this.drawGlyph(used,state.stats.hp<=0?'hero:death':this.heroAction&&performance.now()<this.heroUntil?`hero:${this.heroAction}`:'@',px,py,state.stats.hp>0?0xffe1a0:0xc78487,1,terrainLift(state.tiles[index(state.player.x,state.player.y)],terrainHash(state.seed+119,state.player.x,state.player.y))*.35);
+    const heroLift=terrainLift(state.tiles[index(state.player.x,state.player.y)],terrainHash(state.seed+119,state.player.x,state.player.y))*.35;
+    used=this.artMode==='pixel'?this.drawCreature(used,'hero',px,py,heroPose,heroLift):this.drawGlyph(used,state.stats.hp<=0?'hero:death':this.heroAction&&performance.now()<this.heroUntil?`hero:${this.heroAction}`:'@',px,py,state.stats.hp>0?0xffe1a0:0xc78487,1,heroLift);
     const timeLeft=this.effectUntil-performance.now();
     if(timeLeft>0&&this.mutationEffect&&!this.reducedMotion){
       const progress=Math.min(1,Math.max(0,1-timeLeft/420));
