@@ -2,7 +2,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, 
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
-import { CAMERA_SCALE, paintComposition } from './ascii-art.js';
+import { CAMERA_SCALE, paintComposition, terrainComposition } from './ascii-art.js';
 const VIEW_W = 47, VIEW_H = 27;
 const COLORS = {
     '#': '#63796e', '.': '#9a9580', ':': '#d3b783', '~': '#63afc3', '^': '#c0dbec',
@@ -232,7 +232,7 @@ export class AsciiRenderer {
                     ctx.fillRect(cx * this.cellW, cy * this.cellH, this.cellW, this.cellH);
                 }
                 ctx.fillStyle = coordsForZone(state.zone) ? (tile === '.' || tile === '*' || tile === ',' ? def.palette : COLORS[tile]) : (tile === '#' ? '#506070' : tile === '.' ? '#839aab' : COLORS[tile]);
-                this.glyph(tile, px, py);
+                this.glyph(terrainComposition(tile), px, py);
                 // Lighting never reveals fog-of-war tiles or changes the core simulation.
                 if (visible) {
                     const distance = Math.hypot(x - state.player.x, y - state.player.y);

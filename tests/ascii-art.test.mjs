@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {composition} from '../play/js/apps/web/src/ascii-art.js';
+import {composition,terrainComposition} from '../play/js/apps/web/src/ascii-art.js';
 
 test('hero actions retain distinct printable ASCII silhouettes in the shipped renderer data',()=>{
   const idle=composition('@').join('\n');
@@ -26,5 +26,11 @@ test('all original enemy types and boss leave distinct printable ASCII death mar
     assert.ok(rows.length>=3,`${glyph} death mark missing`);
     assert.notDeepEqual(rows,composition(`enemy:hurt:${glyph}`));
     for(const row of rows)assert.match(row,/^[\x20-\x7e]+$/);
+  }
+});
+test('terrain keeps volumetric compositions for the original tile vocabulary',()=>{
+  for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!']){
+    const rows=composition(terrainComposition(tile));
+    assert.ok(rows.length>=2,`${tile} terrain should have a visible top and side`);
   }
 });

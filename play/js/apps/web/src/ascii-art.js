@@ -33,6 +33,11 @@ const ACTORS = {
     'enemy:death:✺': [['\\ | /', '--X--', '_/_\\_', '/   \\']],
     'enemy:death:◆': [['/x\\', '[~]', '_/_']],
     '#': [[' /_\\', '|##|', '|__|']],
+    '.': [[' . ', '...', '___']],
+    ':': [[' : ', ':::', '___']],
+    ',': [[' , ', ',,,', '___']],
+    ';': [[' ; ', ';;;', '___']],
+    '^': [[' /\\', '/^^\\', '\\__/']],
     '%': [[' /%\\', '|%%|', '|__|']],
     '=': [['/==\\', '|==|']],
     '*': [[' .*.', '/|\\', ' | '], [' :*:', '\\|/', ' | ']],
@@ -65,6 +70,7 @@ export function composition(glyph, frame = 0) {
         return poses[Math.abs(frame) % poses.length];
     return [glyph];
 }
+export function terrainComposition(tile) { return tile === '.' || tile === ':' || tile === ',' || tile === '^' || tile === '#' || tile === '%' || tile === '=' || tile === '~' || tile === '*' || tile === '&' || tile === '!' ? tile : tile; }
 export function paintComposition(ctx, glyph, x, y, size, frame = 0) {
     const rows = composition(glyph, frame), multi = rows.length > 1;
     ctx.save();

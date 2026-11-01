@@ -5,7 +5,7 @@ import {index,passable,within} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
-import {CAMERA_SCALE,paintComposition,type HeroAction} from './ascii-art.js';
+import {CAMERA_SCALE,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
 
 /**
  * Real PixiJS v8 sprite renderer. Tiles are GPU sprites based on a reusable glyph
@@ -396,7 +396,7 @@ export class PixiAsciiRenderer {
         sprite.x=cx*this.cellW+this.cellW/2;sprite.y=cy*this.cellH+this.cellH/2;
         sprite.width=this.cellW;sprite.height=this.cellH;sprite.visible=true;
       }else{
-        used=this.drawGlyph(used,glyph,cx,cy,this.color(palette),alpha);
+        used=this.drawGlyph(used,terrainComposition(glyph),cx,cy,this.color(palette),alpha);
       }
       if(visible&&(glyph==='o'||glyph==='T'||glyph==='?')){
         const shimmer=this.reducedMotion?0.13:0.12+0.06*Math.sin(this.ambience*.3+x);

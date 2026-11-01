@@ -34,6 +34,11 @@ const ACTORS:Record<string,readonly string[][]>={
   'enemy:death:✺':[['\\ | /','--X--','_/_\\_','/   \\']],
   'enemy:death:◆':[['/x\\','[~]','_/_']],
   '#':[[' /_\\','|##|','|__|']],
+  '.':[[' . ','...','___']],
+  ':':[[' : ',':::','___']],
+  ',':[[' , ',',,,','___']],
+  ';':[[' ; ',';;;','___']],
+  '^':[[' /\\','/^^\\','\\__/']],
   '%':[[' /%\\','|%%|','|__|']],
   '=':[['/==\\','|==|']],
   '*':[[' .*.','/|\\',' | '],[' :*:','\\|/',' | ']],
@@ -65,6 +70,7 @@ export function composition(glyph:string,frame=0):readonly string[]{
   if(poses)return poses[Math.abs(frame)%poses.length];
   return [glyph];
 }
+export function terrainComposition(tile:string):string{return tile==='.'||tile===':'||tile===','||tile==='^'||tile==='#'||tile==='%'||tile==='='||tile==='~'||tile==='*'||tile==='&'||tile==='!'?tile:tile;}
 export function paintComposition(ctx:CanvasRenderingContext2D,glyph:string,x:number,y:number,size:number,frame=0):void{
   const rows=composition(glyph,frame),multi=rows.length>1;
   ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
