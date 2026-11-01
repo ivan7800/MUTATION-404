@@ -470,12 +470,14 @@ export class PixiAsciiRenderer {
     for(const npc of [...(state.zone==='surface'?ACTORS:[]),...settlementCitizens(state.zone,state.tick)]){
       if(state.visible[index(npc.x,npc.y)]!==1)continue;
       const x=npc.x-ox,y=npc.y-oy;if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
+      this.backdrop.ellipse((x+.5)*this.cellW,(y+.76)*this.cellH,this.cellW*.48,this.cellH*.12).fill({color:0x020608,alpha:.28});
       used=this.artMode==='pixel'?this.drawCreature(used,'npc',x,y,this.reducedMotion?0:(Math.floor(this.ambience/5)%2) as 0|1):this.drawGlyph(used,`npc:${npc.glyph}`,x,y,this.color(npc.color));
     }
     for(const enemy of state.enemies){
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
       const x=enemy.x-ox,y=enemy.y-oy;if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
       const def=ENEMY_DEFS[enemy.kind],nacar=enemy.id==='campaign-heart-custodian',elite=enemy.id.startsWith('elite-')||nacar;
+      this.backdrop.ellipse((x+.5)*this.cellW,(y+.78)*this.cellH,this.cellW*.5,this.cellH*.13).fill({color:0x020608,alpha:.34});
       if(nacar){
         // Persistent nonessential FX; stable in reduced-motion and ASCII modes.
         const phase=nacarPhase(enemy.hp,def.hp*3);
@@ -502,6 +504,7 @@ export class PixiAsciiRenderer {
       if(health<1){this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,this.cellW-2,2).fill(0x492c33);this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,(this.cellW-2)*health,2).fill(health>.45?0xdcbf83:0xee7373);}
     }
     const px=state.player.x-ox,py=state.player.y-oy;
+    this.backdrop.ellipse((px+.5)*this.cellW,(py+.8)*this.cellH,this.cellW*.55,this.cellH*.14).fill({color:0x020608,alpha:.42});
     this.backdrop.rect(px*this.cellW,py*this.cellH,this.cellW,this.cellH).fill(0x644829);
     this.backdrop.rect(px*this.cellW+.5,py*this.cellH+.5,this.cellW-1,this.cellH-1).stroke({color:0xffdd9d,width:1.5});
     if(this.artMode==='pixel'){

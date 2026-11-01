@@ -219,6 +219,7 @@ export class AsciiRenderer {
     for(const npc of [...(state.zone==='surface'?ACTORS:[]),...settlementCitizens(state.zone,state.tick)]){
       if(state.visible[index(npc.x,npc.y)]!==1)continue;
       const cx=npc.x-ox,cy=npc.y-oy;if(cx<0||cy<0||cx>=VIEW_W||cy>=VIEW_H)continue;
+      ctx.globalAlpha=.28;ctx.fillStyle='#020608';ctx.beginPath();ctx.ellipse(cx*this.cellW+this.cellW*.5,cy*this.cellH+this.cellH*.72,this.cellW*.48,this.cellH*.12,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#0c1b1c';ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
       ctx.fillStyle=npc.color;this.glyph(`npc:${npc.glyph}`,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2);
     }
@@ -226,6 +227,7 @@ export class AsciiRenderer {
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
       const cx=enemy.x-ox,cy=enemy.y-oy;if(cx<0||cy<0||cx>=VIEW_W||cy>=VIEW_H)continue;
       const def=ENEMY_DEFS[enemy.kind],px=cx*this.cellW,py=cy*this.cellH;
+      ctx.globalAlpha=.34;ctx.fillStyle='#020608';ctx.beginPath();ctx.ellipse(px+this.cellW*.5,py+this.cellH*.76,this.cellW*.5,this.cellH*.13,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=state.targetId===enemy.id?'#6b2f2d':'#261a1b';ctx.fillRect(px,py,this.cellW,this.cellH);
       if(state.targetId===enemy.id){ctx.shadowBlur=11;ctx.shadowColor='#f6b76e';}
       if(state.targetId===enemy.id){ctx.strokeStyle='#ffcb72';ctx.lineWidth=1.5;ctx.strokeRect(px+1,py+1,this.cellW-2,this.cellH-2);}
@@ -246,6 +248,7 @@ export class AsciiRenderer {
     }
     ctx.globalAlpha=1;
     const px=(state.player.x-ox)*this.cellW,py=(state.player.y-oy)*this.cellH;
+    ctx.globalAlpha=.42;ctx.fillStyle='#020608';ctx.beginPath();ctx.ellipse(px+this.cellW*.5,py+this.cellH*.78,this.cellW*.55,this.cellH*.14,0,0,Math.PI*2);ctx.fill();
     // Orientation glow emphasizes the errant without making hidden tiles visible.
     const glow=ctx.createRadialGradient(px+this.cellW/2,py+this.cellH/2,2,px+this.cellW/2,py+this.cellH/2,this.cellW*3.5);
     glow.addColorStop(0,'#f8b85a30');glow.addColorStop(1,'#f8b85a00');
