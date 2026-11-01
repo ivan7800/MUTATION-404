@@ -34,11 +34,17 @@ const ACTORS = {
     'enemy:death:◆': [['/x\\', '[~]', '_/_']],
     '#': [[' /_\\', '|##|', '|__|']],
     '.': [[' . ', '...', '___']],
+    '.:1': [[' . ', '.._', '__\u005c']],
+    '.:2': [[' . ', '._.', '_/_']],
     ':': [[' : ', ':::', '___']],
+    ':1': [[' : ', '::_', '__\u005c']],
+    ':2': [[' : ', '_::', '_/_']],
     ',': [[' , ', ',,,', '___']],
     ';': [[' ; ', ';;;', '___']],
     '^': [[' /\\', '/^^\\', '\\__/']],
     '%': [[' /%\\', '|%%|', '|__|']],
+    '%:1': [[' /%\\', '|%_ |', '|__\\']],
+    '%:2': [[' /%\\', '|_%|', '|/_|']],
     '=': [['/==\\', '|==|']],
     '*': [[' .*.', '/|\\', ' | '], [' :*:', '\\|/', ' | ']],
     '&': [['{*}', '/|\\', '/ \\'], ['{*}', '\\|/', '/ \\']],
@@ -70,7 +76,10 @@ export function composition(glyph, frame = 0) {
         return poses[Math.abs(frame) % poses.length];
     return [glyph];
 }
-export function terrainComposition(tile) { return tile === '.' || tile === ':' || tile === ',' || tile === '^' || tile === '#' || tile === '%' || tile === '=' || tile === '~' || tile === '*' || tile === '&' || tile === '!' ? tile : tile; }
+export function terrainComposition(tile, variant = 0) {
+    const key = `${tile}:${Math.abs(variant) % 3}`;
+    return variant % 3 && ACTORS[key] ? key : tile;
+}
 export function paintComposition(ctx, glyph, x, y, size, frame = 0) {
     const rows = composition(glyph, frame), multi = rows.length > 1;
     ctx.save();

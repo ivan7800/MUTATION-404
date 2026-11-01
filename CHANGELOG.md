@@ -12,6 +12,7 @@
 - QA real en Chromium del worker en espera, activación de una revisión nueva y recarga offline con guardado.
 - Exportación manual de la copia de rescate en JSON desde el menú inicial y el panel de sistema.
 - Terreno ASCII volumétrico compartido para suelos, rocas, agua, vegetación y contaminación.
+- Variantes deterministas de desgaste y altura visual por coordenada y semilla.
 - Pulsaciones rápidas independientes, foco contenido en modales y recuperación desde una copia de guardado válida si el archivo principal está dañado.
 - Instalación reproducible mediante lockfile y npm ci; lanzadores incrementales.
 - Caché versionada por build y scope, assets precargados, manifiesto y prueba offline en subruta.

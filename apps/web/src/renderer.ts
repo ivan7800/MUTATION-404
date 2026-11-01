@@ -171,7 +171,7 @@ export class AsciiRenderer {
         ctx.fillStyle=this.ambience%2?'#622738':'#43212a';ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
       }
       ctx.fillStyle=coordsForZone(state.zone)?(tile==='.'||tile==='*'||tile===','?def.palette:COLORS[tile]):(tile==='#'?'#506070':tile==='.'?'#839aab':COLORS[tile]);
-      this.glyph(terrainComposition(tile),px,py);
+      this.glyph(terrainComposition(tile,Math.floor(terrainHash(state.seed+917,x,y)*3)),px,py);
       // Lighting never reveals fog-of-war tiles or changes the core simulation.
       if(visible){
         const distance=Math.hypot(x-state.player.x,y-state.player.y);

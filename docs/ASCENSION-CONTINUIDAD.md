@@ -60,10 +60,12 @@ La iteración siguiente añade marcas de muerte ASCII distintas para las mismas 
 
 La siguiente mejora convierte el vocabulario principal del terreno (`.`, `:`, `,`, `;`, `^`, `#`, `%`, `=`, `~`, `*`, `&`, `!`) en composiciones de varios caracteres con cara superior y base lateral. Canvas y WebGL llaman a la misma función `terrainComposition`; no cambia la celda lógica, visibilidad, colisión, bioma ni guardado. La regresión exige al menos dos filas ASCII por cada material. Build offline, 156 tests, QA Chromium y QA offline pasaron. Faltan variaciones por altura y oclusión real entre los volúmenes.
 
+Las losetas con variantes usan ahora el hash determinista del mundo para seleccionar desgaste y pequeñas diferencias de altura visual. Canvas y Pixi reciben la misma variante por coordenada y semilla, por lo que las capturas y partidas siguen siendo reproducibles. La prueba de arte compara variantes distintas, y la validación completa alcanzó 157 tests, QA de Chromium y QA offline. Todavía no existe una capa de oclusión real entre volúmenes.
+
 ## Fases siguientes concretas
 
 1. Afinar la legibilidad y duración de los estados visuales del héroe, heridas y muertes de enemigos con revisión humana; completar ataques específicos de cada enemigo, incluido Nácar.
-2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Añadir variaciones de altura, oclusión y sombras entre volúmenes, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
+2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Añadir oclusión y sombras entre volúmenes, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
 4. Probar actualización del SW con dos builds completos y assets diferentes, varias pestañas reales, recursos ausentes y recuperación tras red intermitente; probar la descarga manual en un navegador no headless.
 5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y revisar todos los efectos CSS y sonoros bajo la preferencia dinámica.

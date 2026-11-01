@@ -535,7 +535,7 @@ export class PixiAsciiRenderer {
                     sprite.visible = true;
                 }
                 else {
-                    used = this.drawGlyph(used, terrainComposition(glyph), cx, cy, this.color(palette), alpha);
+                    used = this.drawGlyph(used, terrainComposition(glyph, terrain.variant), cx, cy, this.color(palette), alpha);
                 }
                 if (visible && (glyph === 'o' || glyph === 'T' || glyph === '?')) {
                     const shimmer = this.reducedMotion ? 0.13 : 0.12 + 0.06 * Math.sin(this.ambience * .3 + x);

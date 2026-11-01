@@ -34,3 +34,8 @@ test('terrain keeps volumetric compositions for the original tile vocabulary',()
     assert.ok(rows.length>=2,`${tile} terrain should have a visible top and side`);
   }
 });
+test('terrain variants are deterministic and visibly distinct where variants exist',()=>{
+  assert.deepEqual(composition(terrainComposition('.',1)),composition(terrainComposition('.',1)));
+  assert.notDeepEqual(composition(terrainComposition('.',0)),composition(terrainComposition('.',1)));
+  assert.notDeepEqual(composition(terrainComposition('%',0)),composition(terrainComposition('%',2)));
+});
