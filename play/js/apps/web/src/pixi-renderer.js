@@ -609,7 +609,7 @@ export class PixiAsciiRenderer {
                 continue;
             const def = FIELD_VISUALS[field.kind], color = this.color(def.color);
             this.backdrop.rect(x * this.cellW, y * this.cellH, this.cellW, this.cellH).fill({ color, alpha: this.reducedMotion ? .18 : .19 + .07 * Math.sin(this.ambience * .4 + x) });
-            used = this.drawGlyph(used, `field:${field.kind}`, x, y, color);
+            used = this.drawGlyph(used, `field:${field.kind}`, x, y, color, 1, terrainLift(field.kind, terrainHash(state.seed + 119, field.x, field.y)) * .35);
         }
         for (const node of state.ecology.nodes) {
             if (node.zone !== state.zone || node.quantity <= 0 || state.visible[index(node.x, node.y)] !== 1)
@@ -617,7 +617,7 @@ export class PixiAsciiRenderer {
             const x = node.x - ox, y = node.y - oy;
             if (x < 0 || y < 0 || x >= this.viewW || y >= this.viewH)
                 continue;
-            used = this.drawGlyph(used, `resource:${node.kind}`, x, y, node.kind === 'crystal' ? 0xd6b5ff : 0x9fe9b4);
+            used = this.drawGlyph(used, `resource:${node.kind}`, x, y, node.kind === 'crystal' ? 0xd6b5ff : 0x9fe9b4, 1, terrainLift(state.tiles[index(node.x, node.y)], terrainHash(state.seed + 119, node.x, node.y)) * .35);
         }
         for (const item of state.ground) {
             if (state.visible[index(item.x, item.y)] !== 1)
@@ -625,7 +625,7 @@ export class PixiAsciiRenderer {
             const x = item.x - ox, y = item.y - oy;
             if (x < 0 || y < 0 || x >= this.viewW || y >= this.viewH)
                 continue;
-            used = this.drawGlyph(used, 'loot', x, y, 0xf6d48d);
+            used = this.drawGlyph(used, 'loot', x, y, 0xf6d48d, 1, terrainLift(state.tiles[index(item.x, item.y)], terrainHash(state.seed + 119, item.x, item.y)) * .35);
         }
         for (const npc of [...(state.zone === 'surface' ? ACTORS : []), ...settlementCitizens(state.zone, state.tick)]) {
             if (state.visible[index(npc.x, npc.y)] !== 1)
@@ -634,7 +634,7 @@ export class PixiAsciiRenderer {
             if (x < 0 || y < 0 || x >= this.viewW || y >= this.viewH)
                 continue;
             this.backdrop.ellipse((x + .5) * this.cellW, (y + .76) * this.cellH, this.cellW * .48, this.cellH * .12).fill({ color: 0x020608, alpha: .28 });
-            used = this.artMode === 'pixel' ? this.drawCreature(used, 'npc', x, y, this.reducedMotion ? 0 : (Math.floor(this.ambience / 5) % 2)) : this.drawGlyph(used, `npc:${npc.glyph}`, x, y, this.color(npc.color));
+            used = this.artMode === 'pixel' ? this.drawCreature(used, 'npc', x, y, this.reducedMotion ? 0 : (Math.floor(this.ambience / 5) % 2)) : this.drawGlyph(used, `npc:${npc.glyph}`, x, y, this.color(npc.color), 1, terrainLift(state.tiles[index(npc.x, npc.y)], terrainHash(state.seed + 119, npc.x, npc.y)) * .35);
         }
         for (const enemy of state.enemies) {
             if (enemy.hp <= 0 || state.visible[index(enemy.x, enemy.y)] !== 1)
@@ -668,7 +668,7 @@ export class PixiAsciiRenderer {
                 this.flashes.delete(enemy.id);
             const pose = (this.reducedMotion ? 0 : Math.floor(this.ambience / 6 + enemy.x + enemy.y) % 2);
             const creatureGlyph = nacar ? '✺' : elite ? '◆' : def.glyph;
-            used = this.artMode === 'pixel' ? this.drawCreature(used, nacar ? 'nacar' : elite ? 'elite' : enemy.kind, x, y, pose) : this.drawGlyph(used, flash && flash.until > performance.now() ? `enemy:hurt:${creatureGlyph}` : creatureGlyph, x, y, flash && flash.until > performance.now() ? 0xff9d91 : nacar ? 0x92f9ef : elite ? 0xecb9ff : this.color(def.color));
+            used = this.artMode === 'pixel' ? this.drawCreature(used, nacar ? 'nacar' : elite ? 'elite' : enemy.kind, x, y, pose) : this.drawGlyph(used, flash && flash.until > performance.now() ? `enemy:hurt:${creatureGlyph}` : creatureGlyph, x, y, flash && flash.until > performance.now() ? 0xff9d91 : nacar ? 0x92f9ef : elite ? 0xecb9ff : this.color(def.color), 1, terrainLift(state.tiles[index(enemy.x, enemy.y)], terrainHash(state.seed + 119, enemy.x, enemy.y)) * .35);
             const health = Math.max(0, Math.min(1, enemy.hp / (nacar ? def.hp * 3 : def.hp)));
             if (health < 1) {
                 this.backdrop.rect(x * this.cellW + 1, y * this.cellH - 3, this.cellW - 2, 2).fill(0x492c33);
@@ -694,7 +694,7 @@ export class PixiAsciiRenderer {
             this.backdrop.circle(px * this.cellW + this.cellW / 2, py * this.cellH + this.cellH / 2, this.cellW * .44).fill({ color: 0xf6d593, alpha: .24 });
         }
         const heroPose = (this.reducedMotion ? 0 : Math.floor(this.ambience / 6) % 2);
-        used = this.artMode === 'pixel' ? this.drawCreature(used, 'hero', px, py, heroPose) : this.drawGlyph(used, state.stats.hp <= 0 ? 'hero:death' : this.heroAction && performance.now() < this.heroUntil ? `hero:${this.heroAction}` : '@', px, py, state.stats.hp > 0 ? 0xffe1a0 : 0xc78487);
+        used = this.artMode === 'pixel' ? this.drawCreature(used, 'hero', px, py, heroPose) : this.drawGlyph(used, state.stats.hp <= 0 ? 'hero:death' : this.heroAction && performance.now() < this.heroUntil ? `hero:${this.heroAction}` : '@', px, py, state.stats.hp > 0 ? 0xffe1a0 : 0xc78487, 1, terrainLift(state.tiles[index(state.player.x, state.player.y)], terrainHash(state.seed + 119, state.player.x, state.player.y)) * .35);
         const timeLeft = this.effectUntil - performance.now();
         if (timeLeft > 0 && this.mutationEffect && !this.reducedMotion) {
             const progress = Math.min(1, Math.max(0, 1 - timeLeft / 420));
