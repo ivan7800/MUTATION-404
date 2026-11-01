@@ -10,6 +10,15 @@ const COLORS:Record<Tile,string>={
   '*':'#7ca67d','+':'#f3c17a','=':'#b9d4cf','o':'#cba3e9','T':'#ffd085','x':'#f0bc91',
   ',':'#bdb092',';':'#cd8c74','v':'#ceafe9','&':'#a3e0a3','%':'#8ac8d3','?':'#eda4d8','!':'#ff6f86'
 };
+function isoDiamond(ctx:CanvasRenderingContext2D,cx:number,cy:number,w:number,h:number,color:string,alpha=1):void{
+  ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();
+  ctx.moveTo(cx,cy-h*.5);ctx.lineTo(cx+w*.5,cy);ctx.lineTo(cx,cy+h*.5);ctx.lineTo(cx-w*.5,cy);ctx.closePath();ctx.fill();ctx.restore();
+}
+function isoVolume(ctx:CanvasRenderingContext2D,cx:number,cy:number,w:number,h:number,depth:number,color:string):void{
+  ctx.save();ctx.fillStyle=color;ctx.globalAlpha=.72;ctx.beginPath();
+  ctx.moveTo(cx-w*.5,cy);ctx.lineTo(cx,cy+h*.5);ctx.lineTo(cx,cy+h*.5+depth);ctx.lineTo(cx-w*.5,cy+depth);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(cx,cy+h*.5);ctx.lineTo(cx+w*.5,cy);ctx.lineTo(cx+w*.5,cy+depth);ctx.lineTo(cx,cy+h*.5+depth);ctx.closePath();ctx.fill();ctx.restore();
+}
 export class AsciiRenderer {
   private canvas:HTMLCanvasElement;
   private ctx:CanvasRenderingContext2D;
@@ -152,12 +161,13 @@ export class AsciiRenderer {
       const biome=biomeAt(state.seed,x,y),def=BIOMES[biome];
       ctx.globalAlpha=visible?(timeNight?.62:1):.28;
       ctx.fillStyle=coordsForZone(state.zone)?def.shadow:'#101722';
-      ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
+      isoDiamond(ctx,px,py,this.cellW,this.cellH,ctx.fillStyle,ctx.globalAlpha);
+      if(tile==='#'||tile==='%'||tile==='=')isoVolume(ctx,px,py,this.cellW,this.cellH,Math.max(3,this.cellH*.28),ctx.fillStyle);
       if(visible){
         const grain=terrainHash(state.seed+801,x,y);
         ctx.globalAlpha=grain>.7?.11:.045;
         ctx.fillStyle=def.palette;
-        ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
+        isoDiamond(ctx,px,py,this.cellW*.88,this.cellH*.82,ctx.fillStyle,ctx.globalAlpha);
       }
       ctx.globalAlpha=visible?1:.28;
       // Material highlights: seeded, deterministic and independent of game state.
@@ -166,12 +176,12 @@ export class AsciiRenderer {
         if(shimmer>.73){
           ctx.globalAlpha=.10;
           ctx.fillStyle=tile==='~'?'#7de7eb':tile==='^'?'#e9edff':def.palette;
-          ctx.fillRect(cx*this.cellW+2,cy*this.cellH+2,Math.max(2,this.cellW-5),2);
+          isoDiamond(ctx,px,py,this.cellW*.62,2,ctx.fillStyle,ctx.globalAlpha);
         }
       }
       ctx.globalAlpha=visible?1:.28;
       if(tile==='!'&&visible){
-        ctx.fillStyle=this.ambience%2?'#622738':'#43212a';ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
+        ctx.fillStyle=this.ambience%2?'#622738':'#43212a';isoDiamond(ctx,px,py,this.cellW*.94,this.cellH*.88,ctx.fillStyle,ctx.globalAlpha);
       }
       ctx.fillStyle=coordsForZone(state.zone)?(tile==='.'||tile==='*'||tile===','?def.palette:COLORS[tile]):(tile==='#'?'#506070':tile==='.'?'#839aab':COLORS[tile]);
       this.glyph(terrainComposition(tile,Math.floor(terrainHash(state.seed+917,x,y)*3)),px,py);
