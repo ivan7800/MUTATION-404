@@ -25,6 +25,9 @@ function terrainHeight(tile:Tile,seed:number):number{
   if(tile==='^'||tile==='T')return 2+Math.floor(seed*3);
   return 0;
 }
+function actorLift(state:GameState,x:number,y:number):number{
+  return terrainHeight(state.tiles[index(x,y)],terrainHash(state.seed+119,x,y))*.35;
+}
 export class AsciiRenderer {
   private canvas:HTMLCanvasElement;
   private ctx:CanvasRenderingContext2D;
@@ -238,7 +241,7 @@ export class AsciiRenderer {
       const cx=npc.x-ox,cy=npc.y-oy;if(cx<0||cy<0||cx>=VIEW_W||cy>=VIEW_H)continue;
       ctx.globalAlpha=.28;ctx.fillStyle='#020608';ctx.beginPath();ctx.ellipse(cx*this.cellW+this.cellW*.5,cy*this.cellH+this.cellH*.72,this.cellW*.48,this.cellH*.12,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#0c1b1c';ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
-      ctx.fillStyle=npc.color;this.glyph(`npc:${npc.glyph}`,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2);
+      ctx.fillStyle=npc.color;this.glyph(`npc:${npc.glyph}`,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2-actorLift(state,npc.x,npc.y));
     }
     for(const enemy of state.enemies){
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
@@ -251,7 +254,7 @@ export class AsciiRenderer {
       const glyph=enemy.id==='campaign-heart-custodian'?'✺':enemy.id.startsWith('elite-')?'◆':def.glyph;
       const hit=this.enemyHits.has(enemy.id);
       ctx.fillStyle=hit?'#ff9d91':(enemy.stunned??0)>0?'#e3aaf5':def.color;
-      this.glyph(hit?`enemy:hurt:${glyph}`:glyph,px+this.cellW/2,py+this.cellH/2);ctx.shadowBlur=0;
+      this.glyph(hit?`enemy:hurt:${glyph}`:glyph,px+this.cellW/2,py+this.cellH/2-actorLift(state,enemy.x,enemy.y));ctx.shadowBlur=0;
       // Miniature health bar provides threat feedback without a separate modal.
       const health=Math.max(0,Math.min(1,enemy.hp/def.hp));
       if(health<1){ctx.fillStyle='#361c20';ctx.fillRect(px+1,py+this.cellH-3,this.cellW-2,2);ctx.fillStyle=health>.45?'#ddb878':'#ee7373';ctx.fillRect(px+1,py+this.cellH-3,(this.cellW-2)*health,2);}
@@ -279,7 +282,7 @@ export class AsciiRenderer {
     ctx.globalAlpha=1;ctx.fillStyle=glow;ctx.fillRect(px-this.cellW*3,py-this.cellH*2,this.cellW*7,this.cellH*5);
     ctx.shadowColor=state.stats.hp>0?'#ffe29a':'#c78487';ctx.shadowBlur=this.reducedMotion?5:9;
     ctx.fillStyle=state.stats.hp>0?'#4c3825':'#3e1b22';ctx.fillRect(px,py,this.cellW,this.cellH);
-    ctx.fillStyle=state.stats.hp>0?'#ffe29a':'#c78487';this.glyph(state.stats.hp<=0?'hero:death':this.heroAction&&performance.now()<this.heroUntil?`hero:${this.heroAction}`:'@',px+this.cellW/2,py+this.cellH/2);
+    ctx.fillStyle=state.stats.hp>0?'#ffe29a':'#c78487';this.glyph(state.stats.hp<=0?'hero:death':this.heroAction&&performance.now()<this.heroUntil?`hero:${this.heroAction}`:'@',px+this.cellW/2,py+this.cellH/2-actorLift(state,state.player.x,state.player.y));
     ctx.shadowBlur=0;
     // The unexplored world stays dark; the near-field gets a subtle readable frame.
     ctx.strokeStyle='rgba(175,210,197,.45)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,this.cellW-1,this.cellH-1);
