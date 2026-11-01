@@ -1,6 +1,6 @@
-# MUTATION 404 v2.9 — PREMIUM EXPERIENCE (VERTICAL SLICE)
+# MUTATION 404 v2.9 — ASCENSION · ASCII ISOMÉTRICO
 
-ASCENSION se desarrolla en la rama `codex/mutation-404-premium`, sin release final ni despliegue estable. Consulta la [matriz de conservación](docs/ASCENSION.md), el [estado exacto y siguientes fases](docs/ASCENSION-CONTINUIDAD.md) y el [changelog](CHANGELOG.md). Para ejecutar: Node.js 22+ con npm y los lanzadores Windows/Linux. No se certifica 9,5/10.
+ASCENSION se mantiene en desarrollo con `main` y `codex/mutation-404-premium` sincronizadas en la entrega publicada. Consulta la [matriz de conservación](docs/ASCENSION.md), el [estado exacto y siguientes fases](docs/ASCENSION-CONTINUIDAD.md), el [estado persistente](docs/PROJECT_STATE.md), el [informe de pruebas](docs/TEST_REPORT.md), el [informe de rendimiento](docs/PERFORMANCE_REPORT.md), la [regresión visual](docs/VISUAL_REGRESSION.md) y el [changelog](CHANGELOG.md). Para ejecutar: Node.js 22+ con npm y los lanzadores Windows/Linux. No se certifica 9,5/10.
 
 **Pool de sprites v2.9:** PixiJS ya no instancia 1.519 sprites al iniciar. Reserva 64 y crece en grupos de 64 cuando las escenas realmente los necesitan. Solo se ocultan los sprites utilizados anteriormente, evitando recorrer toda la reserva en cada cuadro. El límite máximo se mantiene y se informa del número de sprites activos/asignados cuando se activa `?profile=1`. QA de navegador y prueba de límites añadidas.
 
