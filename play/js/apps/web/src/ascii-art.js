@@ -80,6 +80,7 @@ export function terrainComposition(tile, variant = 0) {
     const key = `${tile}:${Math.abs(variant) % 3}`;
     return variant % 3 && ACTORS[key] ? key : tile;
 }
+export function isOccludingTerrain(tile) { return tile === '#' || tile === '%' || tile === '='; }
 export function paintComposition(ctx, glyph, x, y, size, frame = 0) {
     const rows = composition(glyph, frame), multi = rows.length > 1;
     ctx.save();

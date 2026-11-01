@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {composition,terrainComposition} from '../play/js/apps/web/src/ascii-art.js';
+import {composition,isOccludingTerrain,terrainComposition} from '../play/js/apps/web/src/ascii-art.js';
 
 test('hero actions retain distinct printable ASCII silhouettes in the shipped renderer data',()=>{
   const idle=composition('@').join('\n');
@@ -38,4 +38,8 @@ test('terrain variants are deterministic and visibly distinct where variants exi
   assert.deepEqual(composition(terrainComposition('.',1)),composition(terrainComposition('.',1)));
   assert.notDeepEqual(composition(terrainComposition('.',0)),composition(terrainComposition('.',1)));
   assert.notDeepEqual(composition(terrainComposition('%',0)),composition(terrainComposition('%',2)));
+});
+test('only solid terrain creates a foreground occlusion lip',()=>{
+  assert.equal(isOccludingTerrain('#'),true);assert.equal(isOccludingTerrain('%'),true);assert.equal(isOccludingTerrain('='),true);
+  for(const tile of ['.','~','*','!','T','o'])assert.equal(isOccludingTerrain(tile),false);
 });

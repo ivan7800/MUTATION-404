@@ -4,7 +4,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, weatherAt, 
 import { index, passable, within } from '../../../packages/core/src/world.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
-import { CAMERA_SCALE, paintComposition, terrainComposition } from './ascii-art.js';
+import { CAMERA_SCALE, isOccludingTerrain, paintComposition, terrainComposition } from './ascii-art.js';
 /**
  * Real PixiJS v8 sprite renderer. Tiles are GPU sprites based on a reusable glyph
  * atlas generated from canvas, not one DOM/canvas text draw call per game frame.
@@ -666,6 +666,16 @@ export class PixiAsciiRenderer {
                 this.backdrop.rect(x * this.cellW + 1, y * this.cellH - 3, (this.cellW - 2) * health, 2).fill(health > .45 ? 0xdcbf83 : 0xee7373);
             }
         }
+        for (let depth = 0; depth < this.viewW + this.viewH - 1; depth++)
+            for (let cx = 0; cx < this.viewW; cx++) {
+                const cy = depth - cx;
+                if (cy < 0 || cy >= this.viewH)
+                    continue;
+                const at = index(ox + cx, oy + cy), tile = state.tiles[at];
+                if (!isOccludingTerrain(tile) || state.visible[at] !== 1)
+                    continue;
+                this.backdrop.rect(cx * this.cellW, cy * this.cellH + this.cellH * .72, this.cellW, this.cellH * .2).fill({ color: 0x020608, alpha: .18 });
+            }
         const px = state.player.x - ox, py = state.player.y - oy;
         this.backdrop.ellipse((px + .5) * this.cellW, (py + .8) * this.cellH, this.cellW * .55, this.cellH * .14).fill({ color: 0x020608, alpha: .42 });
         this.backdrop.rect(px * this.cellW, py * this.cellH, this.cellW, this.cellH).fill(0x644829);

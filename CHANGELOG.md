@@ -15,6 +15,7 @@
 - Variantes deterministas de desgaste y altura visual por coordenada y semilla.
 - Orden de profundidad diagonal en Canvas para alinear la oclusión con WebGL.
 - Sombras proyectadas para héroe, enemigos y ciudadanos en ambos renderizadores.
+- Bordes frontales de oclusión para estructuras sólidas en Canvas y WebGL.
 - Pulsaciones rápidas independientes, foco contenido en modales y recuperación desde una copia de guardado válida si el archivo principal está dañado.
 - Instalación reproducible mediante lockfile y npm ci; lanzadores incrementales.
 - Caché versionada por build y scope, assets precargados, manifiesto y prueba offline en subruta.

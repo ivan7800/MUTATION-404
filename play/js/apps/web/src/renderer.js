@@ -2,7 +2,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, 
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
-import { CAMERA_SCALE, paintComposition, terrainComposition } from './ascii-art.js';
+import { CAMERA_SCALE, isOccludingTerrain, paintComposition, terrainComposition } from './ascii-art.js';
 const VIEW_W = 47, VIEW_H = 27;
 const COLORS = {
     '#': '#63796e', '.': '#9a9580', ':': '#d3b783', '~': '#63afc3', '^': '#c0dbec',
@@ -359,6 +359,19 @@ export class AsciiRenderer {
             ctx.fillStyle = '#e8a0a0';
             this.glyph(`enemy:death:${dead.glyph}`, (cx + .5) * this.cellW, (cy + .5) * this.cellH);
         }
+        ctx.globalAlpha = 1;
+        for (let depth = 0; depth < VIEW_W + VIEW_H - 1; depth++)
+            for (let cx = 0; cx < VIEW_W; cx++) {
+                const cy = depth - cx;
+                if (cy < 0 || cy >= VIEW_H)
+                    continue;
+                const at = index(ox + cx, oy + cy), tile = state.tiles[at];
+                if (!isOccludingTerrain(tile) || state.visible[at] !== 1)
+                    continue;
+                ctx.globalAlpha = .18;
+                ctx.fillStyle = '#020608';
+                ctx.fillRect(cx * this.cellW, cy * this.cellH + this.cellH * .72, this.cellW, this.cellH * .2);
+            }
         ctx.globalAlpha = 1;
         const px = (state.player.x - ox) * this.cellW, py = (state.player.y - oy) * this.cellH;
         ctx.globalAlpha = .42;

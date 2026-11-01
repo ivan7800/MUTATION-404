@@ -66,10 +66,12 @@ Canvas dibuja ahora las celdas por diagonales `x + y`, de atrás hacia delante, 
 
 La capa de personajes añade sombras elípticas proyectadas bajo héroe, enemigos y ciudadanos en Canvas y Pixi. La sombra se dibuja antes de la silueta y conserva la legibilidad en movimiento reducido. No afecta visibilidad, daño ni guardados. Build offline, 157 tests, QA WebGL/Canvas y QA offline pasaron; no es una medición de rendimiento en GPU física.
 
+La capa siguiente dibuja un borde frontal tenue para los tiles sólidos (`#`, `%`, `=`) después de los actores, con el mismo recorrido diagonal en Canvas y Pixi. Esto mejora la separación entre estructura y personaje sin convertir una pared en una barrera visual completa. La regresión de materiales confirma qué tiles pueden ocluir; build offline, 158 tests, QA Chromium y QA offline pasaron. La oclusión completa por altura de cada estructura sigue pendiente.
+
 ## Fases siguientes concretas
 
 1. Afinar la legibilidad y duración de los estados visuales del héroe, heridas y muertes de enemigos con revisión humana; completar ataques específicos de cada enemigo, incluido Nácar.
-2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Añadir oclusión de personajes sobre estructuras, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
+2. Completar composición de objetos y FX exclusivamente con ASCII; permanecen formas Graphics de efectos. Añadir oclusión completa por altura, probar restauración de contexto WebGL y quitar atlas inactivo sin perder regresiones funcionales.
 3. Auditar campaña de principio a fin con rutas y perfiles de combate, sin fixtures que salten progresión. Revisar objetivos, narrativa, audio, ritmo y economía con evidencias; conservar contenido original.
 4. Probar actualización del SW con dos builds completos y assets diferentes, varias pestañas reales, recursos ausentes y recuperación tras red intermitente; probar la descarga manual en un navegador no headless.
 5. Hacer auditoría automatizada WCAG y manual con lector, navegación teclado y movimiento reducido. Completar ajustes persistentes y revisar todos los efectos CSS y sonoros bajo la preferencia dinámica.

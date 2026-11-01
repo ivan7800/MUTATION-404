@@ -5,7 +5,7 @@ import {index,passable,within} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
-import {CAMERA_SCALE,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
+import {CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
 
 /**
  * Real PixiJS v8 sprite renderer. Tiles are GPU sprites based on a reusable glyph
@@ -502,6 +502,12 @@ export class PixiAsciiRenderer {
       used=this.artMode==='pixel'?this.drawCreature(used,nacar?'nacar':elite?'elite':enemy.kind,x,y,pose):this.drawGlyph(used,flash&&flash.until>performance.now()?`enemy:hurt:${creatureGlyph}`:creatureGlyph,x,y,flash&&flash.until>performance.now()?0xff9d91:nacar?0x92f9ef:elite?0xecb9ff:this.color(def.color));
       const health=Math.max(0,Math.min(1,enemy.hp/(nacar?def.hp*3:def.hp)));
       if(health<1){this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,this.cellW-2,2).fill(0x492c33);this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,(this.cellW-2)*health,2).fill(health>.45?0xdcbf83:0xee7373);}
+    }
+    for(let depth=0;depth<this.viewW+this.viewH-1;depth++)for(let cx=0;cx<this.viewW;cx++){
+      const cy=depth-cx;if(cy<0||cy>=this.viewH)continue;
+      const at=index(ox+cx,oy+cy),tile=state.tiles[at];
+      if(!isOccludingTerrain(tile)||state.visible[at]!==1)continue;
+      this.backdrop.rect(cx*this.cellW,cy*this.cellH+this.cellH*.72,this.cellW,this.cellH*.2).fill({color:0x020608,alpha:.18});
     }
     const px=state.player.x-ox,py=state.player.y-oy;
     this.backdrop.ellipse((px+.5)*this.cellW,(py+.8)*this.cellH,this.cellW*.55,this.cellH*.14).fill({color:0x020608,alpha:.42});
