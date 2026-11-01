@@ -13,7 +13,13 @@ const browserExecutable=process.env.CHROME_PATH||process.env.CHROMIUM_PATH||'/us
 await mkdir('qa-evidence',{recursive:true});
 let browser;
 try{
-  for(let n=0;n<70;n++){try{const r=await fetch(base);if(r.ok)break;}catch{/* server is still starting */}await new Promise(r=>setTimeout(r,100));}
+  let ready=false;
+  for(let n=0;n<120;n++){
+    try{const r=await fetch(base);if(r.ok){ready=true;break;}}
+    catch{/* server is still starting */}
+    await new Promise(r=>setTimeout(r,100));
+  }
+  assert.ok(ready,`QA server did not become ready at ${base}`);
   browser=await chromium.launch({headless:true,executablePath:browserExecutable,args:['--no-sandbox','--disable-dev-shm-usage','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   for(const mode of ['webgl','canvas-fallback']){
     const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
