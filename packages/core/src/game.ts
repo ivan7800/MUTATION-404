@@ -740,7 +740,7 @@ export function serialize(s:GameState):string{
   const {visible,dialogue,...stored}=s;
   void visible;
   void dialogue;
-  return JSON.stringify(stored);
+  return JSON.stringify({...stored,log:stored.log.slice(-MSG_LIMIT)});
 }
 /** Migration keeps all v0.1 terrain, discovery, quest state and world clock. */
 export function deserialize(raw:string):GameState{
@@ -754,7 +754,9 @@ export function deserialize(raw:string):GameState{
   const validTile=(t:unknown):t is Tile=>typeof t==='string'&&['#','.',':','~','^','*','+','=','o','T','x',',',';','v','&','%','?','!'].includes(t);
   if(!Array.isArray(s.tiles)||s.tiles.length!==WIDTH*HEIGHT||!s.tiles.every(validTile)||!passable(s.tiles[index(s.player.x,s.player.y)]))throw new Error('Mapa corrupto.');
   if(!Array.isArray(s.seen)||s.seen.length!==WIDTH*HEIGHT||!s.seen.every(v=>v===0||v===1))throw new Error('Memoria del mapa corrupta.');
-  if(!Array.isArray(s.log)||s.log.length>MSG_LIMIT||!s.log.every(v=>typeof v==='string'&&v.length<2000))throw new Error('Bitácora inválida.');
+  if(!Array.isArray(s.log)||s.log.length>1000||!s.log.every(v=>typeof v==='string'&&v.length<2000))throw new Error('Bitácora inválida.');
+  // Recover overfull logs written by older clients; retain the newest messages.
+  s.log=s.log.slice(-MSG_LIMIT);
   if(!s.quest||!['undiscovered','active','signal-found','completed'].includes(s.quest.status)||!['none','broadcast','isolate'].includes(s.quest.outcome)||typeof s.quest.fuseFound!=='boolean')throw new Error('Misión inválida.');
   if(!Array.isArray(s.discoveries)||!s.discoveries.every(v=>typeof v==='string'&&LANDMARKS.some(p=>p.id===v)))throw new Error('Descubrimientos inválidos.');
   // Version 2 is the legitimate v0.1 schema; add only new fields, never reset quest/map.
@@ -762,7 +764,7 @@ export function deserialize(raw:string):GameState{
     const game:GameState={...s,version:11,ecology:initialEcology(),civilization:{active:[],completed:[]},zone:'surface',zones:{},reputation:{ferral:0,concordia:0},events:[],stats:{...INITIAL_STATS},inventory:INITIAL_INVENTORY.map(x=>({...x})),equipment:{...INITIAL_EQUIPMENT},enemies:spawnEnemies(s.tiles),ground:[],targetId:null,kills:0,visible:[],dialogue:null,
       genome:initialGenome(),fields:initialFields(s.seed!,s.tiles!),exposure:0,biomeNotes:[],lastBiome:biomeAt(s.seed!,s.player!.x,s.player!.y),
       lastWeather:weatherAt(s.seed!,s.tick!,biomeAt(s.seed!,s.player!.x,s.player!.y)),environmentalTurns:0} as GameState;
-    if(game.zone==='surface'&&inFaro(game.player))game.log.push('MIGRACIÓN // Partida v0.1 conservada. Nuevos peligros detectados fuera de Faro Ciego.');
+    if(game.zone==='surface'&&inFaro(game.player))message(game,'MIGRACIÓN // Partida v0.1 conservada. Nuevos peligros detectados fuera de Faro Ciego.');
     refreshVisibility(game);return game;
   }
   const validItem=(v:unknown):v is ItemId=>typeof v==='string'&&Object.hasOwn(ITEM_DEFS,v);
@@ -785,7 +787,7 @@ export function deserialize(raw:string):GameState{
     if(!s.enemies!.every(e=>(e.stunned===undefined||Number.isInteger(e.stunned)&&e.stunned>=0&&e.stunned<=10)))throw new Error('Estados de criaturas corruptos.');
   }
   if(s.version===6||s.version===7||s.version>=8){
-    if(!(['surface','zero-1','zero-2','zero-3'].includes(s.zone!)||coordsForZone(s.zone!)!==null||exteriorForInterior(s.zone!)!==null||parseRuin(s.zone!)!==null)||!s.zones||typeof s.zones!=='object'||!s.reputation||!Number.isInteger(s.reputation.ferral)||!Number.isInteger(s.reputation.concordia)||!Array.isArray(s.events)||s.events.length>50||!s.events.every(v=>typeof v==='string'&&v.length<80))throw new Error('Estado de regiones o facciones corrupto.');
+    if(!(['surface','zero-1','zero-2','zero-3'].includes(s.zone!)||coordsForZone(s.zone!)!==null||exteriorForInterior(s.zone!)!==null||parseRuin(s.zone!)!==null)||!s.zones||typeof s.zones!=='object'||!s.reputation||!Number.isInteger(s.reputation.ferral)||!Number.isInteger(s.reputation.concordia)||!Array.isArray(s.events)||s.events.length>4096||!s.events.every(v=>typeof v==='string'&&v.length<80))throw new Error('Estado de regiones o facciones corrupto.');
     for(const snapshot of Object.values(s.zones)){
       if(!snapshot||!Array.isArray(snapshot.tiles)||snapshot.tiles.length!==WIDTH*HEIGHT||!snapshot.tiles.every(validTile)||!Array.isArray(snapshot.seen)||snapshot.seen.length!==WIDTH*HEIGHT||!snapshot.seen.every(v=>v===0||v===1)||!snapshot.player||!within(snapshot.player.x,snapshot.player.y)||!passable(snapshot.tiles[index(snapshot.player.x,snapshot.player.y)])||!Array.isArray(snapshot.enemies)||snapshot.enemies.length>1000||!Array.isArray(snapshot.ground)||snapshot.ground.length>5000||!Array.isArray(snapshot.fields)||snapshot.fields.length>96)throw new Error('Estado de planta corrupto.');
     }
@@ -804,13 +806,13 @@ export function deserialize(raw:string):GameState{
     biomeNotes:s.version>=4?s.biomeNotes:[],lastBiome:s.version>=4?s.lastBiome:bi,
     lastWeather:s.version>=4?s.lastWeather:weatherAt(s.seed!,s.tick!,bi),
     environmentalTurns:s.version>=4?s.environmentalTurns:0} as GameState;
-  if(s.version===10)game.log.push('MIGRACIÓN // Ruinas temáticas desbloqueadas. Las zonas ya visitadas conservan sus mapas originales.');
-  if(s.version===9)game.log.push('MIGRACIÓN // Nuevas ruinas regionales abiertas; el atlas subterráneo se ha ampliado.');
-  if(s.version===8)game.log.push('MIGRACIÓN // La red ecológica comienza a reaccionar a tu presencia.');
-  if(s.version===7)game.log.push('MIGRACIÓN // Los enclaves de Nácar reciben habitantes, mercados y encargos.');
-  if(s.version===6)game.log.push('MIGRACIÓN // Los ocho nuevos sectores de Nácar están disponibles en los bordes del mapa.');
-  if(s.version===5)game.log.push('MIGRACIÓN // Partida v0.4 conservada: las regiones CERO-7 están disponibles.');
-  if(s.version===4)game.log.push('MIGRACIÓN // Partida v0.3 conservada: la mutagénesis y los campos activos están preparados.');
-  if(s.version===3)game.log.push('MIGRACIÓN // Partida v0.2 conservada: el dosímetro y los biomas están activos.');
+  if(s.version===10)message(game,'MIGRACIÓN // Ruinas temáticas desbloqueadas. Las zonas ya visitadas conservan sus mapas originales.');
+  if(s.version===9)message(game,'MIGRACIÓN // Nuevas ruinas regionales abiertas; el atlas subterráneo se ha ampliado.');
+  if(s.version===8)message(game,'MIGRACIÓN // La red ecológica comienza a reaccionar a tu presencia.');
+  if(s.version===7)message(game,'MIGRACIÓN // Los enclaves de Nácar reciben habitantes, mercados y encargos.');
+  if(s.version===6)message(game,'MIGRACIÓN // Los ocho nuevos sectores de Nácar están disponibles en los bordes del mapa.');
+  if(s.version===5)message(game,'MIGRACIÓN // Partida v0.4 conservada: las regiones CERO-7 están disponibles.');
+  if(s.version===4)message(game,'MIGRACIÓN // Partida v0.3 conservada: la mutagénesis y los campos activos están preparados.');
+  if(s.version===3)message(game,'MIGRACIÓN // Partida v0.2 conservada: el dosímetro y los biomas están activos.');
   refreshVisibility(game);return game;
 }

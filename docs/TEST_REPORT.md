@@ -1,5 +1,9 @@
 # Informe de pruebas
 
+## Corrección de persistencia posterior a la auditoría
+
+170/170 pruebas, cero fallidas/omitidas; doce nuevas regresiones de persistencia. Typecheck, lint, build normal/offline, diagnóstico P1, contratos de campaña, balance y Pages local pasan. Chromium WebGL/Canvas y offline pasan sobre el build corregido. Conservación: 2500 transiciones y siete catálogos sin diferencias. Los resultados de Fase 1 debajo son históricos: sus dos P1 ahora se verifican como corregidos.
+
 ## Revalidación de Fase 1 — 2026-11-05
 
 Base c5fb6e7, Node 24.22.1, npm 11.9.0, Chromium 155.0.8059.79, Playwright Core 1.64.1, Linux. `npm ci` instaló 134 paquetes. Typecheck, lint, builds normal/offline, test:core y npm test: PASS; 158 pruebas por suite, cero fallidas/omitidas. `qa:campaign`: la misma suite más 3 finales y 12 checkpoints con fixtures. Conservación: 2.500 transiciones y 7 catálogos; balance: 24 semillas / cuatro escenarios (20/24 supervivientes contra drones, no certificado de equilibrio). `check-pages`: 4 archivos comprobados localmente, no despliegue público.

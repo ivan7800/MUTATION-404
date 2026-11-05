@@ -1,5 +1,11 @@
 # Cambios
 
+## ASCENSION — recuperación de persistencia (sin release)
+
+- Guardados con más de 50 hitos/eventos vuelven a cargar sin descartar progreso; límite defensivo de 4096 entradas y validación de contenido conservada.
+- Migraciones v2–v10 mantienen la bitácora acotada. La serialización conserva los últimos 70 mensajes sin mutar la partida; se recuperan bitácoras antiguas desbordadas de hasta 1000 entradas válidas.
+- Doce regresiones de persistencia: reliquia sin doble recompensa, migraciones, recuperación y rechazo de contenido inválido. Esquema 11 conservado.
+
 ## ASCENSION 3.0 — Fase 1, auditoría (2026-11-05; sin release)
 
 - Auditoría P0–P3 y reproducción de dos fallos P1 de carga: límite de eventos y bitácora tras migración.

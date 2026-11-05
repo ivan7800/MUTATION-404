@@ -14,7 +14,7 @@ Esquema **11**, admite versiones **2–11**. Clave principal: mutation404.v10.sa
 
 Incluye zona activa, snapshots, RNG, misión, eventos, genoma y ecología. dispatch valida comandos; advance procesa tiempo/sistemas. No hay scheduler ECS general como el propuesto en preproducción.
 
-El cargador limita eventos a 50 y bitácora a 70; ciertos productores exceden estos límites. Véanse los dos P1 de [la auditoría](AUDITORIA_ASCENSION_3_FASE_1.md). No se certifica recuperación universal.
+El cargador admite hasta 4096 eventos válidos sin truncar hitos. Las bitácoras antiguas de hasta 1000 mensajes válidos se recuperan conservando los últimos 70; migración y serialización respetan ese límite operativo. Los dos P1 de [la auditoría](AUDITORIA_ASCENSION_3_FASE_1.md) disponen de regresiones; no se certifica recuperación universal de contenido corrupto.
 
 ## Build y distribución
 - npm run dev: Vite; base relativa ./ para subdirectorios.

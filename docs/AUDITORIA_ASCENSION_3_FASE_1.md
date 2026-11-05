@@ -1,5 +1,7 @@
 # ASCENSION 3.0 — Auditoría Fase 1
 
+> Actualización posterior: P1-01 y P1-02 cuentan ahora con correcciones y doce regresiones en tests/persistence-boundaries.test.mjs. scripts/audit-phase1.mjs comprueba la recuperación en lugar de esperar errores. El resto del informe conserva la evidencia histórica de la base auditada. Consultar PROJECT_STATE para validaciones actuales.
+
 Fecha: 2026-11-05. Base: `c5fb6e7e8bb2f648ea0b57910c6749d70174ba65`; rama `codex/mutation-404-ascension-3`. Alcance: inspección, pruebas, reproducciones y corrección documental. No se implementan las fases 2–8 ni se certifica release 3.0.
 
 ## Método y alcance
