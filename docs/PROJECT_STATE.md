@@ -12,6 +12,7 @@ Solo Fase 1 de ASCENSION 3.0. Rama codex/mutation-404-ascension-3, base c5fb6e7e
 - Chromium WebGL/Canvas y offline en subruta pasan. Sin campaña humana completa, Windows físico, GPU física o lector de pantalla.
 - scripts/audit-phase1.mjs reproduce dos P1 abiertos: acción aceptada genera 51 eventos y migración v10 genera 71 mensajes; ambos impiden recargar.
 - Git HTTPS lectura disponible; API GitHub devuelve Forbidden en esta sesión. No demuestra token inválido.
+- Rama subida con commits 00c99b4 (auditoría/reproducciones) y 54fe4eb (documentación). `gh pr create` falló con `Post https://api.github.com/graphql: Forbidden`; no hay PR confirmado. [Descripción preparada](PR_ASCENSION_3_FASE_1.md). Se requiere habilitar acceso API en el entorno para completar la creación.
 
 ## Pendientes
 1. Corregir los P1 en una entrega con pruebas de persistencia sin descartar progreso.
