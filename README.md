@@ -1,6 +1,10 @@
 # MUTATION 404 v2.9 — ASCENSION · ASCII ISOMÉTRICO
 
-ASCENSION se mantiene en desarrollo con `main` y `codex/mutation-404-premium` sincronizadas en la entrega publicada. Consulta la [matriz de conservación](docs/ASCENSION.md), el [estado exacto y siguientes fases](docs/ASCENSION-CONTINUIDAD.md), el [estado persistente](docs/PROJECT_STATE.md), el [informe de pruebas](docs/TEST_REPORT.md), el [informe de rendimiento](docs/PERFORMANCE_REPORT.md), la [regresión visual](docs/VISUAL_REGRESSION.md) y el [changelog](CHANGELOG.md). Para ejecutar: Node.js 22+ con npm y los lanzadores Windows/Linux. No se certifica 9,5/10.
+ASCENSION está en desarrollo; paquete 2.9.0. La [auditoría ASCENSION 3.0 — Fase 1](docs/AUDITORIA_ASCENSION_3_FASE_1.md) del 5 de noviembre de 2026 identifica dos defectos P1 de guardados pese a que pasan las 158 pruebas existentes. El estado vigente está en [PROJECT_STATE](docs/PROJECT_STATE.md), la [arquitectura](docs/ARCHITECTURE.md) y la [hoja de ruta](docs/ROADMAP.md). La UI actual es ASCII isométrica sin selector píxel/ASCII; Canvas y PixiJS comparten composiciones, con diferencias de presentación pendientes. No se certifica calidad final ni campaña humana completa.
+
+Desarrollo: Node.js 22+ y `npm ci`. Ejecutar `npm run typecheck`, `npm run lint`, `npm run build:offline` antes de `npm run test:core` (algunas pruebas leen `play/`). `npm run dev` inicia Vite; `node scripts/server.mjs --no-open` sirve el build local. [Resultados y límites de QA](docs/TEST_REPORT.md).
+
+Las secciones de versiones siguientes conservan el historial: menciones a modo píxel, ausencia de WebGL y resultados antiguos no describen el estado actual.
 
 **Pool de sprites v2.9:** PixiJS ya no instancia 1.519 sprites al iniciar. Reserva 64 y crece en grupos de 64 cuando las escenas realmente los necesitan. Solo se ocultan los sprites utilizados anteriormente, evitando recorrer toda la reserva en cada cuadro. El límite máximo se mantiene y se informa del número de sprites activos/asignados cuando se activa `?profile=1`. QA de navegador y prueba de límites añadidas.
 

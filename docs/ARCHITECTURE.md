@@ -1,44 +1,29 @@
-# Arquitectura técnica — MUTATION 404 v0.3
+# Arquitectura técnica — MUTATION 404 / ASCENSION
+Actualizado: 2026-11-05 sobre c5fb6e7; paquete 2.9.0, sin release 3.0.
 
-## Separación de capas
+## Capas
+- packages/core/src: TypeScript sin DOM, Canvas, PixiJS ni Electron. game.ts concentra comandos, diálogos, transiciones, persistencia y migración.
+- world.ts, frontier.ts, depths.ts: mapas de 96×64, sectores, interiores, CERO-7 y ruinas. fov.ts calcula visibilidad; rng.ts mantiene RNG explícito.
+- combat.ts, mutations.ts, environment.ts, ecology.ts, civilizations.ts: combate, genoma, campos, recursos y asentamientos. campaign.ts deriva cinco actos y finales desde misión/eventos.
+- apps/web/src/main.ts: DOM, comandos, audio y almacenamiento. Inicia Canvas y carga PixiJS asíncronamente; fallo de inicialización mantiene Canvas.
+- renderer.ts y pixi-renderer.ts: backends isométricos con composiciones y escala 1,45 compartidas en ascii-art.ts. No hay selector píxel/ASCII; quedan ramas píxel inactivas y tests que dependen de su texto.
+- ascii-art.ts contiene datos y pintado Canvas; es independiente de simulación, pero no exclusivamente datos. tactical.ts filtra amenazas visibles; audio.ts usa Web Audio tras activación del usuario.
 
-- **Motor** (`packages/core/src`): TypeScript puro, sin DOM, Canvas, Electron o PixiJS.
-- **Presentación** (`apps/web/src`): interfaz HTML/CSS, renderizador Canvas 2D y traducción de eventos de teclado/botones a comandos del motor.
-- **Entrega portable** (`play/`): módulos JavaScript ES2022 compilados, HTML/CSS sin dependencias de runtime externas.
-- **Servidor local** (`scripts/server.mjs`): servidor HTTP de loopback que sirve `play/` sin paquetes npm.
+## Persistencia y turnos
+Esquema **11**, admite versiones **2–11**. Clave principal: mutation404.v10.save, copia .backup y búsqueda histórica v09–v01. Se valida antes de cargar/importar; la copia anterior válida se conserva. visible y dialogue no se serializan; visibilidad se recalcula.
 
-## Archivos y responsabilidades
+Incluye zona activa, snapshots, RNG, misión, eventos, genoma y ecología. dispatch valida comandos; advance procesa tiempo/sistemas. No hay scheduler ECS general como el propuesto en preproducción.
 
-| Archivo | Responsabilidad |
-|---|---|
-| `biomes.ts` | Identidad regional, seis biomas, clima determinista, peligros y ecos narrativos |
-| `world.ts` | Generación de mapa 96×64 y características fijas por semilla; límites y colisión de terreno |
-| `fov.ts` | Línea de visión, campo visible y memoria de celdas |
-| `rng.ts` | Aleatoriedad determinista y estado explícito de RNG |
-| `combat.ts` | Catálogo de armas/armaduras/enemigos, pilas de inventario, spawn, búsqueda de caminos local, IA de combate |
-| `game.ts` | Estado de partida, acciones, reglas de ataque, progresión, botín, misiones, persistencia y migración |
-| `audio.ts` | Sonido ambiental opcional generado con Web Audio API, activado por usuario |
-| `renderer.ts` | Glifos, colores, amenazas, botín, minimapa, cámara, zoom, memoria visual |
-| `main.ts` | HUD, diálogos, menú de inventario, acciones de teclado y botones, almacenamiento navegador |
+El cargador limita eventos a 50 y bitácora a 70; ciertos productores exceden estos límites. Véanse los dos P1 de [la auditoría](AUDITORIA_ASCENSION_3_FASE_1.md). No se certifica recuperación universal.
 
-## Estado serializado
+## Build y distribución
+- npm run dev: Vite; base relativa ./ para subdirectorios.
+- npm run build: TypeScript sin emisión, Vite a dist/web y worker con digest.
+- npm run build:offline: TypeScript a play/js, copias HTML/CSS y bundle Vite a play/assets; genera play/sw.js. Los módulos legacy se conservan para pruebas; no editarlos como fuente.
+- node scripts/server.mjs --no-open: sirve play/ en loopback, puerto 8787 por defecto, sin depender de npm para servir el build existente.
+- Lanzadores: scripts/launch.mjs exige Node 22+ y puede instalar/compilar. No hay Electron ni empaquetado nativo.
+- Worker por versión/scope, precarga bundles y espera cierre de clientes para actualizar. Guardados en localStorage, no IndexedDB.
+- CI valida PR a main; deploy exige main y evento distinto de PR.
 
-- **Esquema v4**, incorporado en v0.3: mantiene `stats`, `equipment`, `inventory`, `enemies`, `ground`, `targetId`, `kills` y añade `exposure`, `biomeNotes`, `lastBiome`, `lastWeather`, `environmentalTurns`.
-- **Migración desde v2** (v0.1): mantiene mapa, misión, niebla de guerra, posición, reloj y RNG; inicializa enemigos/estadísticas/inventario.
-- **Migración desde v3** (v0.2): conserva mapa, misión, combate, enemigo, botín, equipo, inventario, experiencia y posición; inicializa campos ambientales de v4.
-- En el navegador, v0.3 escribe en `mutation404.v03.save` y busca `mutation404.v02.save` o `mutation404.v01.save` como claves heredadas. Las claves antiguas no se sobrescriben ni borran.
-- `visible` y `dialogue` no se serializan; la visibilidad se recompone al cargar para evitar inconsistencias y el diálogo es interfaz transitoria.
-- El motor valida tipos y límites del esquema antes de aceptar un guardado.
-
-## Semántica de turnos
-
-- Cada movimiento, ataque, disparo, uso de cura, sondeo, equipamiento y recogida de botín consume 100 unidades temporales. Examinar, apuntar, elegir en ciertos diálogos y alternar arma son gratis.
-- Se avanza la IA solo después de acciones con coste. Las criaturas actúan con información limitada por detección/visión, recuerdan una última posición y pueden investigar o huir.
-- Faro Ciego es una zona segura: se prohíbe el spawn enemigo en su recinto y la IA no realiza ataques mientras el jugador esté dentro.
-- Todas las tiradas se realizan mediante `SeededRng` con estado persistente. No se utiliza `Math.random` para simulación.
-- Los ataques de distancia requieren línea de visión, munición y alcance; los ataques cuerpo a cuerpo requieren adyacencia.
-- IA y BFS local están acotados para evitar búsqueda ilimitada por criatura. El rendimiento aún requiere medición real.
-
-## Limitaciones conocidas
-
-El motor actual es una **vertical slice**, no un ECS completo ni una simulación masiva: el mapa es un único plano, con clima regional simplificado pero sin fluidos simulados ni fabricación. La infraestructura está pensada para evolucionar, pero no se deben prometer sistemas futuros como implementados. El renderizador **es Canvas 2D** y no PixiJS/WebGL2. El cliente portable requiere un servidor HTTP local; no es un ejecutable nativo.
+## Deuda
+Alturas, paletas, FX y orden de capas difieren entre backends. Compartir composiciones no acredita equivalencia visual exacta ni oclusión completa. game.ts y main.ts concentran responsabilidades. Las biblias de preproducción son propuestas históricas, no inventario de implementación.

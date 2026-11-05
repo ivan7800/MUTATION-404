@@ -1,5 +1,11 @@
 # Cambios
 
+## ASCENSION 3.0 — Fase 1, auditoría (2026-11-05; sin release)
+
+- Auditoría P0–P3 y reproducción de dos fallos P1 de carga: límite de eventos y bitácora tras migración.
+- Arquitectura, roadmap, instrucciones de asistentes y estado persistente contrastados con código y validaciones actuales.
+- Evidencia renovada: 158 pruebas, builds, conservación, contratos de campaña, Chromium y offline. Sin cambios de jugabilidad o arte; fases posteriores no iniciadas.
+
 ## ASCENSION — en desarrollo (sin release)
 
 - Composiciones ASCII compartidas y cámara isométrica centrada.

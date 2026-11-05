@@ -1,25 +1,21 @@
 # MUTATION 404 — Hoja de ruta
+Actualizado: 2026-11-05. Referencia: [auditoría Fase 1](AUDITORIA_ASCENSION_3_FASE_1.md).
 
-| Hito | Estado real |
+## Base existente
+Motor determinista, seis especies, nueve mutaciones, seis biomas, sectores conectados, CERO-7, ocho ruinas de dos estratos, comercio, fabricación, ecología y cinco actos con tres finales existen en código. Canvas/WebGL comparten composiciones ASCII isométricas; guardados esquema 11 y worker offline.
+
+Las suites pasan; no equivalen a campaña humana completa o balance final. PREPRODUCCION conserva propuestas históricas.
+
+## Entregas ASCENSION 3.0
+| Fase | Estado y evidencia pendiente |
 |---|---|
-| H0 | Base TypeScript, pruebas y servidor portátil implementados |
-| W1 / v0.1 | Faro Ciego, movimiento, niebla, NPC, primera misión y guardado |
-| W2 / v0.2 | Combate, equipo, seis criaturas acumuladas, IA, experiencia y botín |
-| W3 / v0.3 | Seis biomas regionales, clima, exposición, escáner y atmósfera |
-| **W4 / v0.4** | **Nueve mutaciones jugables, puntos genéticos, poderes activos/pasivos, campos ambientales y habilidades enemigas. 56 tests; QA visual pendiente.** |
-| **W5 / v0.5** | **Pendiente:** mundo regional extensible, transiciones entre sectores, subsuelo multicapa, varios asentamientos, comercio, reputación y sucesos persistentes |
-| W6 / v0.6 | Pendiente: mejoras narrativas, facciones complejas, equipo/crafting, balance e IA |
-| W7 / v0.7 | Pendiente: efectos audiovisuales, optimización de renderizado, pruebas E2E, PixiJS solo si justificado |
-| 1.0 | Pendiente: campaña completa, contenido validado, empaquetado de escritorio y publicación |
+| 1 · Auditoría | Informe y reproducciones; dos P1 abiertos; creación de PR bloqueada por acceso API |
+| 2 · Arte ASCII | No iniciada en esta entrega; migrar tests antes de retirar atlas y revisar FX |
+| 3 · Isometría | No iniciada; altura, profundidad, oclusión, cámara y paridad |
+| 4 · Combate visual | No iniciada; ataques por especie ligados a acciones aceptadas |
+| 5 · Campaña | No iniciada; recorrido con recursos/comandos reales, sin saltos de progreso |
+| 6 · UX | No iniciada; tutorial, accesibilidad, teclado/táctil y recuperación |
+| 7 · QA/optimización | No iniciada como fase; baseline ejecutada en auditoría, falta hardware y sesión larga |
+| 8 · Entrega | Rama de auditoría, sin merge ni despliegue |
 
-## Orden obligatorio para W5
-
-1. Diseñar formato de coordenadas globales `(región, sectorX, sectorY, nivelZ, x, y)` y transiciones sin perder entidades.
-2. Congelar guardado v5 y crear migración reversible hacia el siguiente esquema; guardar cambios del mundo, no solo semillas.
-3. Construir dos sectores nuevos procedurales con biomas distintivos y una transición segura hacia/desde Faro Ciego.
-4. Implementar Estación CERO-7 con tres niveles conectados y retorno viable.
-5. Añadir segundo asentamiento, un comerciante funcional y relaciones con al menos dos facciones.
-6. Añadir sucesos emergentes deterministas que dejen huella persistente.
-7. Probar 1.000 semillas, entradas/salidas entre sectores, guardado en varios niveles y rendimiento en navegador.
-
-No ampliar todos los sistemas a la vez: completar una vertical slice de mundo multi-sector antes de añadir más localizaciones.
+Antes de certificar guardados, resolver P1-01 y P1-02 con regresiones de carga y recuperación, sin borrar progreso. No incrementar versión ni introducir contenido nuevo en esta entrega. Dividir siguientes fases en cambios verificables.

@@ -1,5 +1,7 @@
 # ASCENSION — informe y continuidad
 
+> Registro histórico de iteraciones. Para estado vigente (2026-11-05), usar [PROJECT_STATE](PROJECT_STATE.md) y [auditoría Fase 1](AUDITORIA_ASCENSION_3_FASE_1.md). Las referencias a ramas, PR, red, pendientes ya abordados y notas numéricas siguientes son de aquellas iteraciones; no certifican el checkout actual. Dos P1 de guardados se reproducen ahora aunque la suite existente pasa. Las fases 2–8 del nuevo plan no se han iniciado.
+
 Estado: desarrollo experimental; no RC ni release final. Referencia inicial comprobada `4eb9180`. Base de conservación `e0a9094`. PR existente solicitada: https://github.com/ivan7800/MUTATION-404/pull/4. La versión estable y main no se despliegan desde esta rama.
 
 ## Resumen y arquitectura
