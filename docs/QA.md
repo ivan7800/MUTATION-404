@@ -1,5 +1,7 @@
 # MUTATION 404 — Informe de QA, v0.4 (W4)
 
+> Informe histórico del 29 de octubre; no describe la implementación actual. La evidencia del 5 de noviembre está en [TEST_REPORT](TEST_REPORT.md) y [auditoría Fase 1](AUDITORIA_ASCENSION_3_FASE_1.md). Ahora existen WebGL, esquema 11, sectores y fabricación. Las afirmaciones siguientes se conservan como registro de v0.4.
+
 **Fecha:** 29 de octubre de 2026.
 
 ## Ejecutado y comprobado en este entorno

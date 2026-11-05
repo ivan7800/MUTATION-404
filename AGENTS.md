@@ -8,5 +8,5 @@
 6. No llamar «completada» a una funcionalidad sin pruebas reproducibles.
 7. Antes de una nueva versión: `npm run typecheck`, `npm run test:core`, `npm run build:offline`, `npm test` y prueba interactiva en navegador cuando sea posible.
 8. Nunca sobrescribir ni migrar una partida sin mecanismo de recuperación y prueba de migración.
-9. La implementación actual usa Canvas2D. No afirmar que PixiJS esté integrado hasta instalarlo, ejecutarlo y verificarlo.
+9. Existen Canvas 2D y PixiJS 8/WebGL con composiciones ASCII compartidas. Verificar ambos backends; las pruebas de texto no acreditan paridad visual ni funcionamiento en GPU física.
 10. No publicar en GitHub ni alterar repositorios remotos sin autorización.
