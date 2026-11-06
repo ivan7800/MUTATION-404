@@ -1,5 +1,17 @@
 /** Shared original ASCII compositions. Pure data: no world state, DOM or RNG. */
 export const CAMERA_SCALE=1.45;
+const TERRAIN_COLORS:Record<string,string>={
+  '#':'#63796e','.':'#9a9580',':':'#d3b783','~':'#63afc3','^':'#c0dbec',
+  '*':'#7ca67d','+':'#f3c17a','=':'#b9d4cf','o':'#cba3e9','T':'#ffd085','x':'#f0bc91',
+  ',':'#bdb092',';':'#cd8c74','v':'#ceafe9','&':'#a3e0a3','%':'#8ac8d3','?':'#eda4d8','!':'#ff6f86'
+};
+/** Fog opacity belongs to the renderer, not to the material palette. */
+export function terrainColor(tile:string,surface:boolean,biomePalette:string):string{
+  if(surface&&['.','*',','].includes(tile))return biomePalette;
+  if(!surface&&tile==='#')return '#506070';
+  if(!surface&&tile==='.')return '#839aab';
+  return TERRAIN_COLORS[tile]??'#c5bbaa';
+}
 /** Visual elevation only; never used for collision or field of view. */
 export function terrainHeight(tile:string,seed:number):number{
   if(tile==='#')return 7+Math.floor(seed*7);

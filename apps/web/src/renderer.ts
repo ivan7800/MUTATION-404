@@ -1,15 +1,10 @@
-import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, weatherAt, WIDTH, settlementCitizens, type GameState, type Tile } from '../../../packages/core/src/game.js';
+import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, weatherAt, WIDTH, settlementCitizens, type GameState } from '../../../packages/core/src/game.js';
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
-import {terrainHeight,CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
+import {terrainColor,terrainHeight,CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
 
 const VIEW_W=47, VIEW_H=27;
-const COLORS:Record<Tile,string>={
-  '#':'#63796e','.':'#9a9580',':':'#d3b783','~':'#63afc3','^':'#c0dbec',
-  '*':'#7ca67d','+':'#f3c17a','=':'#b9d4cf','o':'#cba3e9','T':'#ffd085','x':'#f0bc91',
-  ',':'#bdb092',';':'#cd8c74','v':'#ceafe9','&':'#a3e0a3','%':'#8ac8d3','?':'#eda4d8','!':'#ff6f86'
-};
 function isoDiamond(ctx:CanvasRenderingContext2D,cx:number,cy:number,w:number,h:number,color:string,alpha=1):void{
   ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();
   ctx.moveTo(cx,cy-h*.5);ctx.lineTo(cx+w*.5,cy);ctx.lineTo(cx,cy+h*.5);ctx.lineTo(cx-w*.5,cy);ctx.closePath();ctx.fill();ctx.restore();
@@ -187,8 +182,8 @@ export class AsciiRenderer {
       if(tile==='!'&&visible){
         ctx.fillStyle=this.ambience%2?'#622738':'#43212a';isoDiamond(ctx,px,py,this.cellW*.94,this.cellH*.88,ctx.fillStyle,ctx.globalAlpha);
       }
-      ctx.fillStyle=coordsForZone(state.zone)?(tile==='.'||tile==='*'||tile===','?def.palette:COLORS[tile]):(tile==='#'?'#506070':tile==='.'?'#839aab':COLORS[tile]);
-      this.glyph(terrainComposition(tile,Math.floor(terrainHash(state.seed+917,x,y)*3)),px,py);
+      ctx.fillStyle=terrainColor(tile,coordsForZone(state.zone)!==null,def.palette);
+      this.glyph(terrainComposition(tile,Math.floor(terrainHash(state.seed+917,x,y)*3)),px,py-height);
       // Lighting never reveals fog-of-war tiles or changes the core simulation.
       if(visible){
         const distance=Math.hypot(x-state.player.x,y-state.player.y);
@@ -235,7 +230,7 @@ export class AsciiRenderer {
       const cx=npc.x-ox,cy=npc.y-oy;if(cx<0||cy<0||cx>=VIEW_W||cy>=VIEW_H)continue;
       ctx.globalAlpha=.28;ctx.fillStyle='#020608';ctx.beginPath();ctx.ellipse(cx*this.cellW+this.cellW*.5,cy*this.cellH+this.cellH*.72,this.cellW*.48,this.cellH*.12,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#0c1b1c';ctx.fillRect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH);
-      ctx.fillStyle=npc.color;this.glyph(`npc:${npc.glyph}`,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2-actorLift(state,npc.x,npc.y));
+      ctx.globalAlpha=1;ctx.fillStyle=npc.color;this.glyph(`npc:${npc.glyph}`,cx*this.cellW+this.cellW/2,cy*this.cellH+this.cellH/2-actorLift(state,npc.x,npc.y));
     }
     for(const enemy of state.enemies){
       if(enemy.hp<=0||state.visible[index(enemy.x,enemy.y)]!==1)continue;
@@ -247,10 +242,10 @@ export class AsciiRenderer {
       if(state.targetId===enemy.id){ctx.strokeStyle='#ffcb72';ctx.lineWidth=1.5;ctx.strokeRect(px+1,py+1,this.cellW-2,this.cellH-2);}
       const glyph=enemy.id==='campaign-heart-custodian'?'✺':enemy.id.startsWith('elite-')?'◆':def.glyph;
       const hit=this.enemyHits.has(enemy.id);
-      ctx.fillStyle=hit?'#ff9d91':(enemy.stunned??0)>0?'#e3aaf5':def.color;
+      ctx.globalAlpha=1;ctx.fillStyle=hit?'#ff9d91':(enemy.stunned??0)>0?'#e3aaf5':def.color;
       this.glyph(hit?`enemy:hurt:${glyph}`:glyph,px+this.cellW/2,py+this.cellH/2-actorLift(state,enemy.x,enemy.y));ctx.shadowBlur=0;
       // Miniature health bar provides threat feedback without a separate modal.
-      const health=Math.max(0,Math.min(1,enemy.hp/def.hp));
+      const health=Math.max(0,Math.min(1,enemy.hp/(enemy.id==='campaign-heart-custodian'?def.hp*3:def.hp)));
       if(health<1){ctx.fillStyle='#361c20';ctx.fillRect(px+1,py+this.cellH-3,this.cellW-2,2);ctx.fillStyle=health>.45?'#ddb878':'#ee7373';ctx.fillRect(px+1,py+this.cellH-3,(this.cellW-2)*health,2);}
 
     }

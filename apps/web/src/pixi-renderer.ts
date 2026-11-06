@@ -5,7 +5,7 @@ import {index,passable,within} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
-import {terrainHeight,CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
+import {terrainColor,terrainHeight,CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
 
 
 /**
@@ -219,8 +219,7 @@ export class PixiAsciiRenderer {
         const groundColor=visible?(surfaceZone?biome.shadow:'#101722'):'#06090d';
         this.terrainFloor.rect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH).fill({color:this.color(groundColor),alpha:visible?1:.55});
       }
-      const palette=visible&&surfaceZone&&['.',',','*'].includes(glyph)?biome.palette:
-        glyph==='#'?'#697a75':glyph==='T'?'#ffd085':glyph==='o'?'#d5b1f2':glyph==='?'?'#f0a6db':glyph==='!'?'#fd7892':glyph==='~'?'#75d3e3':glyph==='+'?'#f5ce8b':glyph==='&'?'#a3e0a3':glyph==='%'?'#8ac8d3':glyph==='='?'#b9d4cf':'#c5bbaa';
+      const palette=terrainColor(glyph,surfaceZone,biome.palette);
       used=this.drawGlyph(used,terrainComposition(glyph,terrain.variant),cx,cy,this.color(palette),alpha,terrainHeight(glyph,terrainHash(state.seed+119,x,y)));
       if(visible&&(glyph==='o'||glyph==='T'||glyph==='?')){
         const shimmer=this.reducedMotion?0.13:0.12+0.06*Math.sin(this.ambience*.3+x);
@@ -279,7 +278,7 @@ export class PixiAsciiRenderer {
       if(x<0||y<0||x>=this.viewW||y>=this.viewH)continue;
       const def=FIELD_VISUALS[field.kind],color=this.color(def.color);
       this.backdrop.rect(x*this.cellW,y*this.cellH,this.cellW,this.cellH).fill({color,alpha:this.reducedMotion?.18:.19+.07*Math.sin(this.ambience*.4+x)});
-      used=this.drawGlyph(used,`field:${field.kind}`,x,y,color,1,terrainHeight(field.kind as Tile,terrainHash(state.seed+119,field.x,field.y))*.35);
+      used=this.drawGlyph(used,`field:${field.kind}`,x,y,color,1,terrainHeight(state.tiles[index(field.x,field.y)],terrainHash(state.seed+119,field.x,field.y))*.35);
     }
     for(const node of state.ecology.nodes){
       if(node.zone!==state.zone||node.quantity<=0||state.visible[index(node.x,node.y)]!==1)continue;

@@ -5,6 +5,7 @@ Actualizado: 2026-11-06. Rama: codex/mutation-404-ascension-3. Paquete 2.9.0; es
 Completar las fases pendientes por entregas verificables. El usuario autorizó continuar todas las fases; no fusionar ni desplegar automáticamente main.
 
 ## Entregas
+- Coherencia de presentación validada: paleta de terreno compartida, opacidad de actores Canvas restaurada, glifos de terreno elevados, barra de Nácar corregida y altura de campos WebGL basada en su casilla. 171 pruebas, typecheck, lint, builds normal/offline, contratos de campaña, QA Chromium/offline, Pages local y conservación pasan. Capturas Canvas/WebGL inspeccionadas. Las pruebas nuevas ejecutan el dibujo Canvas con contexto instrumentado, comprueban opacidad/altura/salud, ausencia de mutaciones lógicas y ocultación de actores fuera de visión. No cierra la oclusión completa ni unifica iluminación.
 - Fase 1: auditoría y corrección documental subidas. Informe histórico: AUDITORIA_ASCENSION_3_FASE_1.md.
 - Persistencia: P1-01 y P1-02 corregidos en 7d804a8, artefactos en 583ab46. Doce regresiones de eventos, migraciones y bitácoras; validación anterior 170/170, navegador/offline/conservación.
 - Arte ASCII, entrega actual: retirados atlas y ramas píxel inactivos. Migradas las guardas de texto a pruebas del catálogo compartido; se mantienen verificaciones de HP del jefe y pruebas de navegador. Nuevas composiciones para +, ?, x, v completan el vocabulario de terreno. Los glifos desconocidos conservan fallback de un carácter.

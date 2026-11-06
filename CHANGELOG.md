@@ -1,5 +1,12 @@
 # Cambios
 
+## ASCENSION — coherencia de presentación (2026-11-06)
+
+- Paleta del terreno compartida por Canvas y WebGL, diferenciando superficie e interiores.
+- Canvas eleva los glifos del terreno con la altura compartida y restaura opacidad completa tras dibujar sombras de NPC/enemigos.
+- Barra de Nácar en Canvas calculada con su vida máxima real; campos WebGL elevados según el terreno, no según el nombre del efecto.
+- Regresión de dibujo Canvas y pruebas de paleta. Oclusión completa y equivalencia de iluminación siguen pendientes.
+
 ## ASCENSION — consolidación ASCII (2026-11-06, sin release)
 
 - Eliminados atlas píxel y ramas inaccesibles del backend Pixi; el perfil cuenta texturas del atlas ASCII activo.
