@@ -1,5 +1,5 @@
-const VERSION='1902ef8904a34099';
-const ASSETS=["./","./assets/CanvasPool-DU0ddA2q.js","./assets/CanvasRenderer-D3pNbKgc.js","./assets/RenderTargetSystem-u3WDmInh.js","./assets/WebGLRenderer-Chco8xsC.js","./assets/WebGPURenderer-DLkMLkah.js","./assets/browserAll-C4Thr7s7.js","./assets/canvasUtils-Cq8ePfBU.js","./assets/getTexelRangeRects-DRJ3G64D.js","./assets/index-CZgMdvNJ.css","./assets/index-m5xGTdWp.js","./assets/pixi-renderer-COJreYmq.js","./assets/webworkerAll-Dap_as0N.js","./icon.svg","./index.html","./manifest.webmanifest"];
+const VERSION='8ca06b3885ec256e';
+const ASSETS=["./","./assets/CanvasPool-DeKVMlMq.js","./assets/CanvasRenderer-CXdED89M.js","./assets/RenderTargetSystem-BLIAvMww.js","./assets/WebGLRenderer-CjGOSCxn.js","./assets/WebGPURenderer-C0zJSt7Z.js","./assets/browserAll-BjsxeAZp.js","./assets/canvasUtils-CdsBSDJu.js","./assets/getTexelRangeRects-DtHRty-C.js","./assets/index-BcXD6VEj.js","./assets/index-CZgMdvNJ.css","./assets/pixi-renderer-Bju3BcEj.js","./assets/webworkerAll-BENJYQAg.js","./icon.svg","./index.html","./manifest.webmanifest"];
 const PREFIX=`mutation404:${new URL(self.registration.scope).pathname}:`;
 const CACHE=PREFIX+VERSION;
 self.addEventListener('install',event=>{
