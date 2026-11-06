@@ -1,5 +1,28 @@
 /** Shared original ASCII compositions. Pure data: no world state, DOM or RNG. */
 export const CAMERA_SCALE=1.45;
+/** Painter order at the feet: elevation changes appearance, not depth. */
+export function projectedDepth(x:number,y:number,cellW:number,cellH:number,layer=1):number{
+  return x*cellW+y*cellH+layer*.001;
+}
+const TERRAIN_COLORS:Record<string,string>={
+  '#':'#63796e','.':'#9a9580',':':'#d3b783','~':'#63afc3','^':'#c0dbec',
+  '*':'#7ca67d','+':'#f3c17a','=':'#b9d4cf','o':'#cba3e9','T':'#ffd085','x':'#f0bc91',
+  ',':'#bdb092',';':'#cd8c74','v':'#ceafe9','&':'#a3e0a3','%':'#8ac8d3','?':'#eda4d8','!':'#ff6f86'
+};
+/** Fog opacity belongs to the renderer, not to the material palette. */
+export function terrainColor(tile:string,surface:boolean,biomePalette:string):string{
+  if(surface&&['.','*',','].includes(tile))return biomePalette;
+  if(!surface&&tile==='#')return '#506070';
+  if(!surface&&tile==='.')return '#839aab';
+  return TERRAIN_COLORS[tile]??'#c5bbaa';
+}
+/** Visual elevation only; never used for collision or field of view. */
+export function terrainHeight(tile:string,seed:number):number{
+  if(tile==='#')return 7+Math.floor(seed*7);
+  if(tile==='%'||tile==='=')return 5+Math.floor(seed*5);
+  if(tile==='^'||tile==='T')return 2+Math.floor(seed*3);
+  return 0;
+}
 export type HeroAction='walk'|'attack'|'damage'|'mutation'|'interact';
 const ACTORS:Record<string,readonly string[][]>={
   '@':[[' o ','/|\\','/ \\'],[' o ','/|>',' /\\']],
@@ -52,6 +75,10 @@ const ACTORS:Record<string,readonly string[][]>={
   '~':[['~ ~',' ~~'],[' ~~','~ ~']],
   '!':[['!*!','/!\\'],['*!*','\\!/']],
   T:[['/T\\','[=]',' | ']],
+  '+':[[' ___','| + |','|___|']],
+  '?':[[' /?\\','[ : ]',' /_\\']],
+  x:[['\\ /',' X ','/_\\']],
+  v:[['\\v/',' v ','/_\\']],
   o:[['/o\\','|o|','\\_/']],
   'npc:M':[[' .M.','/|\\','/ \\']],
   'npc:O':[[' [O]','/|\\','/ \\']],

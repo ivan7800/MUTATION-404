@@ -1,4 +1,4 @@
-// Diagnostic reproductions for ASCENSION 3.0 phase 1; not a passing quality gate.
+// Regression checks for the persistence defects found in ASCENSION phase 1.
 // Run after npm run test:core. Fixtures isolate boundaries, not a played campaign.
 import assert from 'node:assert/strict';
 import {createGame, dispatch, serialize, deserialize} from '../dist/core/core/src/game.js';
@@ -13,15 +13,14 @@ events.events = Array.from({length:50}, (_, i) => `incident:sector-1-0:${i+1}`);
 assert.doesNotThrow(() => deserialize(serialize(events)), 'fixture must load before interaction');
 assert.equal(dispatch(events, {type:'interact'}).accepted, true);
 assert.equal(events.events.length, 51);
-assert.throws(() => deserialize(serialize(events)), /Estado de regiones o facciones corrupto/);
-console.log('REPRODUCED P1-01: accepted relic interaction makes a loadable 50-event save unloadable (51 events).');
+assert.deepEqual(deserialize(serialize(events)).events, events.events);
+console.log('PASS P1-01: all 51 events survive relic interaction and reload.');
 
 const legacy = JSON.parse(serialize(createGame(404)));
 legacy.version = 10;
 legacy.log = Array.from({length:70}, (_, i) => `Mensaje ${i}`);
 const migrated = deserialize(JSON.stringify(legacy));
 assert.equal(migrated.version, 11);
-assert.equal(migrated.log.length, 71);
-assert.throws(() => deserialize(serialize(migrated)), /Bitácora inválida/);
-console.log('REPRODUCED P1-02: accepted v10 migration grows log 70 -> 71; immediate save cannot load.');
-console.log('These assertions confirm OPEN defects; they do not certify save safety.');
+assert.equal(migrated.log.length, 70);
+assert.deepEqual(deserialize(serialize(migrated)).log, migrated.log);
+console.log('PASS P1-02: migrated full log remains reloadable.');

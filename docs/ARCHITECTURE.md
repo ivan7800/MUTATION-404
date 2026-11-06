@@ -6,7 +6,7 @@ Actualizado: 2026-11-05 sobre c5fb6e7; paquete 2.9.0, sin release 3.0.
 - world.ts, frontier.ts, depths.ts: mapas de 96×64, sectores, interiores, CERO-7 y ruinas. fov.ts calcula visibilidad; rng.ts mantiene RNG explícito.
 - combat.ts, mutations.ts, environment.ts, ecology.ts, civilizations.ts: combate, genoma, campos, recursos y asentamientos. campaign.ts deriva cinco actos y finales desde misión/eventos.
 - apps/web/src/main.ts: DOM, comandos, audio y almacenamiento. Inicia Canvas y carga PixiJS asíncronamente; fallo de inicialización mantiene Canvas.
-- renderer.ts y pixi-renderer.ts: backends isométricos con composiciones y escala 1,45 compartidas en ascii-art.ts. No hay selector píxel/ASCII; quedan ramas píxel inactivas y tests que dependen de su texto.
+- renderer.ts y pixi-renderer.ts: backends isométricos con composiciones, alturas visuales y escala 1,45 compartidas en ascii-art.ts. No hay selector píxel/ASCII; atlas y ramas píxel retirados, pruebas migradas al catálogo compartido.
 - ascii-art.ts contiene datos y pintado Canvas; es independiente de simulación, pero no exclusivamente datos. tactical.ts filtra amenazas visibles; audio.ts usa Web Audio tras activación del usuario.
 
 ## Persistencia y turnos
@@ -14,7 +14,7 @@ Esquema **11**, admite versiones **2–11**. Clave principal: mutation404.v10.sa
 
 Incluye zona activa, snapshots, RNG, misión, eventos, genoma y ecología. dispatch valida comandos; advance procesa tiempo/sistemas. No hay scheduler ECS general como el propuesto en preproducción.
 
-El cargador limita eventos a 50 y bitácora a 70; ciertos productores exceden estos límites. Véanse los dos P1 de [la auditoría](AUDITORIA_ASCENSION_3_FASE_1.md). No se certifica recuperación universal.
+El cargador admite hasta 4096 eventos válidos sin truncar hitos. Las bitácoras antiguas de hasta 1000 mensajes válidos se recuperan conservando los últimos 70; migración y serialización respetan ese límite operativo. Los dos P1 de [la auditoría](AUDITORIA_ASCENSION_3_FASE_1.md) disponen de regresiones; no se certifica recuperación universal de contenido corrupto.
 
 ## Build y distribución
 - npm run dev: Vite; base relativa ./ para subdirectorios.

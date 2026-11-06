@@ -1,5 +1,7 @@
 # MUTATION 404 v2.9 — ASCENSION · ASCII ISOMÉTRICO
 
+Actualización en la rama ASCENSION: los dos P1 de persistencia descritos en la auditoría siguiente se han corregido y tienen regresiones nuevas. El informe de Fase 1 conserva el estado anterior; consultar [estado actual](docs/PROJECT_STATE.md) para avances y pendientes. Todavía no es una release 3.0.
+
 ASCENSION está en desarrollo; paquete 2.9.0. La [auditoría ASCENSION 3.0 — Fase 1](docs/AUDITORIA_ASCENSION_3_FASE_1.md) del 5 de noviembre de 2026 identifica dos defectos P1 de guardados pese a que pasan las 158 pruebas existentes. El estado vigente está en [PROJECT_STATE](docs/PROJECT_STATE.md), la [arquitectura](docs/ARCHITECTURE.md) y la [hoja de ruta](docs/ROADMAP.md). La UI actual es ASCII isométrica sin selector píxel/ASCII; Canvas y PixiJS comparten composiciones, con diferencias de presentación pendientes. No se certifica calidad final ni campaña humana completa.
 
 Desarrollo: Node.js 22+ y `npm ci`. Ejecutar `npm run typecheck`, `npm run lint`, `npm run build:offline` antes de `npm run test:core` (algunas pruebas leen `play/`). `npm run dev` inicia Vite; `node scripts/server.mjs --no-open` sirve el build local. [Resultados y límites de QA](docs/TEST_REPORT.md).

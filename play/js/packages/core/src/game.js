@@ -1046,7 +1046,7 @@ export function serialize(s) {
     const { visible, dialogue, ...stored } = s;
     void visible;
     void dialogue;
-    return JSON.stringify(stored);
+    return JSON.stringify({ ...stored, log: stored.log.slice(-MSG_LIMIT) });
 }
 /** Migration keeps all v0.1 terrain, discovery, quest state and world clock. */
 export function deserialize(raw) {
@@ -1071,8 +1071,10 @@ export function deserialize(raw) {
         throw new Error('Mapa corrupto.');
     if (!Array.isArray(s.seen) || s.seen.length !== WIDTH * HEIGHT || !s.seen.every(v => v === 0 || v === 1))
         throw new Error('Memoria del mapa corrupta.');
-    if (!Array.isArray(s.log) || s.log.length > MSG_LIMIT || !s.log.every(v => typeof v === 'string' && v.length < 2000))
+    if (!Array.isArray(s.log) || s.log.length > 1000 || !s.log.every(v => typeof v === 'string' && v.length < 2000))
         throw new Error('Bitácora inválida.');
+    // Recover overfull logs written by older clients; retain the newest messages.
+    s.log = s.log.slice(-MSG_LIMIT);
     if (!s.quest || !['undiscovered', 'active', 'signal-found', 'completed'].includes(s.quest.status) || !['none', 'broadcast', 'isolate'].includes(s.quest.outcome) || typeof s.quest.fuseFound !== 'boolean')
         throw new Error('Misión inválida.');
     if (!Array.isArray(s.discoveries) || !s.discoveries.every(v => typeof v === 'string' && LANDMARKS.some(p => p.id === v)))
@@ -1083,7 +1085,7 @@ export function deserialize(raw) {
             genome: initialGenome(), fields: initialFields(s.seed, s.tiles), exposure: 0, biomeNotes: [], lastBiome: biomeAt(s.seed, s.player.x, s.player.y),
             lastWeather: weatherAt(s.seed, s.tick, biomeAt(s.seed, s.player.x, s.player.y)), environmentalTurns: 0 };
         if (game.zone === 'surface' && inFaro(game.player))
-            game.log.push('MIGRACIÓN // Partida v0.1 conservada. Nuevos peligros detectados fuera de Faro Ciego.');
+            message(game, 'MIGRACIÓN // Partida v0.1 conservada. Nuevos peligros detectados fuera de Faro Ciego.');
         refreshVisibility(game);
         return game;
     }
@@ -1119,7 +1121,7 @@ export function deserialize(raw) {
             throw new Error('Estados de criaturas corruptos.');
     }
     if (s.version === 6 || s.version === 7 || s.version >= 8) {
-        if (!(['surface', 'zero-1', 'zero-2', 'zero-3'].includes(s.zone) || coordsForZone(s.zone) !== null || exteriorForInterior(s.zone) !== null || parseRuin(s.zone) !== null) || !s.zones || typeof s.zones !== 'object' || !s.reputation || !Number.isInteger(s.reputation.ferral) || !Number.isInteger(s.reputation.concordia) || !Array.isArray(s.events) || s.events.length > 50 || !s.events.every(v => typeof v === 'string' && v.length < 80))
+        if (!(['surface', 'zero-1', 'zero-2', 'zero-3'].includes(s.zone) || coordsForZone(s.zone) !== null || exteriorForInterior(s.zone) !== null || parseRuin(s.zone) !== null) || !s.zones || typeof s.zones !== 'object' || !s.reputation || !Number.isInteger(s.reputation.ferral) || !Number.isInteger(s.reputation.concordia) || !Array.isArray(s.events) || s.events.length > 4096 || !s.events.every(v => typeof v === 'string' && v.length < 80))
             throw new Error('Estado de regiones o facciones corrupto.');
         for (const snapshot of Object.values(s.zones)) {
             if (!snapshot || !Array.isArray(snapshot.tiles) || snapshot.tiles.length !== WIDTH * HEIGHT || !snapshot.tiles.every(validTile) || !Array.isArray(snapshot.seen) || snapshot.seen.length !== WIDTH * HEIGHT || !snapshot.seen.every(v => v === 0 || v === 1) || !snapshot.player || !within(snapshot.player.x, snapshot.player.y) || !passable(snapshot.tiles[index(snapshot.player.x, snapshot.player.y)]) || !Array.isArray(snapshot.enemies) || snapshot.enemies.length > 1000 || !Array.isArray(snapshot.ground) || snapshot.ground.length > 5000 || !Array.isArray(snapshot.fields) || snapshot.fields.length > 96)
@@ -1143,21 +1145,21 @@ export function deserialize(raw) {
         lastWeather: s.version >= 4 ? s.lastWeather : weatherAt(s.seed, s.tick, bi),
         environmentalTurns: s.version >= 4 ? s.environmentalTurns : 0 };
     if (s.version === 10)
-        game.log.push('MIGRACIÓN // Ruinas temáticas desbloqueadas. Las zonas ya visitadas conservan sus mapas originales.');
+        message(game, 'MIGRACIÓN // Ruinas temáticas desbloqueadas. Las zonas ya visitadas conservan sus mapas originales.');
     if (s.version === 9)
-        game.log.push('MIGRACIÓN // Nuevas ruinas regionales abiertas; el atlas subterráneo se ha ampliado.');
+        message(game, 'MIGRACIÓN // Nuevas ruinas regionales abiertas; el atlas subterráneo se ha ampliado.');
     if (s.version === 8)
-        game.log.push('MIGRACIÓN // La red ecológica comienza a reaccionar a tu presencia.');
+        message(game, 'MIGRACIÓN // La red ecológica comienza a reaccionar a tu presencia.');
     if (s.version === 7)
-        game.log.push('MIGRACIÓN // Los enclaves de Nácar reciben habitantes, mercados y encargos.');
+        message(game, 'MIGRACIÓN // Los enclaves de Nácar reciben habitantes, mercados y encargos.');
     if (s.version === 6)
-        game.log.push('MIGRACIÓN // Los ocho nuevos sectores de Nácar están disponibles en los bordes del mapa.');
+        message(game, 'MIGRACIÓN // Los ocho nuevos sectores de Nácar están disponibles en los bordes del mapa.');
     if (s.version === 5)
-        game.log.push('MIGRACIÓN // Partida v0.4 conservada: las regiones CERO-7 están disponibles.');
+        message(game, 'MIGRACIÓN // Partida v0.4 conservada: las regiones CERO-7 están disponibles.');
     if (s.version === 4)
-        game.log.push('MIGRACIÓN // Partida v0.3 conservada: la mutagénesis y los campos activos están preparados.');
+        message(game, 'MIGRACIÓN // Partida v0.3 conservada: la mutagénesis y los campos activos están preparados.');
     if (s.version === 3)
-        game.log.push('MIGRACIÓN // Partida v0.2 conservada: el dosímetro y los biomas están activos.');
+        message(game, 'MIGRACIÓN // Partida v0.2 conservada: el dosímetro y los biomas están activos.');
     refreshVisibility(game);
     return game;
 }

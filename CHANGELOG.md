@@ -1,5 +1,31 @@
 # Cambios
 
+## ASCENSION — profundidad y cobertura combinatoria (2026-11-06)
+
+- Canvas encola glifos con su estilo y los pinta por profundidad; Pixi comparte el criterio basado en pies y dimensiones de celda. La altura visual no altera la prioridad de profundidad.
+- Regresión de pared delante/detrás del héroe y orden en distintas escalas.
+- Cobertura exhaustiva de dominios finitos: 262144 combinaciones de hitos de acceso al final, 16497 combinaciones celda/zoom y 648 combinaciones de materiales/paletas. No equivale a probar todas las partidas ni todos los recorridos de campaña.
+
+## ASCENSION — coherencia de presentación (2026-11-06)
+
+- Paleta del terreno compartida por Canvas y WebGL, diferenciando superficie e interiores.
+- Canvas eleva los glifos del terreno con la altura compartida y restaura opacidad completa tras dibujar sombras de NPC/enemigos.
+- Barra de Nácar en Canvas calculada con su vida máxima real; campos WebGL elevados según el terreno, no según el nombre del efecto.
+- Regresión de dibujo Canvas y pruebas de paleta. Oclusión completa y equivalencia de iluminación siguen pendientes.
+
+## ASCENSION — consolidación ASCII (2026-11-06, sin release)
+
+- Eliminados atlas píxel y ramas inaccesibles del backend Pixi; el perfil cuenta texturas del atlas ASCII activo.
+- Guardas del atlas histórico migradas a pruebas del catálogo compartido de actores, terreno y jefe.
+- Composiciones volumétricas para puertas, señales y símbolos x/v; altura visual de terreno compartida por Canvas y Pixi.
+- Oclusión completa, FX exclusivamente ASCII y ataques por especie continúan pendientes; esta entrega no completa todas las fases.
+
+## ASCENSION — recuperación de persistencia (sin release)
+
+- Guardados con más de 50 hitos/eventos vuelven a cargar sin descartar progreso; límite defensivo de 4096 entradas y validación de contenido conservada.
+- Migraciones v2–v10 mantienen la bitácora acotada. La serialización conserva los últimos 70 mensajes sin mutar la partida; se recuperan bitácoras antiguas desbordadas de hasta 1000 entradas válidas.
+- Doce regresiones de persistencia: reliquia sin doble recompensa, migraciones, recuperación y rechazo de contenido inválido. Esquema 11 conservado.
+
 ## ASCENSION 3.0 — Fase 1, auditoría (2026-11-05; sin release)
 
 - Auditoría P0–P3 y reproducción de dos fallos P1 de carga: límite de eventos y bitácora tras migración.

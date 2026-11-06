@@ -2,13 +2,8 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, 
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
-import { CAMERA_SCALE, isOccludingTerrain, paintComposition, terrainComposition } from './ascii-art.js';
+import { projectedDepth, terrainColor, terrainHeight, CAMERA_SCALE, isOccludingTerrain, paintComposition, terrainComposition } from './ascii-art.js';
 const VIEW_W = 47, VIEW_H = 27;
-const COLORS = {
-    '#': '#63796e', '.': '#9a9580', ':': '#d3b783', '~': '#63afc3', '^': '#c0dbec',
-    '*': '#7ca67d', '+': '#f3c17a', '=': '#b9d4cf', 'o': '#cba3e9', 'T': '#ffd085', 'x': '#f0bc91',
-    ',': '#bdb092', ';': '#cd8c74', 'v': '#ceafe9', '&': '#a3e0a3', '%': '#8ac8d3', '?': '#eda4d8', '!': '#ff6f86'
-};
 function isoDiamond(ctx, cx, cy, w, h, color, alpha = 1) {
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -41,15 +36,6 @@ function isoVolume(ctx, cx, cy, w, h, depth, color) {
     ctx.closePath();
     ctx.fill();
     ctx.restore();
-}
-function terrainHeight(tile, seed) {
-    if (tile === '#')
-        return 7 + Math.floor(seed * 7);
-    if (tile === '%' || tile === '=')
-        return 5 + Math.floor(seed * 5);
-    if (tile === '^' || tile === 'T')
-        return 2 + Math.floor(seed * 3);
-    return 0;
 }
 function actorLift(state, x, y) {
     return terrainHeight(state.tiles[index(x, y)], terrainHash(state.seed + 119, x, y)) * .35;
@@ -209,16 +195,26 @@ export class AsciiRenderer {
         if (mount)
             mount.scrollLeft = Math.max(0, (this.canvas.clientWidth - mount.clientWidth) / 2);
     }
-    glyph(glyph, x, y) {
+    glyphQueue = [];
+    glyph(glyph, x, y, depth) {
         const ctx = this.ctx, t = ctx.getTransform();
         const sx = t.a * x + t.c * y + t.e, sy = t.b * x + t.d * y + t.f;
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        ctx.save();
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        paintComposition(ctx, glyph, sx / dpr, sy / dpr, this.fontSize * CAMERA_SCALE, this.reducedMotion ? 0 : Math.floor(this.ambience / 5));
-        ctx.restore();
+        const alpha = ctx.globalAlpha, color = ctx.fillStyle, shadowBlur = ctx.shadowBlur, shadowColor = ctx.shadowColor;
+        const frame = this.reducedMotion ? 0 : Math.floor(this.ambience / 5);
+        this.glyphQueue.push({ depth, paint: () => {
+                ctx.save();
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = color;
+                ctx.shadowBlur = shadowBlur;
+                ctx.shadowColor = shadowColor;
+                paintComposition(ctx, glyph, sx / dpr, sy / dpr, this.fontSize * CAMERA_SCALE, frame);
+                ctx.restore();
+            } });
     }
     draw(state) {
+        this.glyphQueue = [];
         this.lastState = state;
         const frameTime = performance.now();
         for (const [id, until] of this.enemyHits)
@@ -283,8 +279,8 @@ export class AsciiRenderer {
                     ctx.fillStyle = this.ambience % 2 ? '#622738' : '#43212a';
                     isoDiamond(ctx, px, py, this.cellW * .94, this.cellH * .88, ctx.fillStyle, ctx.globalAlpha);
                 }
-                ctx.fillStyle = coordsForZone(state.zone) ? (tile === '.' || tile === '*' || tile === ',' ? def.palette : COLORS[tile]) : (tile === '#' ? '#506070' : tile === '.' ? '#839aab' : COLORS[tile]);
-                this.glyph(terrainComposition(tile, Math.floor(terrainHash(state.seed + 917, x, y) * 3)), px, py);
+                ctx.fillStyle = terrainColor(tile, coordsForZone(state.zone) !== null, def.palette);
+                this.glyph(terrainComposition(tile, Math.floor(terrainHash(state.seed + 917, x, y) * 3)), px, py - height, projectedDepth(cx, cy, this.cellW, this.cellH, 0));
                 // Lighting never reveals fog-of-war tiles or changes the core simulation.
                 if (visible) {
                     const distance = Math.hypot(x - state.player.x, y - state.player.y);
@@ -322,7 +318,7 @@ export class AsciiRenderer {
             }
             ctx.globalAlpha = 1;
             ctx.fillStyle = def.color;
-            this.glyph(`field:${field.kind}`, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, field.x, field.y));
+            this.glyph(`field:${field.kind}`, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, field.x, field.y), projectedDepth(cx, cy, this.cellW, this.cellH));
         }
         // Naturally occurring materials are visible once their sector has been surveyed.
         for (const node of state.ecology.nodes) {
@@ -333,7 +329,7 @@ export class AsciiRenderer {
                 continue;
             ctx.globalAlpha = 1;
             ctx.fillStyle = node.kind === 'mineral' ? '#e2ba83' : node.kind === 'crystal' ? '#deb9fa' : '#8be6b3';
-            this.glyph(`resource:${node.kind}`, cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, node.x, node.y));
+            this.glyph(`resource:${node.kind}`, cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, node.x, node.y), projectedDepth(cx, cy, this.cellW, this.cellH));
         }
         for (const drop of state.ground) {
             if (state.visible[index(drop.x, drop.y)] !== 1)
@@ -342,7 +338,7 @@ export class AsciiRenderer {
             if (cx < 0 || cy < 0 || cx >= VIEW_W || cy >= VIEW_H)
                 continue;
             ctx.fillStyle = '#f7d991';
-            this.glyph('loot', cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, drop.x, drop.y));
+            this.glyph('loot', cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, drop.x, drop.y), projectedDepth(cx, cy, this.cellW, this.cellH));
         }
         for (const npc of [...(state.zone === 'surface' ? ACTORS : []), ...settlementCitizens(state.zone, state.tick)]) {
             if (state.visible[index(npc.x, npc.y)] !== 1)
@@ -357,8 +353,9 @@ export class AsciiRenderer {
             ctx.fill();
             ctx.fillStyle = '#0c1b1c';
             ctx.fillRect(cx * this.cellW, cy * this.cellH, this.cellW, this.cellH);
+            ctx.globalAlpha = 1;
             ctx.fillStyle = npc.color;
-            this.glyph(`npc:${npc.glyph}`, cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, npc.x, npc.y));
+            this.glyph(`npc:${npc.glyph}`, cx * this.cellW + this.cellW / 2, cy * this.cellH + this.cellH / 2 - actorLift(state, npc.x, npc.y), projectedDepth(cx, cy, this.cellW, this.cellH));
         }
         for (const enemy of state.enemies) {
             if (enemy.hp <= 0 || state.visible[index(enemy.x, enemy.y)] !== 1)
@@ -385,11 +382,12 @@ export class AsciiRenderer {
             }
             const glyph = enemy.id === 'campaign-heart-custodian' ? '✺' : enemy.id.startsWith('elite-') ? '◆' : def.glyph;
             const hit = this.enemyHits.has(enemy.id);
+            ctx.globalAlpha = 1;
             ctx.fillStyle = hit ? '#ff9d91' : (enemy.stunned ?? 0) > 0 ? '#e3aaf5' : def.color;
-            this.glyph(hit ? `enemy:hurt:${glyph}` : glyph, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, enemy.x, enemy.y));
+            this.glyph(hit ? `enemy:hurt:${glyph}` : glyph, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, enemy.x, enemy.y), projectedDepth(cx, cy, this.cellW, this.cellH));
             ctx.shadowBlur = 0;
             // Miniature health bar provides threat feedback without a separate modal.
-            const health = Math.max(0, Math.min(1, enemy.hp / def.hp));
+            const health = Math.max(0, Math.min(1, enemy.hp / (enemy.id === 'campaign-heart-custodian' ? def.hp * 3 : def.hp)));
             if (health < 1) {
                 ctx.fillStyle = '#361c20';
                 ctx.fillRect(px + 1, py + this.cellH - 3, this.cellW - 2, 2);
@@ -405,7 +403,7 @@ export class AsciiRenderer {
                 continue;
             ctx.globalAlpha = Math.max(0, (dead.until - frameTime) / 450);
             ctx.fillStyle = '#e8a0a0';
-            this.glyph(`enemy:death:${dead.glyph}`, (cx + .5) * this.cellW, (cy + .5) * this.cellH);
+            this.glyph(`enemy:death:${dead.glyph}`, (cx + .5) * this.cellW, (cy + .5) * this.cellH, projectedDepth(cx, cy, this.cellW, this.cellH, .5));
         }
         ctx.globalAlpha = 1;
         for (let depth = 0; depth < VIEW_W + VIEW_H - 1; depth++)
@@ -439,7 +437,7 @@ export class AsciiRenderer {
         ctx.fillStyle = state.stats.hp > 0 ? '#4c3825' : '#3e1b22';
         ctx.fillRect(px, py, this.cellW, this.cellH);
         ctx.fillStyle = state.stats.hp > 0 ? '#ffe29a' : '#c78487';
-        this.glyph(state.stats.hp <= 0 ? 'hero:death' : this.heroAction && performance.now() < this.heroUntil ? `hero:${this.heroAction}` : '@', px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, state.player.x, state.player.y));
+        this.glyph(state.stats.hp <= 0 ? 'hero:death' : this.heroAction && performance.now() < this.heroUntil ? `hero:${this.heroAction}` : '@', px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, state.player.x, state.player.y), projectedDepth(state.player.x - ox, state.player.y - oy, this.cellW, this.cellH));
         ctx.shadowBlur = 0;
         // The unexplored world stays dark; the near-field gets a subtle readable frame.
         ctx.strokeStyle = 'rgba(175,210,197,.45)';
@@ -453,6 +451,10 @@ export class AsciiRenderer {
         ctx.moveTo(px + this.cellW + 1, py + this.cellH / 2);
         ctx.lineTo(px + this.cellW + 5, py + this.cellH / 2);
         ctx.stroke();
+        this.glyphQueue.sort((a, b) => a.depth - b.depth);
+        for (const glyph of this.glyphQueue)
+            glyph.paint();
+        this.glyphQueue = [];
         const weather = weatherAt(state.seed, state.tick, currentBiome);
         if (weather !== 'calma' && !this.reducedMotion) {
             // Screen-space dust/spores/ion sparks are cosmetic, deterministic for a given frame.
