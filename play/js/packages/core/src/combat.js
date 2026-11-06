@@ -113,7 +113,7 @@ export function nextStep(tiles, from, to, occupied, maxSearch = 240, hazards = n
         cursor = parents.get(cursor);
     return { x: cursor % WIDTH, y: Math.floor(cursor / WIDTH) };
 }
-export function takeEnemyTurn(s, report) {
+export function takeEnemyTurn(s, report, onAction) {
     const protectFaro = s.zone === undefined || s.zone === 'surface';
     if (s.stats.hp <= 0 || (protectFaro && inFaro(s.player)))
         return;
@@ -143,6 +143,7 @@ export function takeEnemyTurn(s, report) {
         // Unique elite drones issue a visible two-cell electrical warning.
         // No save-schema extension: elite identity comes from its persistent id.
         if (e.id.startsWith('elite-') && canSee && dist >= 2 && dist <= 6 && s.fields && s.tick !== undefined && Math.floor(s.tick / 100) % 4 === 0) {
+            onAction?.({ id: e.id, kind: e.kind, x: e.x, y: e.y, action: 'ability' });
             const dx = Math.sign(s.player.x - e.x), dy = Math.sign(s.player.y - e.y);
             placeField(s.fields, { x: s.player.x, y: s.player.y, kind: 'electric', ttl: 3 });
             const tx = s.player.x + dx, ty = s.player.y + dy;
@@ -154,6 +155,7 @@ export function takeEnemyTurn(s, report) {
         // Warden sentinels force movement with a delayed electrical trap; the
         // environmental phase processes it on the player's next turn.
         if (e.kind === 'sentinel' && canSee && dist >= 2 && dist <= 4 && s.fields && s.tick !== undefined && Math.floor(s.tick / 100) % 6 === 0) {
+            onAction?.({ id: e.id, kind: e.kind, x: e.x, y: e.y, action: 'ability' });
             placeField(s.fields, { x: s.player.x, y: s.player.y, kind: 'electric', ttl: 3 });
             report('AVISO // El vigía de cobre marca el suelo con un arco eléctrico. Muévete antes del próximo turno.');
             continue;
@@ -175,6 +177,7 @@ export function takeEnemyTurn(s, report) {
         }
         // Attack using true position only when target currently sensed.
         if (e.mode === 'hunting' && canSee && dist === 1) {
+            onAction?.({ id: e.id, kind: e.kind, x: e.x, y: e.y, action: 'attack' });
             const hit = rng.int(1, 100) <= Math.min(95, 67 + e.kind.length - (eqArmor(s.equipment) + (s.genome?.unlocked.includes('dermal-plates') ? 1 : 0)) * 5);
             if (hit) {
                 const damage = Math.max(1, rng.int(1, def.attack + 2) - eqArmor(s.equipment) - (s.genome?.unlocked.includes('dermal-plates') ? 1 : 0));
@@ -198,16 +201,19 @@ export function takeEnemyTurn(s, report) {
         if (s.fields && canSee && dist >= 2 && dist <= 4 && s.tick !== undefined) {
             const turn = Math.floor(s.tick / 100);
             if (e.kind === 'spore' && turn % 4 === 0) {
+                onAction?.({ id: e.id, kind: e.kind, x: e.x, y: e.y, action: 'ability' });
                 placeField(s.fields, { x: s.player.x, y: s.player.y, kind: 'spores', ttl: 3 });
                 report('AVISO // El pastor libera una nube de esporas bajo tus pies.');
                 continue;
             }
             if (e.kind === 'drone' && turn % 5 === 0) {
+                onAction?.({ id: e.id, kind: e.kind, x: e.x, y: e.y, action: 'ability' });
                 placeField(s.fields, { x: s.player.x, y: s.player.y, kind: 'electric', ttl: 3 });
                 report('AVISO // El cazador polariza el suelo: aléjate del arco eléctrico.');
                 continue;
             }
             if (e.kind === 'moth' && turn % 6 === 0) {
+                onAction?.({ id: e.id, kind: e.kind, x: e.x, y: e.y, action: 'ability' });
                 placeField(s.fields, { x: e.x, y: e.y, kind: 'spores', ttl: 3 });
                 report('AVISO // Una polilla exhala polvo vivo sobre su posición.');
                 continue;
@@ -215,6 +221,7 @@ export function takeEnemyTurn(s, report) {
         }
         // Sentinels have low-frequency ranged attacks; require real LoS.
         if ((e.kind === 'sentinel' || e.kind === 'drone') && e.mode === 'hunting' && canSee && dist >= 2 && dist <= 4 && rng.int(0, 2) === 0) {
+            onAction?.({ id: e.id, kind: e.kind, x: e.x, y: e.y, action: 'attack' });
             const hit = rng.int(1, 100) <= 60;
             if (hit) {
                 const damage = Math.max(1, rng.int(2, 6) - eqArmor(s.equipment));

@@ -21,6 +21,23 @@ export { TASKS, GOODS, priceFor, settlementCitizens, interiorForSector, exterior
 export { RECIPES, RESOURCE_INFO } from './ecology.js';
 export { BIOMES, WEATHER, biomeAt, weatherAt } from './biomes.js';
 export { campaignProgress, campaignObjective, campaignArchiveList, endingStory, CAMPAIGN_SITES } from './campaign.js';
+const actionObservers = new WeakMap();
+/** Opt-in presentation events; no extra state fields or random draws. */
+export function dispatchWithFeedback(s, command) {
+    const events = [], previous = actionObservers.get(s);
+    actionObservers.set(s, event => { if (s.visible[index(event.x, event.y)] === 1)
+        events.push(event); });
+    try {
+        const result = dispatch(s, command);
+        return { result, events: result.accepted ? events : [] };
+    }
+    finally {
+        if (previous)
+            actionObservers.set(s, previous);
+        else
+            actionObservers.delete(s);
+    }
+}
 const MSG_LIMIT = 70;
 function message(state, text) { state.log.push(text); if (state.log.length > MSG_LIMIT)
     state.log.splice(0, state.log.length - MSG_LIMIT); }
@@ -220,7 +237,7 @@ function advance(s, cost) {
             if (foe.hp === 0 && alive.has(foe.id))
                 killEnemy(s, foe);
         if (s.stats.hp > 0)
-            takeEnemyTurn(s, text => message(s, text));
+            takeEnemyTurn(s, text => message(s, text), event => actionObservers.get(s)?.({ ...event, zone: s.zone }));
         pulseNacar(s);
         if (knows(s.genome, 'regeneration') && s.environmentalTurns % 4 === 3 && s.exposure < 65 && s.stats.hp > 0) {
             const healed = Math.min(1, s.stats.maxHp - s.stats.hp);

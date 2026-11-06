@@ -1,4 +1,4 @@
-import { createGame, deserialize, dispatch, RECIPES, RESOURCE_INFO, MUTATIONS, biomeAt, BIOMES, weatherAt, WEATHER, ENEMY_DEFS, formatClock, HEIGHT, ITEM_DEFS, LANDMARKS, MARKET, ruinName, SECTORS, coordsForZone, sectorName, serialize, stackCount, WIDTH, xpNeeded, TASKS, GOODS, priceFor, settlementCitizens, exteriorForInterior, campaignProgress, campaignObjective, campaignArchiveList, endingStory } from '../../../packages/core/src/game.js';
+import { createGame, deserialize, dispatch, dispatchWithFeedback, RECIPES, RESOURCE_INFO, MUTATIONS, biomeAt, BIOMES, weatherAt, WEATHER, ENEMY_DEFS, formatClock, HEIGHT, ITEM_DEFS, LANDMARKS, MARKET, ruinName, SECTORS, coordsForZone, sectorName, serialize, stackCount, WIDTH, xpNeeded, TASKS, GOODS, priceFor, settlementCitizens, exteriorForInterior, campaignProgress, campaignObjective, campaignArchiveList, endingStory } from '../../../packages/core/src/game.js';
 import { index } from '../../../packages/core/src/world.js';
 import { parseRuin, themeForRuin } from '../../../packages/core/src/depths.js';
 import { AsciiRenderer } from './renderer.js';
@@ -344,7 +344,9 @@ function act(command) {
     const beforeEnemies = new Map(state.enemies.filter(e => e.hp > 0).map(e => [e.id, { hp: e.hp, x: e.x, y: e.y, zone: state.zone, glyph: e.id === 'campaign-heart-custodian' ? '✺' : e.id.startsWith('elite-') ? '◆' : ENEMY_DEFS[e.kind].glyph }]));
     const beforeFields = state.fields.map(field => ({ ...field }));
     const priorNacar = state.zone === 'zero-3' ? beforeEnemies.get(FINAL_GUARDIAN_ID) : undefined;
-    const result = dispatch(state, command);
+    const { result, events } = dispatchWithFeedback(state, command);
+    if (result.accepted)
+        renderer.enemyFeedback(state, events);
     if (result.accepted && 'combatFeedback' in renderer)
         renderer.combatFeedback(beforeEnemies, state);
     if (result.accepted && 'environmentFeedback' in renderer)
