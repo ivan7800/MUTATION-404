@@ -1,5 +1,9 @@
 /** Shared original ASCII compositions. Pure data: no world state, DOM or RNG. */
 export const CAMERA_SCALE = 1.45;
+/** Painter order at the feet: elevation changes appearance, not depth. */
+export function projectedDepth(x, y, cellW, cellH, layer = 1) {
+    return x * cellW + y * cellH + layer * .001;
+}
 const TERRAIN_COLORS = {
     '#': '#63796e', '.': '#9a9580', ':': '#d3b783', '~': '#63afc3', '^': '#c0dbec',
     '*': '#7ca67d', '+': '#f3c17a', '=': '#b9d4cf', 'o': '#cba3e9', 'T': '#ffd085', 'x': '#f0bc91',
