@@ -301,12 +301,13 @@ export class AsciiRenderer {
     this.glyphQueue=[];
     const weather=weatherAt(state.seed,state.tick,currentBiome);
     if(weather!=='calma'&&!this.reducedMotion){
-      // Screen-space dust/spores/ion sparks are cosmetic, deterministic for a given frame.
-      ctx.globalAlpha=.34;
+      // Screen-space Gothic weather stays in the shared ASCII language.
+      ctx.globalAlpha=.42;
+      ctx.font=`bold ${this.fontSize*.72}px "DejaVu Sans Mono",monospace`;
       for(let i=0;i<30;i++){
         const x=Math.floor(terrainHash(state.seed+i,this.ambience+i,31)*w),y=Math.floor(terrainHash(state.seed+i,37,this.ambience+i)*h);
         ctx.fillStyle=weather==='esporas'?'#9fdca7':weather==='estatica'?'#b5f5ec':weather==='distorsion'?'#da8acc':'#d9c49d';
-        ctx.fillRect(x,y,weather==='polvo'?3:2,weather==='polvo'?1:2);
+        paintComposition(ctx,`weather:${weather}`,x,y,this.fontSize*.72,(this.ambience+i)%2);
       }
     }
     // Short-lived frame-driven feedback never changes simulation rules.
@@ -315,11 +316,12 @@ export class AsciiRenderer {
       const progress=1-remaining/300;
       const cx=px+this.cellW/2,cy=py+this.cellH/2;
       const tint=this.effectKind==='mutation'?'#bda5ff':this.effectKind==='damage'?'#ff6b74':this.effectKind==='attack'?'#ffcb81':'#8de3dc';
-      ctx.beginPath();ctx.arc(cx,cy,7+progress*90,0,Math.PI*2);
-      ctx.strokeStyle=tint;ctx.lineWidth=Math.max(.5,2*(1-progress));ctx.globalAlpha=Math.max(0,.8*(1-progress));ctx.stroke();
+      ctx.strokeStyle=tint;ctx.lineWidth=Math.max(.5,2*(1-progress));ctx.globalAlpha=Math.max(0,.8*(1-progress));
+      ctx.font=`bold ${this.fontSize*1.1}px "DejaVu Sans Mono",monospace`;
+      paintComposition(ctx,`effect:${this.effectKind}`,cx,cy,this.fontSize*1.1,Math.floor(progress*2));
       for(let i=0;i<10;i++){
         const a=i*Math.PI/5+progress*.9,d=11+progress*48;
-        ctx.fillStyle=tint;ctx.fillRect(cx+Math.cos(a)*d,cy+Math.sin(a)*d,2,2);
+        ctx.fillStyle=tint;ctx.fillText(i%2?'·':'✦',cx+Math.cos(a)*d,cy+Math.sin(a)*d);
       }
       ctx.globalAlpha=1;
     }

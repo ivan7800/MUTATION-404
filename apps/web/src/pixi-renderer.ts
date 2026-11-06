@@ -427,6 +427,17 @@ export class PixiAsciiRenderer {
         this.backdrop.circle(cx+Math.cos(a)*r,cy+Math.sin(a)*r,Math.max(.5,2.5*(1-phase))).fill({color:n%2?0xf5d29c:0xb6a5ec,alpha:1-phase});
       }
     }
+    const weather=weatherAt(state.seed,state.tick,biomeAt(state.seed,state.player.x,state.player.y));
+    if(weather!=='calma'&&!this.reducedMotion){
+      const weatherColor=weather==='esporas'?0x9fdca7:weather==='estatica'?0xb5f5ec:weather==='distorsion'?0xda8acc:0xd9c49d;
+      // Ambient signs use the same glyph vocabulary as Canvas; their positions
+      // are seeded so weather never consumes RNG or changes a save.
+      for(let i=0;i<24;i++){
+        const x=Math.floor(terrainHash(state.seed+i,this.ambience+i,31)*this.viewW);
+        const y=Math.floor(terrainHash(state.seed+i,37,this.ambience+i)*this.viewH);
+        used=this.drawGlyph(used,`weather:${weather}`,x,y,weatherColor,.46,0,2);
+      }
+    }
     // Hide only objects used in the previous scene (not the entire pool).
     for(let i=used;i<this.activeSprites;i++)this.sprites[i].visible=false;
     this.activeSprites=used;

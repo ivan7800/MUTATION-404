@@ -105,6 +105,15 @@ const ACTORS:Record<string,readonly string[][]>={
   'field:fire':[[' ^ ^','/!\\','^^^'],[' ^^','/!\\','^ ^']],
   'field:electric':[['\\|/','-Z-','/|\\'],['/|\\','-Z-','\\|/']],
   'field:spores':[['. .','(o)','* *'],['* *','(o)','. .']],
+  'weather:polvo':[['·'],[':']],
+  'weather:esporas':[['✦'],['·']],
+  'weather:estatica':[['ϟ'],['⋮']],
+  'weather:distorsion':[['≈'],['∿']],
+  'weather:calma':[['·']],
+  'effect:attack':[['·','/\\','·'],['✦','·','✦']],
+  'effect:damage':[['x','/\\','x'],['✧','x','✧']],
+  'effect:mutation':[['*','{#}','*'],['✺','·','✺']],
+  'effect:scan':[['+','·','+'],['◇','·','◇']],
 };
 export function composition(glyph:string,frame=0):readonly string[]{
   const poses=ACTORS[glyph];
