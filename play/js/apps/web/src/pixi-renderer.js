@@ -177,7 +177,7 @@ export class PixiAsciiRenderer {
             return texture;
         const canvas = document.createElement('canvas');
         canvas.width = 80;
-        canvas.height = 52;
+        canvas.height = 80;
         const ctx = canvas.getContext('2d');
         if (!ctx)
             throw new Error('No se pudo crear el atlas de caracteres.');
@@ -185,7 +185,7 @@ export class PixiAsciiRenderer {
         ctx.textBaseline = 'middle';
         ctx.font = 'bold 37px monospace';
         ctx.fillStyle = '#fff';
-        paintComposition(ctx, character, 40, 26, 37, frame);
+        paintComposition(ctx, character, 40, 40, 37, frame);
         texture = Texture.from(canvas);
         this.glyphs.set(key, texture);
         return texture;
