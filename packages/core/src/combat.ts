@@ -5,6 +5,7 @@ import { SeededRng } from './rng.js';
 import { ACTORS, index, passable, WIDTH, within, type Point, type Tile } from './world.js';
 
 export type EnemyKind = 'crawler' | 'sentinel' | 'larva' | 'moth' | 'drone' | 'spore';
+export interface EnemyAction {id:string;kind:EnemyKind;x:number;y:number;action:'attack'|'ability'}
 export type Behaviour = 'idle' | 'hunting' | 'searching' | 'fleeing';
 export interface Enemy extends Point { id:string; kind:EnemyKind; hp:number; mode:Behaviour; lastKnown?:Point; searchTurns:number;stunned?:number }
 export interface EnemyDef {name:string; glyph:string; color:string; hp:number; attack:number; armor:number; evade:number; xp:number; sight:number}
@@ -104,7 +105,7 @@ export function nextStep(tiles:readonly Tile[],from:Point,to:Point,occupied:Set<
   while(parents.get(cursor)!==start&&parents.get(cursor)!==-1)cursor=parents.get(cursor)!;
   return {x:cursor%WIDTH,y:Math.floor(cursor/WIDTH)};
 }
-export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
+export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void,onAction?:(event:EnemyAction)=>void):void{
   const protectFaro=s.zone===undefined||s.zone==='surface';
   if(s.stats.hp<=0||(protectFaro&&inFaro(s.player)))return;
   const rng=nextRandom(s);
@@ -122,6 +123,7 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
     // Unique elite drones issue a visible two-cell electrical warning.
     // No save-schema extension: elite identity comes from its persistent id.
     if(e.id.startsWith('elite-')&&canSee&&dist>=2&&dist<=6&&s.fields&&s.tick!==undefined&&Math.floor(s.tick/100)%4===0){
+      onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'ability'});
       const dx=Math.sign(s.player.x-e.x),dy=Math.sign(s.player.y-e.y);
       placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});
       const tx=s.player.x+dx,ty=s.player.y+dy;
@@ -132,6 +134,7 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
     // Warden sentinels force movement with a delayed electrical trap; the
     // environmental phase processes it on the player's next turn.
     if(e.kind==='sentinel'&&canSee&&dist>=2&&dist<=4&&s.fields&&s.tick!==undefined&&Math.floor(s.tick/100)%6===0){
+      onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'ability'});
       placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});
       report('AVISO // El vigía de cobre marca el suelo con un arco eléctrico. Muévete antes del próximo turno.');
       continue;
@@ -143,6 +146,7 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
     if(e.mode==='searching'){if(e.searchTurns<=0){e.mode='idle';delete e.lastKnown;}else e.searchTurns--;}
     // Attack using true position only when target currently sensed.
     if(e.mode==='hunting'&&canSee&&dist===1){
+      onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'attack'});
       const hit=rng.int(1,100)<=Math.min(95,67+e.kind.length-(eqArmor(s.equipment)+(s.genome?.unlocked.includes('dermal-plates')?1:0))*5);
       if(hit){const damage=Math.max(1,rng.int(1,def.attack+2)-eqArmor(s.equipment)-(s.genome?.unlocked.includes('dermal-plates')?1:0));s.stats.hp=Math.max(0,s.stats.hp-damage);report(`COMBATE // ${def.name} te hiere: -${damage} PV.`);
         if(e.kind==='spore'&&s.exposure!==undefined){const amount=s.genome?.unlocked.includes('spore-symbiosis')?1:3;s.exposure=Math.min(100,s.exposure+amount);report(`ESPORAS // El contacto aumenta tu exposición biológica (+${amount}).`);}
@@ -154,12 +158,13 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void):void{
     // Species-specific terrain-changing abilities; telegraphed and subject to sight.
     if(s.fields&&canSee&&dist>=2&&dist<=4&&s.tick!==undefined){
       const turn=Math.floor(s.tick/100);
-      if(e.kind==='spore'&&turn%4===0){placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'spores',ttl:3});report('AVISO // El pastor libera una nube de esporas bajo tus pies.');continue;}
-      if(e.kind==='drone'&&turn%5===0){placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});report('AVISO // El cazador polariza el suelo: aléjate del arco eléctrico.');continue;}
-      if(e.kind==='moth'&&turn%6===0){placeField(s.fields,{x:e.x,y:e.y,kind:'spores',ttl:3});report('AVISO // Una polilla exhala polvo vivo sobre su posición.');continue;}
+      if(e.kind==='spore'&&turn%4===0){onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'ability'});placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'spores',ttl:3});report('AVISO // El pastor libera una nube de esporas bajo tus pies.');continue;}
+      if(e.kind==='drone'&&turn%5===0){onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'ability'});placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});report('AVISO // El cazador polariza el suelo: aléjate del arco eléctrico.');continue;}
+      if(e.kind==='moth'&&turn%6===0){onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'ability'});placeField(s.fields,{x:e.x,y:e.y,kind:'spores',ttl:3});report('AVISO // Una polilla exhala polvo vivo sobre su posición.');continue;}
     }
     // Sentinels have low-frequency ranged attacks; require real LoS.
     if((e.kind==='sentinel'||e.kind==='drone')&&e.mode==='hunting'&&canSee&&dist>=2&&dist<=4&&rng.int(0,2)===0){
+      onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'attack'});
       const hit=rng.int(1,100)<=60;
       if(hit){const damage=Math.max(1,rng.int(2,6)-eqArmor(s.equipment));s.stats.hp=Math.max(0,s.stats.hp-damage);report(`DISPARO // Un vigía te alcanza: -${damage} PV.`);}
       else report('DISPARO // Una descarga de cobre pasa a tu lado.');

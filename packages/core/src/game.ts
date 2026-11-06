@@ -36,6 +36,15 @@ export interface GameState {
   genome:Genome;fields:Field[]; exposure:number; biomeNotes:BiomeId[]; lastBiome:BiomeId; lastWeather:WeatherId; environmentalTurns:number;
 }
 export type Command = {type:'move';dx:number;dy:number} | {type:'wait'} | {type:'inspect'} | {type:'interact'} | {type:'choose';option:string} | {type:'close-dialog'} | {type:'target'} | {type:'fire'} | {type:'attack'} | {type:'pickup'} | {type:'heal'} | {type:'swap'} | {type:'equip';item:ItemId} | {type:'scan'} | {type:'unlock';mutation:MutationId} | {type:'cast';mutation:MutationId} | {type:'trade';item:ItemId;side:'buy'|'sell'} | {type:'descend'} | {type:'ascend'} | {type:'explore'} | {type:'enter-settlement'} | {type:'leave-settlement'} | {type:'regional-trade';item:ItemId;side:'buy'|'sell'} | {type:'harvest'} | {type:'craft';recipe:string};
+export type EnemyVisualAction=import('./combat.js').EnemyAction & {zone:ZoneId};
+const actionObservers=new WeakMap<GameState,(event:EnemyVisualAction)=>void>();
+/** Opt-in presentation events; no extra state fields or random draws. */
+export function dispatchWithFeedback(s:GameState,command:Command):{result:ActionResult;events:EnemyVisualAction[]}{
+  const events:EnemyVisualAction[]=[],previous=actionObservers.get(s);
+  actionObservers.set(s,event=>{if(s.visible[index(event.x,event.y)]===1)events.push(event);});
+  try{const result=dispatch(s,command);return {result,events:result.accepted?events:[]};}
+  finally{if(previous)actionObservers.set(s,previous);else actionObservers.delete(s);}
+}
 export interface ActionResult { accepted:boolean; timeCost:number; message:string }
 const MSG_LIMIT = 70;
 function message(state: GameState, text: string): void { state.log.push(text); if (state.log.length > MSG_LIMIT) state.log.splice(0, state.log.length - MSG_LIMIT); }
@@ -177,7 +186,7 @@ function advance(s:GameState,cost:number):void {
     const alive=new Set(s.enemies.filter(e=>e.hp>0).map(e=>e.id));
     stepEnvironment(s,text=>message(s,text));
     for(const foe of s.enemies)if(foe.hp===0&&alive.has(foe.id))killEnemy(s,foe);
-    if(s.stats.hp>0)takeEnemyTurn(s,text=>message(s,text));
+    if(s.stats.hp>0)takeEnemyTurn(s,text=>message(s,text),event=>actionObservers.get(s)?.({...event,zone:s.zone}));
     pulseNacar(s);
     if(knows(s.genome,'regeneration')&&s.environmentalTurns%4===3&&s.exposure<65&&s.stats.hp>0){
       const healed=Math.min(1,s.stats.maxHp-s.stats.hp);s.stats.hp+=healed;

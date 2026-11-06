@@ -32,7 +32,7 @@ test('Canvas draw restores actor opacity, lifts walls and scales boss health',t=
   },{get(target,key){return key in target?target[key]:()=>{};}});
   const renderer=Object.create(AsciiRenderer.prototype);
   Object.assign(renderer,{ctx,fontSize:18,cellW:15,cellH:23,ambience:0,reducedMotion:true,
-    enemyHits:new Map(),enemyDeaths:[],effectUntil:0,heroUntil:0});
+    enemyHits:new Map(),enemyActions:new Map(),enemyDeaths:[],effectUntil:0,heroUntil:0});
   renderer.glyph=(glyph,x,y)=>glyphs.push({glyph,x,y,alpha:ctx.globalAlpha});
   const state=createGame(404);
   state.tiles.fill('.');state.visible.fill(1);state.seen.fill(1);state.fields=[];state.ground=[];

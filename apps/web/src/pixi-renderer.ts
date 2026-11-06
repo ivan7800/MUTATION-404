@@ -115,6 +115,16 @@ export class PixiAsciiRenderer {
     }
     if(this.fieldBursts.length>24)this.fieldBursts.splice(0,this.fieldBursts.length-24);
   }
+  private enemyActions=new Map<string,number>();
+  private enemyActionTimer=0;
+  enemyFeedback(state:GameState,events:readonly import('../../../packages/core/src/game.js').EnemyVisualAction[]):void{
+    if(this.reducedMotion)return;
+    for(const event of events)if(event.zone===state.zone&&state.visible[index(event.x,event.y)]===1)this.enemyActions.set(event.zone+':'+event.id,performance.now()+280);
+    if(!events.length)return;
+    if(this.enemyActionTimer)clearTimeout(this.enemyActionTimer);
+    this.enemyActionTimer=window.setTimeout(()=>{this.enemyActionTimer=0;this.enemyActions.clear();if(this.state)this.draw(this.state);},300);
+    this.draw(state);
+  }
   combatFeedback(previous:ReadonlyMap<string,{hp:number;x:number;y:number;zone:string;glyph:string}>,state:GameState):void{
     if(this.reducedMotion)return;
     const now=performance.now(),current=new Set(state.enemies.map(e=>e.id));
@@ -323,7 +333,7 @@ export class PixiAsciiRenderer {
       }else if(flash)this.flashes.delete(enemy.id);
       const creatureGlyph=nacar?'✺':elite?'◆':def.glyph;
       const enemyLift=terrainHeight(state.tiles[index(enemy.x,enemy.y)],terrainHash(state.seed+119,enemy.x,enemy.y))*.35;
-      used=this.drawGlyph(used,flash&&flash.until>performance.now()?`enemy:hurt:${creatureGlyph}`:creatureGlyph,x,y,flash&&flash.until>performance.now()?0xff9d91:nacar?0x92f9ef:elite?0xecb9ff:this.color(def.color),1,enemyLift);
+      used=this.drawGlyph(used,flash&&flash.until>performance.now()?`enemy:hurt:${creatureGlyph}`:!this.reducedMotion&&(this.enemyActions.get(state.zone+':'+enemy.id)??0)>performance.now()?`enemy:attack:${creatureGlyph}`:creatureGlyph,x,y,flash&&flash.until>performance.now()?0xff9d91:nacar?0x92f9ef:elite?0xecb9ff:this.color(def.color),1,enemyLift);
       const health=Math.max(0,Math.min(1,enemy.hp/(nacar?def.hp*3:def.hp)));
       if(health<1){this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,this.cellW-2,2).fill(0x492c33);this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,(this.cellW-2)*health,2).fill(health>.45?0xdcbf83:0xee7373);}
     }

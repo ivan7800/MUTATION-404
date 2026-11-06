@@ -1,5 +1,12 @@
 # Cambios
 
+## ASCENSION — acciones enemigas visibles (sin release)
+
+- Eventos transitorios de ataques cuerpo a cuerpo, disparos y habilidades, capturados donde el motor los resuelve. No se incorporan al estado ni al esquema de guardado.
+- Poses de ataque ASCII propias de las seis especies, élites y Nácar, compartidas por Canvas/WebGL. Las heridas tienen prioridad; movimiento reducido suprime la pose transitoria.
+- Captura filtrada por visibilidad y zona, con expiración. Pruebas de equivalencia de resultados/RNG/guardados, acciones inválidas, aturdimiento y habilidades especiales.
+- Preparación anticipada por especie, coreografía completa y recorrido real de campaña siguen pendientes.
+
 ## ASCENSION — profundidad y cobertura combinatoria (2026-11-06)
 
 - Canvas encola glifos con su estilo y los pinta por profundidad; Pixi comparte el criterio basado en pies y dimensiones de celda. La altura visual no altera la prioridad de profundidad.
