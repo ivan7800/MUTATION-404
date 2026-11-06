@@ -1,5 +1,7 @@
 # MUTATION 404 v2.9 — ASCENSION · ASCII ISOMÉTRICO
 
+La rama ASCENSION incorpora ahora una [dirección gótica](docs/DIRECCION_GOTICA.md): piedra violeta, bronce y vidrieras discretas, marcos de arco, controles legibles y composiciones ASCII apuntadas. Es una entrega en desarrollo; el estado real y los pendientes siguen en [PROJECT_STATE](docs/PROJECT_STATE.md).
+
 Actualización en la rama ASCENSION: los dos P1 de persistencia descritos en la auditoría siguiente se han corregido y tienen regresiones nuevas. El informe de Fase 1 conserva el estado anterior; consultar [estado actual](docs/PROJECT_STATE.md) para avances y pendientes. Todavía no es una release 3.0.
 
 ASCENSION está en desarrollo; paquete 2.9.0. La [auditoría ASCENSION 3.0 — Fase 1](docs/AUDITORIA_ASCENSION_3_FASE_1.md) del 5 de noviembre de 2026 identifica dos defectos P1 de guardados pese a que pasan las 158 pruebas existentes. El estado vigente está en [PROJECT_STATE](docs/PROJECT_STATE.md), la [arquitectura](docs/ARCHITECTURE.md) y la [hoja de ruta](docs/ROADMAP.md). La UI actual es ASCII isométrica sin selector píxel/ASCII; Canvas y PixiJS comparten composiciones, con diferencias de presentación pendientes. No se certifica calidad final ni campaña humana completa.

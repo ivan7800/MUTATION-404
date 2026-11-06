@@ -1,5 +1,12 @@
 # Cambios
 
+## ASCENSION — santuario gótico (sin release)
+
+- Dirección de interfaz con piedra violeta, bronce, vino, luz de vidriera y títulos serif locales. Menú de arco apuntado y paneles coherentes; sin fuentes, imágenes o CDN externos.
+- Foco de teclado de tres píxeles, controles de al menos 44 px, cierre de diálogo amplio y ajustes móviles/movimiento reducido/colores forzados.
+- Puertas, terminales y santuarios ASCII con arcos. Atlas WebGL ampliado a 80×80 para no recortar composiciones de cuatro filas; escala visual conservada.
+- QA Chromium comprueba límites reales de texto en el atlas además de las doce escenas de ataque.
+
 ## ASCENSION — QA de ataques por backend
 
 - Doce escenas Chromium verifican las poses de seis especies desde la interfaz normal en Canvas y WebGL; el informe pasa de 13 a 25 resultados.

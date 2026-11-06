@@ -191,3 +191,48 @@ button:focus-visible,.world-canvas:focus-visible{outline:2px solid #e5c88a;outli
 @media(prefers-reduced-motion:no-preference){.epilogue-sigil{animation:nacar-epilogue-glow 3.5s ease-in-out infinite alternate}}
 @keyframes nacar-epilogue-glow{from{opacity:.75}to{opacity:1}}
 .world-canvas{transform:none;image-rendering:crisp-edges;box-shadow:0 22px 28px #0008}
+
+/* Gothic sanctuary: local fonts, mineral surfaces and restrained stained glass. */
+#start-file{display:none}
+:root{--stone:#15141c;--stone-deep:#09090f;--bronze:#a88a5c;--ivory:#eee4d1;--ash:#bcb3c4;--wine:#542d40;--glass:#a6b9ce;color:var(--ivory);background:var(--stone-deep);color-scheme:dark}
+body{background:radial-gradient(ellipse at 15% 0%,#35223280,transparent 45%),radial-gradient(ellipse at 90% 20%,#202a4580,transparent 48%),linear-gradient(180deg,#14121c,#08090e 70%);color:var(--ivory)}
+.shell{max-width:1540px;padding-inline:clamp(12px,2.3vw,36px)}
+.brand-title,.panel-heading h1,.start-menu-card h1,.modal-card h2,.mission-card h3{font-family:Palatino,"Palatino Linotype",Georgia,serif;font-weight:600}
+.brand-title{letter-spacing:.16em}.brand-title em{color:#d8b47d}.brand-sub{color:#c0afc4;letter-spacing:.16em}
+.brand-mark{border-radius:50% 50% 3px 3px;background:linear-gradient(135deg,#372432,#111825);border-color:var(--bronze);box-shadow:inset 0 0 0 4px #13121a,0 0 25px #9c6b4126;color:#e5c98e}
+.topbar{border-bottom:1px solid #a88a5c55}.top-controls{gap:10px}.live{color:#c2b5bd}
+.hero-strip,.toolbar,.field-notice,.combatbar{background:#15141f;border-color:#67533f;color:#c6bcc9}
+.tiny-label,.section-title span,.map-caption,.save-status,.portrait small,.pairs,.stat,.brand-sub,footer{color:#bdb3c4}
+.panel-heading{padding-top:5px}.panel-heading h1{color:#e9d1a4;font-size:clamp(25px,2.5vw,34px)}
+.biome-story{background:linear-gradient(100deg,#211a29,#12151e);border-color:#67533f;border-left:3px solid var(--biome-accent)}
+.biome-emblem{color:#d7b979;text-shadow:none}.biome-story-text p{color:#e1d7d9}.weather-badge{border-radius:3px;color:#dfc799}
+.viewport{background:#090a10;border-color:#9b7e54;border-radius:3px;box-shadow:0 0 0 4px #111019,inset 0 0 40px #000,0 20px 55px #0008}
+.world-canvas,#viewport .pixi-canvas{filter:none;border-color:#443c46}
+.art-badge{background:#231d29;border-color:#947b55;color:#ead4a9}
+.side-card,.eventpanel{border-color:#62503f;border-radius:2px;background:linear-gradient(145deg,#201b28,#12141c);box-shadow:inset 0 1px #d7bd7a12,0 12px 30px #0003}
+.section-title{color:#e4c491;border-color:#736044;font-weight:600;letter-spacing:.12em}
+.portrait>span{background:#282034;border-color:#a38962;border-radius:50% 50% 2px 2px;color:#e5ca94}
+.portrait strong,.pairs b{color:#eee1c5}.mission-card h3{color:#e7cdaa}.mission-card p,.discovery-card p{color:#d0c5cf}
+.quest-state{background:#2b2130;border-color:#bc9865;color:#f0d6a2}.equipment-summary p{color:#d3c9d5;border-color:#4d3c49}
+#log p{color:#c9c0cd;border-color:#66516a;line-height:1.65}#log p.latest{color:#f4dfb8;border-color:#caab76}
+.icon-btn,.zoom button,.action,.system-actions button,.modal-option,.dpad button{background:#211d2c;border-color:#76604e;color:#eadfce;border-radius:2px;min-height:44px}
+.action{font-size:12px;letter-spacing:.03em;padding:12px 14px}.action.primary{background:#4a372d;border-color:#d0aa72;color:#fff0d0}
+.action.attack{background:#422332;border-color:#a46b7c;color:#ffe0dc}.action.gene{background:#2e2342;border-color:#947cab;color:#ede0ff}.action.discovery{background:#222b3d;border-color:#8093b3;color:#e0e8ff}
+.icon-btn:hover:not(:disabled),.action:hover:not(:disabled),.system-actions button:hover,.modal-option:hover,.zoom button:hover{background:#403249;border-color:#e6c48d;color:#fff2d7}
+:is(button,input,select,textarea,a):focus-visible,.world-canvas:focus-visible{outline:3px solid #f8d995;outline-offset:3px;box-shadow:0 0 0 6px #100d17}
+button:disabled{cursor:not-allowed}.modal{background:#06040be8}.modal-card{background:linear-gradient(155deg,#2b1e30,#14141e 70%);border-color:#c7a26d;border-radius:3px;box-shadow:0 30px 100px #000c,inset 0 0 0 5px #100e1855}
+.modal-card h2{border-color:#806448;color:#f2ddba}.modal-card p,.modal-card li{color:#e0d5df;line-height:1.8}.modal-card .muted{color:#bdb1c8}.modal-card :is(h2,p,li,button){overflow-wrap:anywhere}
+#modal-close{min-width:44px;min-height:44px}.modal-header{color:#dec38d}.modal-option{line-height:1.65}
+.start-menu{background:radial-gradient(ellipse at 30% 10%,#52253c80,transparent 48%),radial-gradient(ellipse at 80% 25%,#293e6880,transparent 50%),#080910f5;backdrop-filter:blur(8px)}
+.start-menu-card{position:relative;isolation:isolate;border:1px solid #bda06c;border-radius:48% 48% 4px 4px / 12% 12% 4px 4px;background:linear-gradient(135deg,#302335ee,#151823f5 60%,#221925);box-shadow:0 0 0 5px #0c0b13,0 0 0 6px #695438,0 25px 100px #000c;padding-top:clamp(38px,6vh,64px)}
+.start-sigil{font:64px/1.1 Georgia,serif;color:#d9b679;text-shadow:0 0 30px #bd8a5b40;margin-bottom:12px}
+.start-menu-card h1{letter-spacing:.09em;color:#f5e7cc}.start-menu-card h1 em{color:#d9ad7c}
+.start-eyebrow,.start-footer{color:#c8b6ca;font-size:10px;line-height:1.6}.start-tagline{color:#e2c3bb;letter-spacing:.08em}.start-description{color:#d0c1d2;line-height:1.8}
+.start-actions button,.start-settings button{background:#251e30;border-color:#877054;color:#eee2d1;border-radius:2px;min-height:48px}
+.start-actions .start-primary{background:linear-gradient(110deg,#684239,#493046);border-color:#d2ae77;color:#fff0d2}
+.start-actions button:hover:not(:disabled),.start-settings button:hover{background:#49344d;border-color:#f0ce94}.start-actions button:disabled{opacity:.55}
+.start-settings{background:#13131f;border-color:#8a6c52;border-radius:2px}.start-settings input{min-height:44px;accent-color:#d9b679}
+.start-settings p,.start-save-info,#start-message{color:#cfc0d2}.epilogue-stage{border-color:#c7a26d}.epilogue-credits{font-family:Georgia,serif}
+@media(max-width:620px){.topbar{gap:12px}.top-controls{justify-content:space-between;gap:6px}.icon-btn{font-size:10px;padding:9px 10px}.start-menu-card{border-radius:28% 28% 3px 3px / 6% 6% 3px 3px}.start-description{font-size:14px}.action{min-height:48px}.field-notice{font-size:11px;line-height:1.6}.modal-card{max-height:88dvh}.dpad{grid-template-rows:repeat(2,48px)}}
+@media(prefers-reduced-motion:reduce){.start-sigil,.biome-emblem{text-shadow:none}.start-menu{backdrop-filter:none}}
+@media(forced-colors:active){body,.start-menu,.start-menu-card,.modal-card,.side-card{background:Canvas;color:CanvasText}button{border:1px solid ButtonText}.viewport,.world-canvas{forced-color-adjust:none}}

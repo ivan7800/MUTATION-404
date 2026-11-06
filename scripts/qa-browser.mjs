@@ -37,6 +37,7 @@ try{
     page.on('pageerror',e=>errors.push(e.message));
     await page.goto(base,{waitUntil:'networkidle',timeout:45000});
     assert.ok(await page.locator('#start-menu').isVisible(),'startup menu must open before gameplay');
+    assert.equal(await page.locator('#start-file').isVisible(),false,'native file picker stays hidden until import is requested');
     await page.screenshot({path:`qa-evidence/menu-${mode}.png`,fullPage:true,animations:'disabled'});
     assert.equal(await page.locator('#start-continue').isDisabled(),true,'continue must be disabled without a save');
     await page.locator('#start-options').click();
@@ -334,9 +335,13 @@ try{
           if(fallback&&['webgl','webgl2','experimental-webgl'].includes(type))return null;
           return get.call(this,type,...args);
         };
-        window.__attackRows=[];
+        window.__attackRows=[];window.__glyphClips=[];
         const text=CanvasRenderingContext2D.prototype.fillText;
         CanvasRenderingContext2D.prototype.fillText=function(row,...args){
+          if(this.canvas.width===80&&this.canvas.height===80){
+            const [x,y]=args,m=this.measureText(row);
+            if(x-m.actualBoundingBoxLeft<-.5||x+m.actualBoundingBoxRight>80.5||y-m.actualBoundingBoxAscent<-.5||y+m.actualBoundingBoxDescent>80.5)window.__glyphClips.push(String(row));
+          }
           window.__attackRows.push(String(row));
           if(window.__attackRows.length>10000)window.__attackRows.splice(0,5000);
           return text.call(this,row,...args);
@@ -352,6 +357,7 @@ try{
       await page.locator('#wait-btn').click();
       const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);
       await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows);
+      assert.deepEqual(await page.evaluate(()=>window.__glyphClips),[],'glyph atlas must fit the painted text');
       assert.deepEqual(errors,[]);
       results.push({scene:`enemy-attack-${kind}-${mode}`,status:'passed',glyphRowsObserved:rows,fixture:true});
     }finally{await context.close();}

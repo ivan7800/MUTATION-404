@@ -44,7 +44,7 @@ root.innerHTML=`
 </div>
 <div id="start-menu" class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
   <div class="start-menu-card">
-    <div class="start-eyebrow">TRANSMISIÓN // ARCHIVO 404 · VERSIÓN 2.7</div>
+    <div class="start-eyebrow">TRANSMISIÓN // ARCHIVO 404 · ASCENSION EN DESARROLLO</div>
     <div class="start-sigil" aria-hidden="true">◈</div>
     <h1 id="start-title">MUTATION <em>404</em></h1>
     <p class="start-tagline">NÁCAR TE RECUERDA. TÚ TODAVÍA NO.</p>
