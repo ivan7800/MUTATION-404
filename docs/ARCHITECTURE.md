@@ -6,7 +6,7 @@ Actualizado: 2026-11-05 sobre c5fb6e7; paquete 2.9.0, sin release 3.0.
 - world.ts, frontier.ts, depths.ts: mapas de 96×64, sectores, interiores, CERO-7 y ruinas. fov.ts calcula visibilidad; rng.ts mantiene RNG explícito.
 - combat.ts, mutations.ts, environment.ts, ecology.ts, civilizations.ts: combate, genoma, campos, recursos y asentamientos. campaign.ts deriva cinco actos y finales desde misión/eventos.
 - apps/web/src/main.ts: DOM, comandos, audio y almacenamiento. Inicia Canvas y carga PixiJS asíncronamente; fallo de inicialización mantiene Canvas.
-- renderer.ts y pixi-renderer.ts: backends isométricos con composiciones y escala 1,45 compartidas en ascii-art.ts. No hay selector píxel/ASCII; quedan ramas píxel inactivas y tests que dependen de su texto.
+- renderer.ts y pixi-renderer.ts: backends isométricos con composiciones, alturas visuales y escala 1,45 compartidas en ascii-art.ts. No hay selector píxel/ASCII; atlas y ramas píxel retirados, pruebas migradas al catálogo compartido.
 - ascii-art.ts contiene datos y pintado Canvas; es independiente de simulación, pero no exclusivamente datos. tactical.ts filtra amenazas visibles; audio.ts usa Web Audio tras activación del usuario.
 
 ## Persistencia y turnos

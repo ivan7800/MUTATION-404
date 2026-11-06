@@ -2,7 +2,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, 
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
-import {CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
+import {terrainHeight,CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
 
 const VIEW_W=47, VIEW_H=27;
 const COLORS:Record<Tile,string>={
@@ -18,12 +18,6 @@ function isoVolume(ctx:CanvasRenderingContext2D,cx:number,cy:number,w:number,h:n
   ctx.save();ctx.fillStyle=color;ctx.globalAlpha=.72;ctx.beginPath();
   ctx.moveTo(cx-w*.5,cy);ctx.lineTo(cx,cy+h*.5);ctx.lineTo(cx,cy+h*.5+depth);ctx.lineTo(cx-w*.5,cy+depth);ctx.closePath();ctx.fill();
   ctx.beginPath();ctx.moveTo(cx,cy+h*.5);ctx.lineTo(cx+w*.5,cy);ctx.lineTo(cx+w*.5,cy+depth);ctx.lineTo(cx,cy+h*.5+depth);ctx.closePath();ctx.fill();ctx.restore();
-}
-function terrainHeight(tile:Tile,seed:number):number{
-  if(tile==='#')return 7+Math.floor(seed*7);
-  if(tile==='%'||tile==='=')return 5+Math.floor(seed*5);
-  if(tile==='^'||tile==='T')return 2+Math.floor(seed*3);
-  return 0;
 }
 function actorLift(state:GameState,x:number,y:number):number{
   return terrainHeight(state.tiles[index(x,y)],terrainHash(state.seed+119,x,y))*.35;

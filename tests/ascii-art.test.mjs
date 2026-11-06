@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {composition,isOccludingTerrain,terrainComposition} from '../play/js/apps/web/src/ascii-art.js';
+import {composition,isOccludingTerrain,terrainComposition,terrainHeight} from '../play/js/apps/web/src/ascii-art.js';
+
+test('visual elevation shares solid and walkable terrain rules',()=>{
+  assert.equal(terrainHeight('#',0),7);
+  assert.equal(terrainHeight('#',.99),13);
+  assert.equal(terrainHeight('%',.99),9);
+  assert.equal(terrainHeight('=',0),5);
+  assert.equal(terrainHeight('T',.99),4);
+  for(const tile of ['.','~',':','+'])assert.equal(terrainHeight(tile,.99),0);
+});
 
 test('hero actions retain distinct printable ASCII silhouettes in the shipped renderer data',()=>{
   const idle=composition('@').join('\n');
@@ -29,7 +38,7 @@ test('all original enemy types and boss leave distinct printable ASCII death mar
   }
 });
 test('terrain keeps volumetric compositions for the original tile vocabulary',()=>{
-  for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!']){
+  for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!','+','?','x','v','T','o']){
     const rows=composition(terrainComposition(tile));
     assert.ok(rows.length>=2,`${tile} terrain should have a visible top and side`);
   }

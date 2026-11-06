@@ -1,5 +1,12 @@
 /** Shared original ASCII compositions. Pure data: no world state, DOM or RNG. */
 export const CAMERA_SCALE=1.45;
+/** Visual elevation only; never used for collision or field of view. */
+export function terrainHeight(tile:string,seed:number):number{
+  if(tile==='#')return 7+Math.floor(seed*7);
+  if(tile==='%'||tile==='=')return 5+Math.floor(seed*5);
+  if(tile==='^'||tile==='T')return 2+Math.floor(seed*3);
+  return 0;
+}
 export type HeroAction='walk'|'attack'|'damage'|'mutation'|'interact';
 const ACTORS:Record<string,readonly string[][]>={
   '@':[[' o ','/|\\','/ \\'],[' o ','/|>',' /\\']],
@@ -52,6 +59,10 @@ const ACTORS:Record<string,readonly string[][]>={
   '~':[['~ ~',' ~~'],[' ~~','~ ~']],
   '!':[['!*!','/!\\'],['*!*','\\!/']],
   T:[['/T\\','[=]',' | ']],
+  '+':[[' ___','| + |','|___|']],
+  '?':[[' /?\\','[ : ]',' /_\\']],
+  x:[['\\ /',' X ','/_\\']],
+  v:[['\\v/',' v ','/_\\']],
   o:[['/o\\','|o|','\\_/']],
   'npc:M':[[' .M.','/|\\','/ \\']],
   'npc:O':[[' [O]','/|\\','/ \\']],

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {composition} from '../play/js/apps/web/src/ascii-art.js';
 
 const renderer=readFileSync('apps/web/src/pixi-renderer.ts','utf8');
 const main=readFileSync('apps/web/src/main.ts','utf8');
@@ -15,27 +16,12 @@ test('static map floor is drawn in a dedicated cached Graphics layer',()=>{
  assert.match(renderer,/result\.view\.addChild\(result\.terrainFloor,result\.backdrop,result\.layers\)/);
  assert.match(renderer,/new URLSearchParams\(location\.search\)\.has\('profile'\)/);
 });
-test('original GPU tile atlas has Faro and Ojo separate palettes and cached sprites',()=>{
- assert.match(renderer,/tileTexture\(tile:Tile,eye:boolean,faro:boolean,variant:number,region:string\)/);
- assert.match(renderer,/this\.tiles\.get\(key\)/);
- assert.match(renderer,/this\.tiles\.set\(key,texture\)/);
- assert.match(renderer,/state\.zone\.startsWith\('ruin--1--1-'\)/);
- assert.match(renderer,/state\.zone==='surface'/);
- assert.match(renderer,/this\.artMode==='pixel'/);
-});
-test('v2.9 regional tile atlas covers six biomes while preserving ASCII mode',()=>{
- for(const biome of ['salinas','ceniza','hierro','vidrio','medula','umbral'])assert.ok(renderer.includes(biome+':{stone:'),'missing region palette '+biome);
- assert.match(renderer,/if\(this\.artMode==='pixel'\)\{/);
- assert.match(renderer,/this\.tileTexture\(glyph,eye,faro,terrain\.variant,biomeKey\)/);
- assert.match(renderer,/const key=\x60\$\{eye\?'eye':faro\?'faro':region\}/);
- assert.ok(qa.includes('region-v29-ascii-unified.png'));
-});
-test('v2.9 final custodian has its own texture, ASCII glyph, and correct HP denominator',()=>{
- assert.match(renderer,/nacar:\['#f3d9a8'/);
- assert.match(renderer,/enemy\.id==='campaign-heart-custodian'/);
- assert.match(renderer,/nacar\?'nacar':elite\?'elite'/);
- assert.match(renderer,/nacar\?'✺'/);
- assert.match(renderer,/enemy\.hp\/\(nacar\?def\.hp\*3:def\.hp\)/);
+test('shared catalogue covers volumetric terrain and boss',()=>{
+ for(const tile of ['.','#','%','=','~','*','&','!'])assert.ok(composition(tile).length>=2);
+ assert.ok(composition('✺').length>=4);
+ assert.notDeepEqual(composition('✺'),composition('D'));
+ assert.ok(renderer.includes('enemy.hp/(nacar?def.hp*3:def.hp)'));
+ assert.doesNotMatch(renderer,/tileTexture|creatureTexture|drawCreature/);
 });
 test('v2.9 death banner is hidden for living characters',()=>{
  const css=readFileSync('apps/web/src/style.css','utf8');
@@ -45,7 +31,7 @@ test('v2.9 death banner is hidden for living characters',()=>{
 test('ASCII is the single visual language across renderers',()=>{
  assert.match(main,/ASCII ISOMÉTRICO/);
  assert.doesNotMatch(main,/art-mode-btn|toggleArt|PÍXEL/);
- assert.match(renderer,/private readonly artMode:'ascii'\|'pixel'='ascii'/);
+ assert.ok(renderer.includes("get mode(): 'ascii'"));
  assert.doesNotMatch(renderer,/toggleArt\(\)/);
 });
 test('browser QA exercises both artistic scenes in the unified ASCII mode',()=>{
@@ -55,15 +41,13 @@ test('browser QA exercises both artistic scenes in the unified ASCII mode',()=>{
  assert.match(qa,/eyeSave=serialize\(state\)/);
 });
 
-test('v2.1 reusable character sprites cover all original species and reduced motion',()=>{
- assert.match(renderer,/creatureTexture\(kind:string,frame:0\|1\)/);
- assert.match(renderer,/this\.tiles\.get\(key\)/);
- assert.match(renderer,/this\.tiles\.set\(key,texture\)/);
- for(const kind of ['hero','crawler','sentinel','drone','spore','moth','larva','elite','npc']){
-  assert.ok(renderer.includes(kind+":"),'missing texture palette '+kind);
+test('shared actors retain printable silhouettes in both poses',()=>{
+ for(const glyph of ['@','s','V','l','p','D','f','✺','◆','npc:$'])for(const frame of [0,1]){
+  const rows=composition(glyph,frame);
+  assert.ok(rows.length>=3);
+  for(const row of rows)assert.ok([...row].every(c=>c.charCodeAt(0)>=32&&c.charCodeAt(0)<=126));
  }
- assert.match(renderer,/this\.artMode==='pixel'\?this\.drawCreature/);
- assert.match(renderer,/this\.reducedMotion\?0/);
+ assert.notDeepEqual(composition('@',0),composition('@',1));
 });
 
 test('v2.2 combat effects use real before/after HP, without mutating the game core',()=>{

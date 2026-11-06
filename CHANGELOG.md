@@ -1,5 +1,12 @@
 # Cambios
 
+## ASCENSION — consolidación ASCII (2026-11-06, sin release)
+
+- Eliminados atlas píxel y ramas inaccesibles del backend Pixi; el perfil cuenta texturas del atlas ASCII activo.
+- Guardas del atlas histórico migradas a pruebas del catálogo compartido de actores, terreno y jefe.
+- Composiciones volumétricas para puertas, señales y símbolos x/v; altura visual de terreno compartida por Canvas y Pixi.
+- Oclusión completa, FX exclusivamente ASCII y ataques por especie continúan pendientes; esta entrega no completa todas las fases.
+
 ## ASCENSION — recuperación de persistencia (sin release)
 
 - Guardados con más de 50 hitos/eventos vuelven a cargar sin descartar progreso; límite defensivo de 4096 entradas y validación de contenido conservada.
