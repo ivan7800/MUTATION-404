@@ -2,7 +2,8 @@ import {chromium} from 'playwright-core';
 import {spawn} from 'node:child_process';
 import {mkdir,writeFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
-import {createGame,serialize,refreshVisibility} from '../dist/core/core/src/game.js';
+import {createGame,serialize,refreshVisibility,ENEMY_DEFS} from '../dist/core/core/src/game.js';
+import {composition} from '../play/js/apps/web/src/ascii-art.js';
 import {generateRuin,generateDepth} from '../dist/core/core/src/depths.js';
 import {CAMPAIGN_SITES} from '../dist/core/core/src/campaign.js';
 const PORT=8877;
@@ -317,6 +318,44 @@ try{
   assert.deepEqual(endingErrors,[]);
   results.push({scene:'final-campana',status:'passed',savedEnding:'bind',screenshot:'qa-evidence/final-campana-v28.png'});
   await endingContext.close();
+  // Isolated combat scenes verify the real UI dispatch and both glyph painters.
+  // Fixtures position a living enemy; attacks themselves use the normal wait command.
+  for(const mode of ['webgl','canvas-fallback'])for(const kind of Object.keys(ENEMY_DEFS)){
+    const fixture=createGame(404);
+    fixture.zone='zero-1';fixture.tiles.fill('.');fixture.fields=[];fixture.player={x:20,y:20};
+    fixture.enemies=[{id:'visual-'+kind,kind,x:21,y:20,hp:ENEMY_DEFS[kind].hp,mode:'idle',searchTurns:0}];
+    refreshVisibility(fixture);
+    const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'no-preference'});
+    try{
+      await context.addInitScript(({raw,fallback})=>{
+        localStorage.setItem('mutation404.v10.save',raw);
+        const get=HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext=function(type,...args){
+          if(fallback&&['webgl','webgl2','experimental-webgl'].includes(type))return null;
+          return get.call(this,type,...args);
+        };
+        window.__attackRows=[];
+        const text=CanvasRenderingContext2D.prototype.fillText;
+        CanvasRenderingContext2D.prototype.fillText=function(row,...args){
+          window.__attackRows.push(String(row));
+          if(window.__attackRows.length>10000)window.__attackRows.splice(0,5000);
+          return text.call(this,row,...args);
+        };
+      },{raw:serialize(fixture),fallback:mode==='canvas-fallback'});
+      const page=await context.newPage(),errors=[];
+      page.on('pageerror',e=>errors.push(e.message));
+      await page.goto(base,{waitUntil:'networkidle'});
+      await page.locator('#start-continue').click();
+      const expected=mode==='webgl'?'pixi-webgl':'canvas2d';
+      await page.waitForFunction(value=>document.querySelector('#viewport')?.dataset.renderer===value,expected);
+      await page.evaluate(()=>{window.__attackRows=[];});
+      await page.locator('#wait-btn').click();
+      const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);
+      await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows);
+      assert.deepEqual(errors,[]);
+      results.push({scene:`enemy-attack-${kind}-${mode}`,status:'passed',glyphRowsObserved:rows,fixture:true});
+    }finally{await context.close();}
+  }
   await writeFile('qa-evidence/report.json',JSON.stringify({status:'passed',browser:browserExecutable,results},null,2));
   console.log('PASS real browser QA',results);
 }catch(error){

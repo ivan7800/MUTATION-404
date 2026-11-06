@@ -1,5 +1,11 @@
 # Cambios
 
+## ASCENSION — QA de ataques por backend
+
+- Doce escenas Chromium verifican las poses de seis especies desde la interfaz normal en Canvas y WebGL; el informe pasa de 13 a 25 resultados.
+- Matriz de 576 combinaciones de combate (especie, semilla, distancia, aturdimiento, visibilidad) compara respuesta y partida con y sin captura de eventos.
+- Suite actual: 187 pruebas aprobadas. Los fixtures no acreditan una campaña completa ni sustituyen una revisión humana del arte.
+
 ## ASCENSION — acciones enemigas visibles (sin release)
 
 - Eventos transitorios de ataques cuerpo a cuerpo, disparos y habilidades, capturados donde el motor los resuelve. No se incorporan al estado ni al esquema de guardado.

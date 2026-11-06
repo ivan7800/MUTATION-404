@@ -3,6 +3,22 @@ import assert from 'node:assert/strict';
 import {createGame,dispatch,dispatchWithFeedback,serialize,refreshVisibility,ENEMY_DEFS} from '../dist/core/core/src/game.js';
 import {composition} from '../play/js/apps/web/src/ascii-art.js';
 
+test('576 combat combinations preserve outcomes and suppress hidden or stunned feedback',()=>{
+  let cases=0;
+  for(const kind of Object.keys(ENEMY_DEFS))for(let seed=1;seed<=8;seed++)for(const distance of [1,2,5])for(const stunned of [0,2])for(const visible of [false,true]){
+    const s=createGame(seed);s.zone='zero-1';s.tiles.fill('.');s.fields=[];s.player={x:20,y:20};
+    s.enemies=[{id:'matrix-'+kind,kind,x:20+distance,y:20,hp:ENEMY_DEFS[kind].hp,mode:'idle',searchTurns:0,stunned}];
+    refreshVisibility(s);if(!visible)s.visible.fill(0);
+    const plain=structuredClone(s),expected=dispatch(plain,{type:'wait'});
+    const actual=dispatchWithFeedback(s,{type:'wait'});
+    assert.deepEqual(actual.result,expected);
+    assert.equal(serialize(s),serialize(plain),`${kind}/${seed}/${distance}/${stunned}/${visible}`);
+    if(!visible||stunned)assert.deepEqual(actual.events,[]);
+    cases++;
+  }
+  assert.equal(cases,576);
+});
+
 for(const kind of Object.keys(ENEMY_DEFS))test(`${kind} resolved attacks emit feedback without changing simulation`,()=>{
   const state=createGame(404);state.zone='zero-1';state.tiles.fill('.');state.fields=[];state.player={x:20,y:20};
   state.enemies=[{id:'test-'+kind,kind,x:21,y:20,hp:ENEMY_DEFS[kind].hp,mode:'idle',searchTurns:0}];
