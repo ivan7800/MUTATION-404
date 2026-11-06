@@ -52,3 +52,15 @@ test('only solid terrain creates a foreground occlusion lip',()=>{
   assert.equal(isOccludingTerrain('#'),true);assert.equal(isOccludingTerrain('%'),true);assert.equal(isOccludingTerrain('='),true);
   for(const tile of ['.','~','*','!','T','o'])assert.equal(isOccludingTerrain(tile),false);
 });
+test('gothic atmosphere and feedback share complete ASCII compositions',()=>{
+  for(const weather of ['polvo','esporas','estatica','distorsion']){
+    const rows=composition(`weather:${weather}`);
+    assert.ok(rows.length>=1,`${weather} weather glyph missing`);
+    assert.ok(rows.join('').trim().length>0);
+  }
+  for(const effect of ['attack','damage','mutation','scan']){
+    const rows=composition(`effect:${effect}`);
+    assert.ok(rows.length>=2,`${effect} feedback composition missing`);
+    assert.ok(rows.join('').trim().length>0);
+  }
+});
