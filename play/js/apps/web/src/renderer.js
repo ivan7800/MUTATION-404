@@ -2,7 +2,7 @@ import { ACTORS, FIELD_VISUALS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, LANDMARKS, 
 import { index } from '../../../packages/core/src/world.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
-import { CAMERA_SCALE, isOccludingTerrain, paintComposition, terrainComposition } from './ascii-art.js';
+import { terrainHeight, CAMERA_SCALE, isOccludingTerrain, paintComposition, terrainComposition } from './ascii-art.js';
 const VIEW_W = 47, VIEW_H = 27;
 const COLORS = {
     '#': '#63796e', '.': '#9a9580', ':': '#d3b783', '~': '#63afc3', '^': '#c0dbec',
@@ -41,15 +41,6 @@ function isoVolume(ctx, cx, cy, w, h, depth, color) {
     ctx.closePath();
     ctx.fill();
     ctx.restore();
-}
-function terrainHeight(tile, seed) {
-    if (tile === '#')
-        return 7 + Math.floor(seed * 7);
-    if (tile === '%' || tile === '=')
-        return 5 + Math.floor(seed * 5);
-    if (tile === '^' || tile === 'T')
-        return 2 + Math.floor(seed * 3);
-    return 0;
 }
 function actorLift(state, x, y) {
     return terrainHeight(state.tiles[index(x, y)], terrainHash(state.seed + 119, x, y)) * .35;
