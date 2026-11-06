@@ -119,9 +119,10 @@ export class AsciiRenderer {
     enemyFeedback(state, events) {
         if (this.reducedMotion)
             return;
+        const started = performance.now();
         for (const event of events)
             if (event.zone === state.zone && state.visible[index(event.x, event.y)] === 1)
-                this.enemyActions.set(event.zone + ':' + event.id, performance.now() + 280);
+                this.enemyActions.set(event.zone + ':' + event.id, { started, until: started + 360 });
         if (!events.length)
             return;
         if (this.enemyActionTimer)
@@ -400,7 +401,9 @@ export class AsciiRenderer {
             const hit = this.enemyHits.has(enemy.id);
             ctx.globalAlpha = 1;
             ctx.fillStyle = hit ? '#ff9d91' : (enemy.stunned ?? 0) > 0 ? '#e3aaf5' : def.color;
-            this.glyph(hit ? `enemy:hurt:${glyph}` : !this.reducedMotion && (this.enemyActions.get(state.zone + ':' + enemy.id) ?? 0) > performance.now() ? `enemy:attack:${glyph}` : glyph, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, enemy.x, enemy.y), projectedDepth(cx, cy, this.cellW, this.cellH));
+            const action = this.enemyActions.get(state.zone + ':' + enemy.id), now = performance.now();
+            const actionGlyph = action && now < action.until ? (now - action.started < 90 ? 'enemy:telegraph' : `enemy:attack:${glyph}`) : glyph;
+            this.glyph(hit ? `enemy:hurt:${glyph}` : actionGlyph, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, enemy.x, enemy.y), projectedDepth(cx, cy, this.cellW, this.cellH));
             ctx.shadowBlur = 0;
             // Miniature health bar provides threat feedback without a separate modal.
             const health = Math.max(0, Math.min(1, enemy.hp / (enemy.id === 'campaign-heart-custodian' ? def.hp * 3 : def.hp)));

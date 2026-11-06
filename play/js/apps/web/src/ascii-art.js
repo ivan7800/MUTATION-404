@@ -119,6 +119,7 @@ const ACTORS = {
     'effect:damage': [['x', '/\\', 'x'], ['✧', 'x', '✧']],
     'effect:mutation': [['*', '{#}', '*'], ['✺', '·', '✺']],
     'effect:scan': [['+', '·', '+'], ['◇', '·', '◇']],
+    'enemy:telegraph': [[' . ', '/|\\', ' /\\'], [' ! ', '/|\\', '/ \\']],
 };
 export function composition(glyph, frame = 0) {
     const poses = ACTORS[glyph];

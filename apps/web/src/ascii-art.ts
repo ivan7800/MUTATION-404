@@ -114,6 +114,7 @@ const ACTORS:Record<string,readonly string[][]>={
   'effect:damage':[['x','/\\','x'],['✧','x','✧']],
   'effect:mutation':[['*','{#}','*'],['✺','·','✺']],
   'effect:scan':[['+','·','+'],['◇','·','◇']],
+  'enemy:telegraph':[[' . ','/|\\',' /\\'],[' ! ','/|\\','/ \\']],
 };
 export function composition(glyph:string,frame=0):readonly string[]{
   const poses=ACTORS[glyph];
