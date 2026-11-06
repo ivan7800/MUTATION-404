@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {AsciiRenderer} from '../play/js/apps/web/src/renderer.js';
-import {terrainColor,terrainHeight} from '../play/js/apps/web/src/ascii-art.js';
+import {terrainColor,terrainHeight,projectedDepth,composition} from '../play/js/apps/web/src/ascii-art.js';
+
+test('depth follows projected feet and gives actors precedence on the same cell',()=>{
+  assert.ok(projectedDepth(1,0,15,23)<projectedDepth(0,1,15,23));
+  assert.ok(projectedDepth(2,0,15,23)>projectedDepth(0,1,15,23));
+  assert.ok(projectedDepth(1,1,15,23,0)<projectedDepth(1,1,15,23,1));
+  assert.ok(projectedDepth(1,0,21,30)<projectedDepth(0,1,21,30));
+});
 import {createGame,ACTORS,ENEMY_DEFS,serialize} from '../dist/core/core/src/game.js';
 import {terrainHash} from '../dist/core/core/src/biomes.js';
 
@@ -47,4 +54,19 @@ test('Canvas draw restores actor opacity, lifts walls and scales boss health',t=
   state.visible.fill(0);glyphs.length=0;
   renderer.draw(state);
   assert.equal(glyphs.some(g=>g.glyph==='✺'||g.glyph.startsWith('npc:')),false,'hidden actors must not be drawn');
+  // Exercise the actual deferred painter, not the glyph spy above.
+  delete renderer.glyph;
+  const text=[];
+  ctx.getTransform=()=>({a:1,b:0,c:0,d:1,e:0,f:0});
+  ctx.fillText=row=>text.push(row);
+  state.tiles.fill('.');state.seen.fill(0);state.visible.fill(0);
+  state.seen[32*96+32]=1;state.visible[32*96+32]=1;
+  const heroRow=composition('@')[0],wallRow=composition('#')[0];
+  for(const [wallX,front] of [[33,true],[31,false]]){
+    state.seen.fill(0);state.seen[32*96+32]=1;state.seen[32*96+wallX]=1;
+    state.tiles.fill('.');state.tiles[32*96+wallX]='#';text.length=0;
+    renderer.draw(state);
+    assert.ok(text.includes(heroRow)&&text.includes(wallRow));
+    assert.equal(text.indexOf(wallRow)>text.indexOf(heroRow),front,'wall/actor order must follow feet, not category');
+  }
 });

@@ -5,7 +5,7 @@ import {index,passable,within} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
-import {terrainColor,terrainHeight,CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
+import {projectedDepth,terrainColor,terrainHeight,CAMERA_SCALE,isOccludingTerrain,paintComposition,terrainComposition,type HeroAction} from './ascii-art.js';
 
 
 /**
@@ -172,7 +172,7 @@ export class PixiAsciiRenderer {
     if(!sprite)throw new Error('Sprite pool exhausted');
     return sprite;
   }
-  private drawGlyph(i:number,glyph:string,x:number,y:number,color:number,opacity=1,lift=0):number{
+  private drawGlyph(i:number,glyph:string,x:number,y:number,color:number,opacity=1,lift=0,layer=1):number{
     const sprite=this.spriteAt(i);
     sprite.texture=this.texture(glyph,this.reducedMotion?0:Math.floor(this.ambience/5)%2);sprite.tint=color;sprite.alpha=opacity;
     // Counter-project glyphs while their anchors follow the diamond lattice.
@@ -180,7 +180,7 @@ export class PixiAsciiRenderer {
     const scale=glyph==='✺'?1.7:1;
     const width=this.cellW*scale,height=this.cellH*scale;
     sprite.setFromMatrix(new Matrix(width/80,-width/80,height/52,height/52,x*this.cellW+this.cellW/2,y*this.cellH+this.cellH/2-lift));
-    sprite.zIndex=x+y+lift*.02;
+    sprite.zIndex=projectedDepth(x,y,this.cellW,this.cellH,layer);
     sprite.visible=true;
     return i+1;
   }
@@ -220,7 +220,7 @@ export class PixiAsciiRenderer {
         this.terrainFloor.rect(cx*this.cellW,cy*this.cellH,this.cellW,this.cellH).fill({color:this.color(groundColor),alpha:visible?1:.55});
       }
       const palette=terrainColor(glyph,surfaceZone,biome.palette);
-      used=this.drawGlyph(used,terrainComposition(glyph,terrain.variant),cx,cy,this.color(palette),alpha,terrainHeight(glyph,terrainHash(state.seed+119,x,y)));
+      used=this.drawGlyph(used,terrainComposition(glyph,terrain.variant),cx,cy,this.color(palette),alpha,terrainHeight(glyph,terrainHash(state.seed+119,x,y)),0);
       if(visible&&(glyph==='o'||glyph==='T'||glyph==='?')){
         const shimmer=this.reducedMotion?0.13:0.12+0.06*Math.sin(this.ambience*.3+x);
         this.backdrop.rect(cx*this.cellW+2,cy*this.cellH+2,this.cellW-4,2).fill({color:0xffd8a4,alpha:shimmer});
@@ -411,7 +411,7 @@ export class PixiAsciiRenderer {
       if(remaining<=0){this.echoes.splice(i,1);continue;}
       const phase=1-remaining/450,cx=(e.x-ox+.5)*this.cellW,cy=(e.y-oy+.5)*this.cellH;
       const vx=e.x-ox,vy=e.y-oy;
-      if(vx>=0&&vy>=0&&vx<this.viewW&&vy<this.viewH&&state.visible[index(e.x,e.y)]===1)used=this.drawGlyph(used,`enemy:death:${e.glyph}`,vx,vy,0xe8a0a0,1-phase);
+      if(vx>=0&&vy>=0&&vx<this.viewW&&vy<this.viewH&&state.visible[index(e.x,e.y)]===1)used=this.drawGlyph(used,`enemy:death:${e.glyph}`,vx,vy,0xe8a0a0,1-phase,0,.5);
       for(let n=0;n<8;n++){
         const a=n*Math.PI/4+phase*.5,r=3+phase*20;
         this.backdrop.circle(cx+Math.cos(a)*r,cy+Math.sin(a)*r,Math.max(.5,2.5*(1-phase))).fill({color:n%2?0xf5d29c:0xb6a5ec,alpha:1-phase});

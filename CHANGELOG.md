@@ -1,5 +1,11 @@
 # Cambios
 
+## ASCENSION — profundidad y cobertura combinatoria (2026-11-06)
+
+- Canvas encola glifos con su estilo y los pinta por profundidad; Pixi comparte el criterio basado en pies y dimensiones de celda. La altura visual no altera la prioridad de profundidad.
+- Regresión de pared delante/detrás del héroe y orden en distintas escalas.
+- Cobertura exhaustiva de dominios finitos: 262144 combinaciones de hitos de acceso al final, 16497 combinaciones celda/zoom y 648 combinaciones de materiales/paletas. No equivale a probar todas las partidas ni todos los recorridos de campaña.
+
 ## ASCENSION — coherencia de presentación (2026-11-06)
 
 - Paleta del terreno compartida por Canvas y WebGL, diferenciando superficie e interiores.
