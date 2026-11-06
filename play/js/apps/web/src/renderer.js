@@ -422,18 +422,6 @@ export class AsciiRenderer {
             this.glyph(`enemy:death:${dead.glyph}`, (cx + .5) * this.cellW, (cy + .5) * this.cellH, projectedDepth(cx, cy, this.cellW, this.cellH, .5));
         }
         ctx.globalAlpha = 1;
-        for (let depth = 0; depth < VIEW_W + VIEW_H - 1; depth++)
-            for (let cx = 0; cx < VIEW_W; cx++) {
-                const cy = depth - cx;
-                if (cy < 0 || cy >= VIEW_H)
-                    continue;
-                const at = index(ox + cx, oy + cy), tile = state.tiles[at];
-                if (!isOccludingTerrain(tile) || state.visible[at] !== 1)
-                    continue;
-                ctx.globalAlpha = .18;
-                ctx.fillStyle = '#020608';
-                ctx.fillRect(cx * this.cellW, cy * this.cellH + this.cellH * .72, this.cellW, this.cellH * .2);
-            }
         ctx.globalAlpha = 1;
         const px = (state.player.x - ox) * this.cellW, py = (state.player.y - oy) * this.cellH;
         ctx.globalAlpha = .42;
@@ -471,6 +459,23 @@ export class AsciiRenderer {
         for (const glyph of this.glyphQueue)
             glyph.paint();
         this.glyphQueue = [];
+        // The lower face is a true foreground pass: actors and effects remain
+        // visible above the tile, while solid structures cover their feet.
+        for (let depth = 0; depth < VIEW_W + VIEW_H - 1; depth++)
+            for (let cx = 0; cx < VIEW_W; cx++) {
+                const cy = depth - cx;
+                if (cy < 0 || cy >= VIEW_H)
+                    continue;
+                const at = index(ox + cx, oy + cy), tile = state.tiles[at];
+                if (!isOccludingTerrain(tile) || state.visible[at] !== 1)
+                    continue;
+                ctx.globalAlpha = .62;
+                ctx.fillStyle = tile === '#' ? '#26333a' : tile === '%' ? '#3f3349' : '#51402f';
+                ctx.fillRect(cx * this.cellW, cy * this.cellH + this.cellH * .72, this.cellW, this.cellH * .2);
+                ctx.globalAlpha = .28;
+                ctx.fillStyle = '#d1b78b';
+                ctx.fillRect(cx * this.cellW + 1, cy * this.cellH + this.cellH * .72, this.cellW - 2, 1);
+            }
         const weather = weatherAt(state.seed, state.tick, currentBiome);
         if (weather !== 'calma' && !this.reducedMotion) {
             // Screen-space Gothic weather stays in the shared ASCII language.

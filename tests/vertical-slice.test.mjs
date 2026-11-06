@@ -13,7 +13,7 @@ test('static map floor is drawn in a dedicated cached Graphics layer',()=>{
  assert.match(renderer,/const floorDirty=this\.floorKey!==floorKey/);
  assert.match(renderer,/if\(floorDirty\)\{/);
  assert.match(renderer,/this\.terrainFloor\.rect\(/);
- assert.match(renderer,/result\.view\.addChild\(result\.terrainFloor,result\.backdrop,result\.layers\)/);
+ assert.match(renderer,/result\.view\.addChild\(result\.terrainFloor,result\.backdrop,result\.layers,result\.foreground\)/);
  assert.match(renderer,/new URLSearchParams\(location\.search\)\.has\('profile'\)/);
 });
 test('shared catalogue covers volumetric terrain and boss',()=>{

@@ -17,6 +17,7 @@ export class PixiAsciiRenderer {
     view = new Container();
     terrainFloor = new Graphics();
     backdrop = new Graphics();
+    foreground = new Graphics();
     layers = new Container();
     sprites = [];
     activeSprites = 0;
@@ -88,7 +89,7 @@ export class PixiAsciiRenderer {
         result.app.canvas.tabIndex = 0;
         result.app.canvas.setAttribute('aria-label', 'Mapa WebGL ASCII interactivo. Flechas/WASD para moverse; E para interactuar; X para atacar.');
         result.app.canvas.dataset.renderer = 'pixi-webgl';
-        result.view.addChild(result.terrainFloor, result.backdrop, result.layers);
+        result.view.addChild(result.terrainFloor, result.backdrop, result.layers, result.foreground);
         result.layers.sortableChildren = true;
         // A true affine isometric basis for every glyph, floor tile and effect.
         // Game coordinates stay Cartesian so pathfinding and saves remain stable.
@@ -513,6 +514,22 @@ export class PixiAsciiRenderer {
                 this.backdrop.circle(cx + Math.cos(a) * r, cy + Math.sin(a) * r, Math.max(.5, 2.5 * (1 - phase))).fill({ color: n % 2 ? 0xf5d29c : 0xb6a5ec, alpha: 1 - phase });
             }
         }
+        // Foreground lips are deliberately drawn after actors and effects. They
+        // provide the visible lower face of solid structures without changing
+        // collision, visibility or the deterministic simulation.
+        this.foreground.clear();
+        for (let cy = 0; cy < this.viewH; cy++)
+            for (let cx = 0; cx < this.viewW; cx++) {
+                const wx = ox + cx, wy = oy + cy, at = index(wx, wy), tile = state.tiles[at];
+                if (!isOccludingTerrain(tile) || state.visible[at] !== 1)
+                    continue;
+                const color = tile === '#' ? 0x26333a : tile === '%' ? 0x3f3349 : 0x51402f;
+                this.foreground.rect(cx * this.cellW, cy * this.cellH + this.cellH * .72, this.cellW, this.cellH * .2)
+                    .fill({ color, alpha: .62 });
+                this.foreground.moveTo(cx * this.cellW + 1, cy * this.cellH + this.cellH * .72)
+                    .lineTo((cx + 1) * this.cellW - 1, cy * this.cellH + this.cellH * .72)
+                    .stroke({ color: 0xd1b78b, width: 1, alpha: .28 });
+            }
         const weather = weatherAt(state.seed, state.tick, biomeAt(state.seed, state.player.x, state.player.y));
         if (weather !== 'calma' && !this.reducedMotion) {
             const weatherColor = weather === 'esporas' ? 0x9fdca7 : weather === 'estatica' ? 0xb5f5ec : weather === 'distorsion' ? 0xda8acc : 0xd9c49d;
