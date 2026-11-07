@@ -250,3 +250,38 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.11;b
 .start-sigil{color:#e6bd78;text-shadow:0 0 18px #e6a56366,0 0 34px #bd8a5b40}
 .start-actions .start-primary{box-shadow:inset 0 0 16px #f1c47b1c,0 0 14px #cb805028}
 @media(prefers-reduced-motion:reduce){body::before{opacity:.06}.start-sigil{ text-shadow:none}}
+
+/* Monochrome Gothic CRT: one phosphor palette shared by every menu and HUD. */
+:root,
+:root[data-biome=ceniza],:root[data-biome=hierro],:root[data-biome=vidrio],
+:root[data-biome=medula],:root[data-biome=umbral]{
+  --mono-hot:#f0e8c9;--mono-light:#c7d5bd;--mono-mid:#8ea58c;--mono-dim:#536752;
+  --mono-line:#6f866b;--biome-accent:var(--mono-light);--biome-dark:#101a16;
+}
+body{background:radial-gradient(ellipse at 50% 0%,#243329 0%,#0a0f0d 48%,#050706 100%);color:var(--mono-light);font-family:"Courier New",ui-monospace,monospace}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent 0 2px,#e5f2d008 2px 3px);mix-blend-mode:screen;opacity:.7}
+.brand-title,.panel-heading h1,.start-menu-card h1,.modal-card h2,.mission-card h3,.discovery-card h3{font-family:Georgia,"Times New Roman",serif;color:var(--mono-hot)}
+.brand-mark,.portrait>span,.biome-emblem,.start-sigil{color:var(--mono-hot);filter:grayscale(1);}
+.topbar,.hero-strip,.toolbar,.combatbar,.field-notice,.eventpanel,.side-card,.biome-story,.mutation-card,.nacar-boss,.survival-strip{background:#0d1511;border-color:var(--mono-dim);color:var(--mono-light)}
+.biome-story{border-left-color:var(--mono-light)}
+.biome-story-text p,.mission-card p,.discovery-card p,.modal-card p,.modal-card li{color:var(--mono-light)}
+.weather-badge,.art-badge,.quest-state,.section-title,.modal-header,.modal-card h3{color:var(--mono-hot);border-color:var(--mono-line)}
+.viewport{background:#050806;border-color:var(--mono-line);box-shadow:0 0 0 2px #030503,inset 0 0 48px #000,0 0 28px #b7d6a518}
+.world-canvas,#viewport .pixi-canvas{filter:grayscale(1) contrast(1.2) brightness(1.02);image-rendering:pixelated}
+.icon-btn,.zoom button,.action,.system-actions button,.modal-option,.dpad button,.start-actions button,.start-settings button{border-radius:0;background:#101a13;border-color:var(--mono-line);color:var(--mono-light);box-shadow:inset 0 0 0 1px #dcebc315,3px 3px 0 #030503;transition:background-color .16s ease,color .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease}
+.icon-btn:hover:not(:disabled),.zoom button:hover,.action:hover:not(:disabled),.system-actions button:hover,.modal-option:hover,.dpad button:hover,.start-actions button:hover:not(:disabled),.start-settings button:hover{background:#213322;border-color:var(--mono-hot);color:var(--mono-hot);box-shadow:inset 0 0 12px #cde7b616,1px 1px 0 #030503;transform:translate(2px,2px)}
+.action.primary,.start-actions .start-primary{background:#2a3b29;border-color:var(--mono-hot);color:var(--mono-hot);box-shadow:inset 0 0 18px #dfedbb1b,3px 3px 0 #030503}
+.action.attack,.action.gene,.action.discovery{background:#142118;border-color:var(--mono-mid);color:var(--mono-light)}
+.meter,.nacar-boss-meter{background:#050906;border-color:var(--mono-dim)}.meter i,.nacar-boss-meter i{background:var(--mono-light);box-shadow:0 0 10px #cfe8c477}
+.stat,.pairs,.tiny-label,.section-title span,.map-caption,.save-status,.portrait small,.brand-sub,footer,.live{color:var(--mono-mid)}
+#log p{color:#a9bda4;border-color:var(--mono-dim)}#log p.latest{color:var(--mono-hot);border-color:var(--mono-hot);background:linear-gradient(90deg,#b9d79b16,transparent)}
+.modal{background:#020403ed;backdrop-filter:blur(3px)}.modal-card{background:#0c150f;border-color:var(--mono-hot);border-radius:0;box-shadow:0 0 0 3px #030503,0 24px 80px #000,0 0 28px #c6e9a51f;animation:mono-modal-in .24s ease-out both}
+.start-menu{background:radial-gradient(ellipse at 50% 20%,#1f3626f5,#050805 70%);backdrop-filter:none}.start-menu-card{border-color:var(--mono-hot);border-radius:0;background:#0c150f;box-shadow:0 0 0 4px #030503,0 0 0 5px var(--mono-dim),0 25px 90px #000,0 0 30px #c4e3a51e;animation:mono-card-in .45s ease-out both}
+.start-sigil{animation:mono-sigil 2.8s ease-in-out infinite alternate}.live-dot{background:var(--mono-hot);box-shadow:0 0 12px var(--mono-hot);animation:mono-blink 1.8s steps(2,end) infinite}
+.panel-heading h1,.start-menu-card h1{ text-shadow:0 0 14px #d6ebba22}.survival-strip[data-risk=critical]{border-color:var(--mono-hot);color:var(--mono-hot);background:#1b261a}
+:is(button,input,select,textarea,a):focus-visible,.world-canvas:focus-visible{outline:2px solid var(--mono-hot);outline-offset:3px;box-shadow:0 0 0 5px #071008,0 0 16px #d5ecb955}
+@keyframes mono-card-in{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes mono-modal-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes mono-sigil{from{opacity:.66;text-shadow:0 0 8px #cce7b533}to{opacity:1;text-shadow:0 0 26px #d8edbd88}}
+@keyframes mono-blink{0%,48%{opacity:1}49%,100%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){body::after{display:none}.start-sigil,.live-dot{animation:none}.modal-card,.start-menu-card{animation:none}.world-canvas,#viewport .pixi-canvas{filter:grayscale(1) contrast(1.12)}}
