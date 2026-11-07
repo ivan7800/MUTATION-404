@@ -2,7 +2,7 @@ import { placeField } from './environment.js';
 import { hasLineOfSight } from './fov.js';
 import { biomeAt, WEATHER, weatherAt } from './biomes.js';
 import { SeededRng } from './rng.js';
-import { ACTORS, index, passable, WIDTH, within } from './world.js';
+import { ACTORS, HEIGHT, index, passable, WIDTH, within } from './world.js';
 export const ENEMY_DEFS = {
     crawler: { name: 'Carroñero de sal', glyph: 's', color: '#f0a66c', hp: 9, attack: 4, armor: 0, evade: 12, xp: 5, sight: 6 },
     sentinel: { name: 'Vigía de cobre', glyph: 'V', color: '#e6be79', hp: 16, attack: 5, armor: 2, evade: 3, xp: 9, sight: 7 },
@@ -40,8 +40,26 @@ const PRESETS = [
 ];
 export const inFaro = (p) => p.x >= 18 && p.x <= 47 && p.y >= 21 && p.y <= 43;
 export const manhattan = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+/** Main surface roads stay readable: danger can flank them, but never occupies
+ * the road tile or its immediate shoulder. This is presentation-safe routing,
+ * not a new safe zone; enemies still attack when the player leaves the road. */
+function protectedRoute(tiles) {
+    const result = new Set();
+    for (let y = 1; y < HEIGHT - 1; y++)
+        for (let x = 1; x < WIDTH - 1; x++) {
+            if (tiles[index(x, y)] !== ':' && tiles[index(x, y)] !== '+')
+                continue;
+            for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const nx = x + dx, ny = y + dy;
+                if (within(nx, ny))
+                    result.add(`${nx},${ny}`);
+            }
+        }
+    return result;
+}
 export function spawnEnemies(tiles) {
     const occupied = new Set(ACTORS.map(a => `${a.x},${a.y}`));
+    const roads = protectedRoute(tiles);
     return PRESETS.map((s, i) => {
         let pos;
         // Fixed deterministic fallback, independent of RNG and pre-existing NPCs.
@@ -49,7 +67,7 @@ export function spawnEnemies(tiles) {
             for (let dy = -radius; dy <= radius && !pos; dy++)
                 for (let dx = -radius; dx <= radius; dx++) {
                     const x = s.x + dx, y = s.y + dy;
-                    if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius || !within(x, y) || inFaro({ x, y }) || !passable(tiles[index(x, y)]) || occupied.has(`${x},${y}`))
+                    if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius || !within(x, y) || inFaro({ x, y }) || roads.has(`${x},${y}`) || !passable(tiles[index(x, y)]) || occupied.has(`${x},${y}`))
                         continue;
                     pos = { x, y };
                     break;
@@ -121,6 +139,9 @@ export function takeEnemyTurn(s, report, onAction) {
     const blocked = new Set(protectFaro ? ACTORS.map(a => `${a.x},${a.y}`) : []);
     // Avoid hazardous ground unless no safe route exists; spores remain safe for their own species.
     const hazards = new Set((s.fields ?? []).filter(f => f.ttl > 0 && f.kind !== 'spores').map(f => `${f.x},${f.y}`));
+    if (protectFaro)
+        for (const cell of protectedRoute(s.tiles))
+            hazards.add(cell);
     for (const enemy of s.enemies)
         if (enemy.hp > 0)
             blocked.add(`${enemy.x},${enemy.y}`);

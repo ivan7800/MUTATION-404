@@ -25,6 +25,17 @@ test('enemy spawn in 1000 procedural worlds is collision-free and outside safe t
     }
   }
 });
+test('surface routes keep a readable one-cell shoulder free of initial danger',()=>{
+  for(const seed of [0,1,14,404,808,9999]){
+    const s=createGame(seed);
+    for(const enemy of s.enemies){
+      for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]){
+        const x=enemy.x+dx,y=enemy.y+dy;
+        assert.notEqual(s.tiles[index(x,y)],':',`seed ${seed}: enemy blocks route at ${enemy.x},${enemy.y}`);
+      }
+    }
+  }
+});
 test('the safe town does not trigger enemy attack turns',()=>{
   const s=createGame(404);s.enemies=[{id:'test',kind:'sentinel',x:48,y:32,hp:16,mode:'hunting',searchTurns:2,lastKnown:{...s.player}}];
   const before=s.stats.hp;
