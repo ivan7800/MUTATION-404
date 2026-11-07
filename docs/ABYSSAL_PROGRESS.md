@@ -26,3 +26,9 @@ Se añadieron controles independientes y persistentes para scanlines, brillo, ru
 
 La rama está publicada como candidata experimental. No se fusiona en `main` mientras falten la campaña humana completa, la revisión con lector de pantalla y las sesiones largas en hardware objetivo.
 
+## Rescate artístico · vertical slice
+
+Estado: implementada en `codex/mutation-404-art-rescue`; no se amplían otros biomas hasta revisar esta dirección.
+
+La gramática compartida de `ascii-art.ts` incorpora siluetas densas de cinco líneas, arquitectura monumental por material, vegetación, formaciones orgánicas, efectos y ataques legibles. Canvas y Pixi/WebGL usan el mismo catálogo. La evidencia actual pasa 193 pruebas y 25 comprobaciones Chromium; las diferencias pendientes están detalladas en `docs/ABYSSAL_ART_RESCUE.md`.
+
