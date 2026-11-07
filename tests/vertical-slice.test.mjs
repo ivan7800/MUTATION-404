@@ -8,6 +8,7 @@ const main=readFileSync('apps/web/src/main.ts','utf8');
 const qa=readFileSync('scripts/qa-browser.mjs','utf8');
 const pixel=readFileSync('apps/web/src/pixel-renderer.ts','utf8');
 const atlas=readFileSync('apps/web/public/pixel/atlas.svg','utf8');
+const assets=readFileSync('apps/web/src/pixel-assets.ts','utf8');
 
 test('static map floor is drawn in a dedicated cached Graphics layer',()=>{
  assert.match(renderer,/terrainFloor=new Graphics\(\)/);
@@ -39,6 +40,29 @@ test('Pixel and ASCII renderers share the same game controls',()=>{
  assert.match(atlas,/id="hero-idle"/);
  assert.match(atlas,/id="crawler"/);
  assert.match(atlas,/id="ruin"/);
+});
+test('Pixel Rebirth inventory covers every biome, species, elite and boss',()=>{
+ for(const id of ['salinas','ceniza','hierro','vidrio','medula','umbral']){
+  assert.match(atlas,new RegExp(`id="floor-${id}"`));
+  assert.match(atlas,new RegExp(`id="prop-${id}"`));
+  assert.ok(assets.includes(`floor-${id}`));
+ }
+ for(const id of ['crawler','sentinel','larva','moth','drone','spore']){
+  assert.match(atlas,new RegExp(`id="${id}-a"`));
+  assert.match(atlas,new RegExp(`id="${id}-b"`));
+ }
+ assert.match(atlas,/id="elite-drone-a"/);
+ assert.match(atlas,/id="boss-heart-a"/);
+ assert.match(pixel,/campaign-heart/);
+ assert.match(pixel,/elite-/);
+ assert.match(pixel,/Math\.floor\(this\.ambience\/2\)%2/);
+ assert.match(readFileSync('scripts/qa-pixel-biomes.mjs','utf8'),/Object\.entries\(points\)/);
+});
+test('Pixel renderer reuses world terrain sprites between animation frames',()=>{
+ assert.match(pixel,/terrainPool=new Map<string,Sprite>\(\)/);
+ assert.match(pixel,/for\(const sprite of this\.terrainPool\.values\(\)\)sprite\.visible=false/);
+ assert.match(pixel,/this\.terrainPool\.get\(key\)/);
+ assert.match(pixel,/else if\(sprite\.texture!==texture\)sprite\.texture=texture/);
 });
 test('browser QA exercises both artistic scenes in the unified ASCII mode',()=>{
  assert.ok(qa.includes('faro-ascii-unified'));
