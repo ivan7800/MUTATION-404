@@ -402,7 +402,8 @@ export class AsciiRenderer {
             ctx.globalAlpha = 1;
             ctx.fillStyle = hit ? '#ff9d91' : (enemy.stunned ?? 0) > 0 ? '#e3aaf5' : def.color;
             const action = this.enemyActions.get(state.zone + ':' + enemy.id), now = performance.now();
-            const actionGlyph = action && now < action.until ? (now - action.started < 90 ? 'enemy:telegraph' : `enemy:attack:${glyph}`) : glyph;
+            const elapsed = action ? now - action.started : Infinity;
+            const actionGlyph = action && now < action.until ? (elapsed < 90 ? 'enemy:telegraph' : elapsed < 250 ? `enemy:attack:${glyph}` : `enemy:recover:${glyph}`) : glyph;
             this.glyph(hit ? `enemy:hurt:${glyph}` : actionGlyph, px + this.cellW / 2, py + this.cellH / 2 - actorLift(state, enemy.x, enemy.y), projectedDepth(cx, cy, this.cellW, this.cellH));
             ctx.shadowBlur = 0;
             // Miniature health bar provides threat feedback without a separate modal.

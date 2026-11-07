@@ -37,6 +37,13 @@ test('all original enemy types and boss leave distinct printable ASCII death mar
     for(const row of rows)assert.match(row,/^[\x20-\x7e]+$/);
   }
 });
+test('every creature has a readable post-impact recovery silhouette',()=>{
+  for(const glyph of ['s','V','l','p','D','f','✺','◆']){
+    const rows=composition(`enemy:recover:${glyph}`);
+    assert.ok(rows.length>=3,`${glyph} recovery pose missing`);
+    assert.ok(rows.join('').trim().length>=6,`${glyph} recovery pose is too sparse`);
+  }
+});
 test('terrain keeps volumetric compositions for the original tile vocabulary',()=>{
   for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!','+','?','x','v','T','o']){
     const rows=composition(terrainComposition(tile));
@@ -47,6 +54,14 @@ test('terrain variants are deterministic and visibly distinct where variants exi
   assert.deepEqual(composition(terrainComposition('.',1)),composition(terrainComposition('.',1)));
   assert.notDeepEqual(composition(terrainComposition('.',0)),composition(terrainComposition('.',1)));
   assert.notDeepEqual(composition(terrainComposition('%',0)),composition(terrainComposition('%',2)));
+});
+test('terrain compositions provide stable dense character tramas',()=>{
+  for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!']){
+    const first=composition(terrainComposition(tile,1)).join('\n');
+    const second=composition(terrainComposition(tile,1)).join('\n');
+    assert.equal(first,second,`${tile} trama must remain stable`);
+    assert.ok(first.replace(/\s/g,'').length>=8,`${tile} trama is too sparse`);
+  }
 });
 test('only solid terrain creates a foreground occlusion lip',()=>{
   assert.equal(isOccludingTerrain('#'),true);assert.equal(isOccludingTerrain('%'),true);assert.equal(isOccludingTerrain('='),true);

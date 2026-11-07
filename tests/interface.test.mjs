@@ -20,6 +20,14 @@ test('critical UI controls route to actions and show keyboard alternatives',()=>
   assert.match(style,/\.biome-story/);
   assert.match(style,/\.atlas-grid/);
 });
+test('ABYSSAL CRT controls are independent, persistent and accessible',()=>{
+  for(const id of ['crt-scanlines','crt-brightness','crt-noise','crt-vignette','crt-glow','crt-accessible'])assert.ok(markup.includes(`id="${id}"`),`missing CRT control #${id}`);
+  assert.match(main,/mutation404\.crt\.v1/);
+  assert.match(main,/applyCrtSettings/);
+  assert.match(style,/data-crt-scanlines=false/);
+  assert.match(style,/data-crt-accessible=true/);
+  assert.match(style,/\.crt-settings/);
+});
 test('offline entrypoint includes the audio and biome modules',()=>{
   const entry=readFileSync('play/js/apps/web/src/main.js','utf8');
   const audio=readFileSync('play/js/apps/web/src/audio.js','utf8');

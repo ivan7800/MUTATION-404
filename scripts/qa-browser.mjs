@@ -324,7 +324,7 @@ try{
   for(const mode of ['webgl','canvas-fallback'])for(const kind of Object.keys(ENEMY_DEFS)){
     const fixture=createGame(404);
     fixture.zone='zero-1';fixture.tiles.fill('.');fixture.fields=[];fixture.player={x:20,y:20};
-    fixture.enemies=[{id:'visual-'+kind,kind,x:21,y:20,hp:ENEMY_DEFS[kind].hp,mode:'idle',searchTurns:0}];
+    fixture.enemies=[{id:'visual-'+kind,kind,x:21,y:20,hp:ENEMY_DEFS[kind].hp,mode:'hunting',lastKnown:{x:20,y:20},searchTurns:3}];
     refreshVisibility(fixture);
     const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'no-preference'});
     try{
@@ -356,7 +356,11 @@ try{
       await page.evaluate(()=>{window.__attackRows=[];});
       await page.locator('#wait-btn').click();
       const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);
-      await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows);
+      try{
+        await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows,{timeout:10000});
+      }catch(error){
+        throw new Error(`attack pose timeout for ${kind}/${mode}; expected=${JSON.stringify(rows)} observed=${JSON.stringify(await page.evaluate(()=>window.__attackRows.slice(-40)))}`,{cause:error});
+      }
       assert.deepEqual(await page.evaluate(()=>window.__glyphClips),[],'glyph atlas must fit the painted text');
       assert.deepEqual(errors,[]);
       results.push({scene:`enemy-attack-${kind}-${mode}`,status:'passed',glyphRowsObserved:rows,fixture:true});

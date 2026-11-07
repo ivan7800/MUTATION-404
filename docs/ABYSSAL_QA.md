@@ -4,14 +4,19 @@
 
 | Comprobación | Resultado |
 |---|---|
-| Suite Node | 189/189 |
+| Suite Node | 192/192 |
 | ESLint | Pasa |
 | TypeScript | Pasa |
 | Build web | Pasa |
 | Servidor offline | Pasa |
 | Imagen Cyclopean disponible | No |
-| Campaña humana completa | Pendiente |
-| Revisión física de hardware | Pendiente |
+| Campaña humana completa | Pendiente; los runners actuales usan fixtures explícitos |
+| Lector de pantalla | Pendiente de sesión manual |
+| Sesión larga en hardware real | Pendiente |
+
+Tras la Fase 2, la suite pasó con 190/190 pruebas. Tras la primera entrega de Fase 3, pasó con 191/191. La entrega ABYSSAL CRT pasa con 192/192 e incorpora regresiones para controles independientes, persistencia y modo accesible.
+
+La QA Chromium actual pasa 25 comprobaciones sobre Canvas/Pixi, atlas, ataques, escritorio y móvil. La QA offline pasa con recarga sin red, guardado persistente, WebGL y actualización pendiente. Las capturas quedan en `qa-evidence/`.
 
 ## Regla de las siguientes entregas
 
