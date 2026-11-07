@@ -3,6 +3,9 @@
 ## ABYSSAL TERMINAL 4.0 — rama experimental
 
 - Paleta monocromática cian/turquesa y presentación CRT unificada para menús, HUD, diálogos, paneles y mapa.
+- Paneles ABYSSAL accesibles desde la interfaz normal: personaje, inventario, mutaciones, atlas/mapa, diario, fabricación y sistema.
+- Controles CRT persistentes e independientes para scanlines, brillo, ruido, viñeta, resplandor y modo accesible; el brillo se ajusta sin reiniciar.
+- QA reproducible: 192 pruebas Node, 25 comprobaciones Chromium y recarga offline con guardado preservado. La campaña humana y la revisión con lector de pantalla siguen pendientes.
 
 ## ASCENSION — santuario gótico (sin release)
 

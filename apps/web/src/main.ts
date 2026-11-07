@@ -62,6 +62,14 @@ root.innerHTML=`
       <label for="start-volume">VOLUMEN DEL JUEGO <output id="start-volume-value">55%</output></label>
       <input id="start-volume" type="range" min="0" max="100" step="5" value="55"/>
       <button id="start-audio" type="button" aria-pressed="false">♫ ACTIVAR SONIDO Y PROBAR</button>
+      <fieldset class="crt-settings"><legend>ABYSSAL CRT</legend>
+        <label><span>SCANLINES</span><input id="crt-scanlines" type="checkbox" checked/></label>
+        <label><span>BRILLO <output id="crt-brightness-value">100%</output></span><input id="crt-brightness" type="range" min="70" max="130" step="5" value="100"/></label>
+        <label><span>RUIDO</span><input id="crt-noise" type="checkbox" checked/></label>
+        <label><span>VIÑETA</span><input id="crt-vignette" type="checkbox" checked/></label>
+        <label><span>RESPLANDOR</span><input id="crt-glow" type="checkbox" checked/></label>
+        <label><span>MODO ACCESIBLE</span><input id="crt-accessible" type="checkbox"/></label>
+      </fieldset>
       <p id="start-audio-status">El navegador requiere que actives el sonido. La música y los efectos no se reproducen automáticamente.</p>
     </div>
     <p id="start-save-info" class="start-save-info">Buscando datos guardados…</p>
@@ -75,6 +83,34 @@ let renderer:AsciiRenderer|PixiAsciiRenderer=new AsciiRenderer($<HTMLDivElement>
 $<HTMLElement>('#viewport').dataset.renderer='canvas2d';
 const audio=new AtmosphereAudio();
 const AUDIO_SETTINGS_KEY='mutation404.audio.v27';
+const CRT_SETTINGS_KEY='mutation404.crt.v1';
+type CrtSettings={scanlines:boolean;noise:boolean;vignette:boolean;glow:boolean;accessible:boolean;brightness:number};
+const DEFAULT_CRT:Readonly<CrtSettings>={scanlines:true,noise:true,vignette:true,glow:true,accessible:false,brightness:100};
+function readCrtSettings():CrtSettings{
+  try{
+    const raw=localStorage.getItem(CRT_SETTINGS_KEY);if(!raw)return {...DEFAULT_CRT};
+    const parsed=JSON.parse(raw) as Partial<CrtSettings>;
+    return {scanlines:parsed.scanlines!==false,noise:parsed.noise!==false,vignette:parsed.vignette!==false,glow:parsed.glow!==false,accessible:parsed.accessible===true,brightness:Number.isFinite(parsed.brightness)?Math.min(130,Math.max(70,Number(parsed.brightness))):100};
+  }catch{return {...DEFAULT_CRT};}
+}
+let crtSettings=readCrtSettings();
+function applyCrtSettings():void{
+  const root=document.documentElement;
+  root.dataset.crtScanlines=String(crtSettings.scanlines);
+  root.dataset.crtNoise=String(crtSettings.noise);
+  root.dataset.crtVignette=String(crtSettings.vignette);
+  root.dataset.crtGlow=String(crtSettings.glow);
+  root.dataset.crtAccessible=String(crtSettings.accessible);
+  root.style.setProperty('--crt-brightness',String(crtSettings.brightness/100));
+  const fields:Record<string,string>={
+    '#crt-scanlines':String(crtSettings.scanlines),'#crt-noise':String(crtSettings.noise),'#crt-vignette':String(crtSettings.vignette),
+    '#crt-glow':String(crtSettings.glow),'#crt-accessible':String(crtSettings.accessible)
+  };
+  for(const [selector,value] of Object.entries(fields))$<HTMLInputElement>(selector).checked=value==='true';
+  $<HTMLInputElement>('#crt-brightness').value=String(crtSettings.brightness);write('#crt-brightness-value',`${crtSettings.brightness}%`);
+  renderer.setReducedMotion(crtSettings.accessible||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true);
+}
+function saveCrtSettings():void{try{localStorage.setItem(CRT_SETTINGS_KEY,JSON.stringify(crtSettings));}catch{/* settings remain active for this session */}}
 let gameStarted=false;
 const saveKeys=[SAVE_KEY,V09_KEY,V08_KEY,V07_KEY,LAST_KEY,OLDER_KEY,OLD_KEY,PREVIOUS_KEY,LEGACY_KEY,FIRST_KEY] as const;
 function storedSave():{raw:string;key:string}|null{
@@ -497,6 +533,17 @@ $<HTMLInputElement>('#start-volume').addEventListener('input',()=>{
   audio.setVolume(n);write('#start-volume-value',String(Math.round(n*100))+'%');
   try{localStorage.setItem(AUDIO_SETTINGS_KEY,String(n));}catch{/* storage can be unavailable in private contexts */}
 });
+for(const selector of ['#crt-scanlines','#crt-noise','#crt-vignette','#crt-glow','#crt-accessible']){
+  $<HTMLInputElement>(selector).addEventListener('change',event=>{
+    const input=event.currentTarget as HTMLInputElement;
+    const key=selector.slice(5) as keyof CrtSettings;
+    crtSettings={...crtSettings,[key]:input.checked};saveCrtSettings();applyCrtSettings();
+  });
+}
+$<HTMLInputElement>('#crt-brightness').addEventListener('input',event=>{
+  crtSettings={...crtSettings,brightness:Number((event.currentTarget as HTMLInputElement).value)};saveCrtSettings();applyCrtSettings();
+});
+applyCrtSettings();
 function updateAudioButtons(active:boolean):void{
   write('#audio-btn',active?'♫ SILENCIAR':'♫ ACTIVAR SONIDO');
   $('#audio-btn').setAttribute('aria-pressed',String(active));
