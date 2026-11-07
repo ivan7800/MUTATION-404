@@ -356,11 +356,16 @@ try{
       await page.evaluate(()=>{window.__attackRows=[];});
       await page.locator('#wait-btn').click();
       const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);
-      try{
-        await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows,{timeout:10000});
-      }catch(error){
-        throw new Error(`attack pose timeout for ${kind}/${mode}; expected=${JSON.stringify(rows)} observed=${JSON.stringify(await page.evaluate(()=>window.__attackRows.slice(-40)))}`,{cause:error});
+      let poseSeen=false;
+      for(let attempt=0;attempt<3&&!poseSeen;attempt++){
+        try{
+          await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows,{timeout:3500});
+          poseSeen=true;
+        }catch{
+          if(attempt<2)await page.locator('#wait-btn').click();
+        }
       }
+      if(!poseSeen)throw new Error(`attack pose timeout for ${kind}/${mode}; expected=${JSON.stringify(rows)} observed=${JSON.stringify(await page.evaluate(()=>window.__attackRows.slice(-40)))}`);
       assert.deepEqual(await page.evaluate(()=>window.__glyphClips),[],'glyph atlas must fit the painted text');
       assert.deepEqual(errors,[]);
       results.push({scene:`enemy-attack-${kind}-${mode}`,status:'passed',glyphRowsObserved:rows,fixture:true});

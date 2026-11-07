@@ -5,7 +5,13 @@
 - Paleta monocromática cian/turquesa y presentación CRT unificada para menús, HUD, diálogos, paneles y mapa.
 - Paneles ABYSSAL accesibles desde la interfaz normal: personaje, inventario, mutaciones, atlas/mapa, diario, fabricación y sistema.
 - Controles CRT persistentes e independientes para scanlines, brillo, ruido, viñeta, resplandor y modo accesible; el brillo se ajusta sin reiniciar.
-- QA reproducible: 192 pruebas Node, 25 comprobaciones Chromium y recarga offline con guardado preservado. La campaña humana y la revisión con lector de pantalla siguen pendientes.
+- QA reproducible: 193 pruebas Node, 25 comprobaciones Chromium y recarga offline con guardado preservado. La campaña humana y la revisión con lector de pantalla siguen pendientes.
+
+## Rescate artístico — vertical slice experimental
+
+- Catálogo ASCII rediseñado con composiciones densas de cinco líneas para protagonista, criaturas, muros monumentales, ruinas, cavernas, vegetación, agua y formaciones elevadas.
+- Canvas y Pixi/WebGL comparten la misma gramática de caracteres, variaciones deterministas y oclusión; la coreografía de ataque permanece visible durante una ventana legible.
+- Capturas Chromium actualizadas para Canvas fallback, Pixi/WebGL, exterior y combate. La ruina monumental específica y la comparación píxel a píxel con Cyclopean siguen pendientes por falta de la referencia en el entorno.
 
 ## ASCENSION — santuario gótico (sin release)
 

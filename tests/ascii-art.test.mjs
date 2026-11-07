@@ -79,3 +79,15 @@ test('gothic atmosphere and feedback share complete ASCII compositions',()=>{
     assert.ok(rows.join('').trim().length>0);
   }
 });
+test('art rescue vertical slice uses dense readable silhouettes and architecture',()=>{
+  assert.ok(composition('@').length>=5,'hero must have a cloak and readable stance');
+  for(const glyph of ['s','V','l']){
+    assert.ok(composition(glyph).length>=5,`${glyph} must have a detailed silhouette`);
+    assert.ok(composition(glyph).join('').replace(/\s/g,'').length>=18,`${glyph} must carry visual mass`);
+  }
+  for(const tile of ['#','%','=','^','*','&']){
+    const rows=composition(terrainComposition(tile,1));
+    assert.ok(rows.length>=4,`${tile} must read as a structure or organic formation`);
+    assert.ok(rows.join('').replace(/\s/g,'').length>=14,`${tile} must have dense material detail`);
+  }
+});

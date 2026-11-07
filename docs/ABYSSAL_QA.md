@@ -4,7 +4,7 @@
 
 | Comprobación | Resultado |
 |---|---|
-| Suite Node | 192/192 |
+| Suite Node | 193/193 |
 | ESLint | Pasa |
 | TypeScript | Pasa |
 | Build web | Pasa |
@@ -14,7 +14,7 @@
 | Lector de pantalla | Pendiente de sesión manual |
 | Sesión larga en hardware real | Pendiente |
 
-Tras la Fase 2, la suite pasó con 190/190 pruebas. Tras la primera entrega de Fase 3, pasó con 191/191. La entrega ABYSSAL CRT pasa con 192/192 e incorpora regresiones para controles independientes, persistencia y modo accesible.
+Tras la Fase 2, la suite pasó con 190/190 pruebas. Tras la primera entrega de Fase 3, pasó con 191/191. La entrega ABYSSAL CRT pasó con 192/192. El rescate artístico pasa con 193/193 e incorpora una regresión de densidad para la vertical slice.
 
 La QA Chromium actual pasa 25 comprobaciones sobre Canvas/Pixi, atlas, ataques, escritorio y móvil. La QA offline pasa con recarga sin red, guardado persistente, WebGL y actualización pendiente. Las capturas quedan en `qa-evidence/`.
 

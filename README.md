@@ -1,6 +1,18 @@
-# MUTATION 404 v2.9 — ASCENSION · ASCII ISOMÉTRICO
+# MUTATION 404 — ABYSSAL TERMINAL
 
-La rama ASCENSION incorpora ahora una [dirección gótica](docs/DIRECCION_GOTICA.md): piedra violeta, bronce y vidrieras discretas, marcos de arco, controles legibles y composiciones ASCII apuntadas. Es una entrega en desarrollo; el estado real y los pendientes siguen en [PROJECT_STATE](docs/PROJECT_STATE.md).
+La build pública jugable se sirve en [ivan7800.github.io/MUTATION-404](https://ivan7800.github.io/MUTATION-404/). Mantiene la campaña, combate, guardados, fabricación, mutaciones, mapa, diario y modo offline del motor 2.9, con una vertical slice artística ASCII cian/negra compartida entre Canvas 2D y PixiJS/WebGL.
+
+Estado de publicación: **build pública experimental**. La vertical slice incluye exterior, ruina, vegetación, arquitectura, tres familias de enemigos, animaciones ASCII de protagonista y combate, HUD y CRT configurable. La campaña es jugable, pero la campaña humana completa sin fixtures, lector de pantalla real y sesiones prolongadas en hardware físico siguen siendo validaciones pendientes.
+
+Validación actual: **193/193 pruebas**, lint, TypeScript, build offline, 25 comprobaciones Chromium y recarga offline. La dirección artística y sus diferencias pendientes están documentadas en [ABYSSAL_ART_RESCUE](docs/ABYSSAL_ART_RESCUE.md).
+
+La rama pública se mantiene en `main`; las iteraciones artísticas posteriores seguirán en ramas experimentales.
+
+## Desarrollo histórico
+
+La versión ASCENSION incorpora ahora una [dirección gótica](docs/DIRECCION_GOTICA.md): piedra violeta, bronce y vidrieras discretas, marcos de arco, controles legibles y composiciones ASCII apuntadas. El rescate ABYSSAL actual sustituye esa presentación por una gramática cian/negra más densa en la vertical slice.
+
+El estado técnico detallado y los pendientes históricos siguen en [PROJECT_STATE](docs/PROJECT_STATE.md).
 
 Actualización en la rama ASCENSION: los dos P1 de persistencia descritos en la auditoría siguiente se han corregido y tienen regresiones nuevas. El informe de Fase 1 conserva el estado anterior; consultar [estado actual](docs/PROJECT_STATE.md) para avances y pendientes. Todavía no es una release 3.0.
 
