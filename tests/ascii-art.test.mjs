@@ -48,6 +48,14 @@ test('terrain variants are deterministic and visibly distinct where variants exi
   assert.notDeepEqual(composition(terrainComposition('.',0)),composition(terrainComposition('.',1)));
   assert.notDeepEqual(composition(terrainComposition('%',0)),composition(terrainComposition('%',2)));
 });
+test('terrain compositions provide stable dense character tramas',()=>{
+  for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!']){
+    const first=composition(terrainComposition(tile,1)).join('\n');
+    const second=composition(terrainComposition(tile,1)).join('\n');
+    assert.equal(first,second,`${tile} trama must remain stable`);
+    assert.ok(first.replace(/\s/g,'').length>=8,`${tile} trama is too sparse`);
+  }
+});
 test('only solid terrain creates a foreground occlusion lip',()=>{
   assert.equal(isOccludingTerrain('#'),true);assert.equal(isOccludingTerrain('%'),true);assert.equal(isOccludingTerrain('='),true);
   for(const tile of ['.','~','*','!','T','o'])assert.equal(isOccludingTerrain(tile),false);

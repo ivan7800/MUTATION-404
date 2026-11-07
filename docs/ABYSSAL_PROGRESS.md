@@ -16,7 +16,7 @@ Resultado: sustituida la mezcla actual por una paleta coherente de fondo negro, 
 
 ## Fases siguientes
 
-2. Tramas densas y volumétricas del terreno.
+2. Tramas densas y volumétricas del terreno — implementada; 190 pruebas pasan.
 3. Siluetas y coreografía completa de criaturas.
 4. HUD y menús ABYSSAL TERMINAL.
 5. Paridad, rendimiento, offline y accesibilidad.

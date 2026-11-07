@@ -4,7 +4,7 @@
 
 | Comprobación | Resultado |
 |---|---|
-| Suite Node | 189/189 |
+| Suite Node | 190/190 |
 | ESLint | Pasa |
 | TypeScript | Pasa |
 | Build web | Pasa |
@@ -12,6 +12,8 @@
 | Imagen Cyclopean disponible | No |
 | Campaña humana completa | Pendiente |
 | Revisión física de hardware | Pendiente |
+
+Tras la Fase 2, la suite pasa con 190/190 pruebas. Se añadió una regresión para exigir tramas de terreno densas, estables y deterministas en los materiales principales.
 
 ## Regla de las siguientes entregas
 
