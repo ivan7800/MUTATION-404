@@ -132,13 +132,13 @@ export class PixiAsciiRenderer {
         const started = performance.now();
         for (const event of events)
             if (event.zone === state.zone && state.visible[index(event.x, event.y)] === 1)
-                this.enemyActions.set(event.zone + ':' + event.id, { started, until: started + 360 });
+                this.enemyActions.set(event.zone + ':' + event.id, { started, until: started + 700 });
         if (!events.length)
             return;
         if (this.enemyActionTimer)
             clearTimeout(this.enemyActionTimer);
         this.enemyActionTimer = window.setTimeout(() => { this.enemyActionTimer = 0; this.enemyActions.clear(); if (this.state)
-            this.draw(this.state); }, 300);
+            this.draw(this.state); }, 680);
         this.draw(state);
     }
     combatFeedback(previous, state) {
