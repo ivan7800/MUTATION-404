@@ -17,7 +17,7 @@ root.innerHTML = `
 <div class="hero-strip"><span><span id="biome-strip">REGIÓN / SALINAS DE VÉRTICE</span></span><span id="clock">07:00</span><span id="coords">X:32 Y:32</span><span class="strip-accent" id="exploration">EXPLORACIÓN 0%</span></div>
 <main class="layout">
 <section class="game-column" aria-label="Área de juego">
-<div class="panel-heading"><div><span class="tiny-label">VISTA ASCII ISOMÉTRICA / COMBATE TÁCTICO</span><h1 id="location">Faro Ciego</h1></div><div class="zoom"><span class="art-badge" aria-label="Dirección artística ASCII unificada">ASCII ISOMÉTRICO</span><button id="zoom-out" aria-label="Reducir mapa">−</button><button id="zoom-in" aria-label="Ampliar mapa">+</button></div></div>
+<div class="panel-heading"><div><span class="tiny-label">VISTA ISOMÉTRICA / COMBATE TÁCTICO</span><h1 id="location">Faro Ciego</h1></div><div class="zoom"><button id="art-mode-btn" class="art-badge" type="button" aria-pressed="false">PIXEL ART</button><button id="zoom-out" aria-label="Reducir mapa">−</button><button id="zoom-in" aria-label="Ampliar mapa">+</button></div></div>
 <div class="biome-story" aria-live="polite">
   <div class="biome-emblem">◈</div>
   <div class="biome-story-text"><span class="tiny-label" id="biome-subtitle">EL DESIERTO QUE ESCUCHA</span><p id="biome-description">La sal conserva ecos de quienes desaparecieron.</p></div>
@@ -81,7 +81,12 @@ root.innerHTML = `
 const $ = (selector) => { const el = document.querySelector(selector); if (!el)
     throw new Error(`Elemento ${selector} ausente`); return el; };
 let renderer = new AsciiRenderer($('#viewport'));
+const asciiRenderer = renderer;
+let asciiWebgl = null;
+let pixelRenderer = null;
+let artMode = 'ascii';
 $('#viewport').dataset.renderer = 'canvas2d';
+$('#viewport').dataset.artMode = 'ascii';
 const audio = new AtmosphereAudio();
 const AUDIO_SETTINGS_KEY = 'mutation404.audio.v27';
 const CRT_SETTINGS_KEY = 'mutation404.crt.v1';
@@ -121,6 +126,25 @@ function saveCrtSettings() { try {
     localStorage.setItem(CRT_SETTINGS_KEY, JSON.stringify(crtSettings));
 }
 catch { /* settings remain active for this session */ } }
+function setArtMode(next) {
+    if (next === 'pixel' && !pixelRenderer)
+        return;
+    renderer.pauseAmbience();
+    renderer = next === 'pixel' ? pixelRenderer : asciiWebgl ?? asciiRenderer;
+    for (const canvas of Array.from($('#viewport').querySelectorAll('canvas')))
+        canvas.style.display = 'none';
+    const active = next === 'pixel' ? $('#viewport canvas.pixel-canvas') : asciiWebgl ? $('#viewport canvas.pixi-canvas') : $('#viewport canvas.world-canvas');
+    active.style.display = 'block';
+    artMode = next;
+    $('#viewport').dataset.artMode = next;
+    const button = $('#art-mode-btn');
+    button.textContent = next === 'pixel' ? 'PIXEL ART' : 'ASCII';
+    button.setAttribute('aria-pressed', String(next === 'pixel'));
+    draw();
+    if (gameStarted)
+        renderer.startAmbience();
+    renderer.focus();
+}
 let gameStarted = false;
 const saveKeys = [SAVE_KEY, V09_KEY, V08_KEY, V07_KEY, LAST_KEY, OLDER_KEY, OLD_KEY, PREVIOUS_KEY, LEGACY_KEY, FIRST_KEY];
 function storedSave() {
@@ -694,6 +718,7 @@ $('#help-btn').addEventListener('click', help);
 $('#modal-close').addEventListener('click', closeModal);
 $('#modal').addEventListener('click', ev => { if (ev.target === $('#modal'))
     closeModal(); });
+$('#art-mode-btn').addEventListener('click', () => setArtMode(artMode === 'pixel' ? 'ascii' : 'pixel'));
 $('#zoom-in').addEventListener('click', () => { renderer.zoom(2); draw(); });
 $('#zoom-out').addEventListener('click', () => { renderer.zoom(-2); draw(); });
 function startStatus(text) { write('#start-message', text); }
@@ -875,7 +900,7 @@ window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener('change
         renderer.startAmbience();
 });
 window.addEventListener('pagehide', () => { if (gameStarted && state.stats.hp > 0)
-    save(true); });
+    save(true); asciiWebgl?.destroy(); pixelRenderer?.destroy(); });
 // The main menu always opens first. We never overwrite the player's saved game at boot.
 draw();
 renderer.pauseAmbience();
@@ -884,12 +909,21 @@ $(savedRaw() ? '#start-continue' : '#start-new').focus();
 // WebGL upgrade is asynchronous: controls and Canvas 2D work immediately.
 // A WebGL failure never blocks input, saves or the offline release.
 void import('./pixi-renderer.js').then(async ({ PixiAsciiRenderer }) => {
-    const candidate = await PixiAsciiRenderer.create($('#viewport'), renderer);
-    renderer.pauseAmbience();
+    const candidate = await PixiAsciiRenderer.create($('#viewport'), asciiRenderer);
+    asciiWebgl = candidate;
     renderer = candidate;
     $('#viewport').dataset.renderer = 'pixi-webgl';
-    $('#viewport').dataset.artMode = 'ascii';
-    state.log.push('GRÁFICOS // Renderizado PixiJS WebGL activado.');
+    state.log.push('GRÁFICOS // Renderizado PixiJS WebGL ASCII activado.');
+    try {
+        const { PixelRenderer } = await import('./pixel-renderer.js');
+        pixelRenderer = await PixelRenderer.create($('#viewport'), asciiRenderer);
+        setArtMode('pixel');
+        state.log.push('GRÁFICOS // Atlas pixel art original activado.');
+    }
+    catch (pixelError) {
+        console.warn('Pixel art no disponible; se conserva ASCII:', pixelError);
+        setArtMode('ascii');
+    }
     draw();
     if (gameStarted) {
         renderer.startAmbience();
@@ -898,6 +932,7 @@ void import('./pixi-renderer.js').then(async ({ PixiAsciiRenderer }) => {
 }).catch(error => {
     $('#viewport').dataset.renderer = 'canvas2d';
     $('#viewport').dataset.artMode = 'ascii';
+    $('#art-mode-btn').setAttribute('disabled', 'true');
     state.log.push('GRÁFICOS // WebGL no disponible; motor Canvas 2D operativo.');
     console.warn('PixiJS WebGL fallback:', error);
     draw();

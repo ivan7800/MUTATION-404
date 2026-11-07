@@ -3,6 +3,7 @@ import { index } from '../../../packages/core/src/world.js';
 import { parseRuin, themeForRuin } from '../../../packages/core/src/depths.js';
 import { AsciiRenderer } from './renderer.js';
 import type { PixiAsciiRenderer } from './pixi-renderer.js';
+import type { PixelRenderer } from './pixel-renderer.js';
 import { AtmosphereAudio } from './audio.js';
 import { tacticalSignal } from './tactical.js';
 import type {HeroAction} from './ascii-art.js';
@@ -17,7 +18,7 @@ root.innerHTML=`
 <div class="hero-strip"><span><span id="biome-strip">REGIÓN / SALINAS DE VÉRTICE</span></span><span id="clock">07:00</span><span id="coords">X:32 Y:32</span><span class="strip-accent" id="exploration">EXPLORACIÓN 0%</span></div>
 <main class="layout">
 <section class="game-column" aria-label="Área de juego">
-<div class="panel-heading"><div><span class="tiny-label">VISTA ASCII ISOMÉTRICA / COMBATE TÁCTICO</span><h1 id="location">Faro Ciego</h1></div><div class="zoom"><span class="art-badge" aria-label="Dirección artística ASCII unificada">ASCII ISOMÉTRICO</span><button id="zoom-out" aria-label="Reducir mapa">−</button><button id="zoom-in" aria-label="Ampliar mapa">+</button></div></div>
+<div class="panel-heading"><div><span class="tiny-label">VISTA ISOMÉTRICA / COMBATE TÁCTICO</span><h1 id="location">Faro Ciego</h1></div><div class="zoom"><button id="art-mode-btn" class="art-badge" type="button" aria-pressed="false">PIXEL ART</button><button id="zoom-out" aria-label="Reducir mapa">−</button><button id="zoom-in" aria-label="Ampliar mapa">+</button></div></div>
 <div class="biome-story" aria-live="polite">
   <div class="biome-emblem">◈</div>
   <div class="biome-story-text"><span class="tiny-label" id="biome-subtitle">EL DESIERTO QUE ESCUCHA</span><p id="biome-description">La sal conserva ecos de quienes desaparecieron.</p></div>
@@ -79,8 +80,13 @@ root.innerHTML=`
 </div>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-header"><span id="modal-caption">TRANSMISIÓN LOCAL</span><button id="modal-close" aria-label="Cerrar diálogo">✕</button></div><h2 id="modal-title">Registro</h2><div id="modal-content"></div><div id="modal-options"></div></div></div>`;
 const $=<T extends HTMLElement>(selector:string):T=>{const el=document.querySelector<T>(selector);if(!el)throw new Error(`Elemento ${selector} ausente`);return el;};
-let renderer:AsciiRenderer|PixiAsciiRenderer=new AsciiRenderer($<HTMLDivElement>('#viewport'));
+let renderer:AsciiRenderer|PixiAsciiRenderer|PixelRenderer=new AsciiRenderer($<HTMLDivElement>('#viewport'));
+const asciiRenderer=renderer as AsciiRenderer;
+let asciiWebgl:PixiAsciiRenderer|null=null;
+let pixelRenderer:PixelRenderer|null=null;
+let artMode:'ascii'|'pixel'='ascii';
 $<HTMLElement>('#viewport').dataset.renderer='canvas2d';
+$<HTMLElement>('#viewport').dataset.artMode='ascii';
 const audio=new AtmosphereAudio();
 const AUDIO_SETTINGS_KEY='mutation404.audio.v27';
 const CRT_SETTINGS_KEY='mutation404.crt.v1';
@@ -111,6 +117,17 @@ function applyCrtSettings():void{
   renderer.setReducedMotion(crtSettings.accessible||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true);
 }
 function saveCrtSettings():void{try{localStorage.setItem(CRT_SETTINGS_KEY,JSON.stringify(crtSettings));}catch{/* settings remain active for this session */}}
+function setArtMode(next:'ascii'|'pixel'):void{
+  if(next==='pixel'&&!pixelRenderer)return;
+  renderer.pauseAmbience();
+  renderer=next==='pixel'?pixelRenderer!:asciiWebgl??asciiRenderer;
+  for(const canvas of Array.from($<HTMLDivElement>('#viewport').querySelectorAll<HTMLCanvasElement>('canvas')))canvas.style.display='none';
+  const active=next==='pixel'?$<HTMLCanvasElement>('#viewport canvas.pixel-canvas'):asciiWebgl?$<HTMLCanvasElement>('#viewport canvas.pixi-canvas'):$<HTMLCanvasElement>('#viewport canvas.world-canvas');
+  active.style.display='block';
+  artMode=next;$<HTMLElement>('#viewport').dataset.artMode=next;
+  const button=$<HTMLButtonElement>('#art-mode-btn');button.textContent=next==='pixel'?'PIXEL ART':'ASCII';button.setAttribute('aria-pressed',String(next==='pixel'));
+  draw();if(gameStarted)renderer.startAmbience();renderer.focus();
+}
 let gameStarted=false;
 const saveKeys=[SAVE_KEY,V09_KEY,V08_KEY,V07_KEY,LAST_KEY,OLDER_KEY,OLD_KEY,PREVIOUS_KEY,LEGACY_KEY,FIRST_KEY] as const;
 function storedSave():{raw:string;key:string}|null{
@@ -464,6 +481,7 @@ $('#harvest-btn').addEventListener('click',()=>act({type:'harvest'}));$('#craft-
 $('#inventory-btn').addEventListener('click',inventory);$('#journal-btn').addEventListener('click',journal);$('#help-btn').addEventListener('click',help);
 $('#modal-close').addEventListener('click',closeModal);
 $('#modal').addEventListener('click',ev=>{if(ev.target===$('#modal'))closeModal();});
+$('#art-mode-btn').addEventListener('click',()=>setArtMode(artMode==='pixel'?'ascii':'pixel'));
 $('#zoom-in').addEventListener('click',()=>{renderer.zoom(2);draw();});$('#zoom-out').addEventListener('click',()=>{renderer.zoom(-2);draw();});
 function startStatus(text:string):void{write('#start-message',text);}
 function updateStartMenu():void{
@@ -589,7 +607,7 @@ window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener('change
   renderer.setReducedMotion(event.matches);
   if(gameStarted&&document.visibilityState==='visible')renderer.startAmbience();
 });
-window.addEventListener('pagehide',()=>{if(gameStarted&&state.stats.hp>0)save(true);});
+window.addEventListener('pagehide',()=>{if(gameStarted&&state.stats.hp>0)save(true);asciiWebgl?.destroy();pixelRenderer?.destroy();});
 // The main menu always opens first. We never overwrite the player's saved game at boot.
 draw();
 renderer.pauseAmbience();
@@ -598,16 +616,24 @@ $<HTMLButtonElement>(savedRaw()?'#start-continue':'#start-new').focus();
 // WebGL upgrade is asynchronous: controls and Canvas 2D work immediately.
 // A WebGL failure never blocks input, saves or the offline release.
 void import('./pixi-renderer.js').then(async ({PixiAsciiRenderer})=>{
-  const candidate=await PixiAsciiRenderer.create($<HTMLDivElement>('#viewport'),renderer as AsciiRenderer);
-  renderer.pauseAmbience();
-  renderer=candidate;
+  const candidate=await PixiAsciiRenderer.create($<HTMLDivElement>('#viewport'),asciiRenderer);
+  asciiWebgl=candidate;renderer=candidate;
   $('#viewport').dataset.renderer='pixi-webgl';
-  $('#viewport').dataset.artMode='ascii';
-  state.log.push('GRÁFICOS // Renderizado PixiJS WebGL activado.');
+  state.log.push('GRÁFICOS // Renderizado PixiJS WebGL ASCII activado.');
+  try{
+    const {PixelRenderer}=await import('./pixel-renderer.js');
+    pixelRenderer=await PixelRenderer.create($<HTMLDivElement>('#viewport'),asciiRenderer);
+    setArtMode('pixel');
+    state.log.push('GRÁFICOS // Atlas pixel art original activado.');
+  }catch(pixelError){
+    console.warn('Pixel art no disponible; se conserva ASCII:',pixelError);
+    setArtMode('ascii');
+  }
   draw();if(gameStarted){renderer.startAmbience();renderer.focus();}
 }).catch(error=>{
   $('#viewport').dataset.renderer='canvas2d';
   $('#viewport').dataset.artMode='ascii';
+  $('#art-mode-btn').setAttribute('disabled','true');
   state.log.push('GRÁFICOS // WebGL no disponible; motor Canvas 2D operativo.');
   console.warn('PixiJS WebGL fallback:',error);
   draw();
