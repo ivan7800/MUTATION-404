@@ -28,6 +28,13 @@ test('ABYSSAL CRT controls are independent, persistent and accessible',()=>{
   assert.match(style,/data-crt-accessible=true/);
   assert.match(style,/\.crt-settings/);
 });
+test('premium interface keeps hierarchy and responsive console treatment',()=>{
+  assert.match(style,/--premium-cyan/);
+  assert.match(style,/premium-sweep/);
+  assert.match(style,/\.command-deck|\.actionbar/);
+  assert.match(style,/max-width:1760px/);
+  assert.match(style,/@media\(max-width:620px\)/);
+});
 test('offline entrypoint includes the audio and biome modules',()=>{
   const entry=readFileSync('play/js/apps/web/src/main.js','utf8');
   const audio=readFileSync('play/js/apps/web/src/audio.js','utf8');

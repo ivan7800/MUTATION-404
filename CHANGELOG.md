@@ -6,6 +6,7 @@
 - Paneles ABYSSAL accesibles desde la interfaz normal: personaje, inventario, mutaciones, atlas/mapa, diario, fabricación y sistema.
 - Controles CRT persistentes e independientes para scanlines, brillo, ruido, viñeta, resplandor y modo accesible; el brillo se ajusta sin reiniciar.
 - QA reproducible: 193 pruebas Node, 25 comprobaciones Chromium y recarga offline con guardado preservado. La campaña humana y la revisión con lector de pantalla siguen pendientes.
+- Interfaz premium: cabecera de señal, paneles de profundidad, viewport tratado como reliquia, comandos agrupados por función, estados de combate más legibles y responsive refinado para móvil.
 
 ## Rescate artístico — vertical slice experimental
 
