@@ -357,3 +357,7 @@ body:before{background:radial-gradient(ellipse at center,transparent 45%,#000b 1
 @media(max-width:800px){.shell{padding-inline:10px}.topbar{padding:13px 14px}.layout{grid-template-columns:1fr;gap:15px}.sidebar{grid-template-columns:repeat(2,minmax(0,1fr));display:grid}.viewport{min-height:370px;padding:8px}.panel-heading h1{font-size:27px}.actionbar{padding:9px}}
 @media(max-width:620px){.shell{padding-inline:7px}.topbar{min-height:0}.brand-title{font-size:20px}.brand-mark{width:48px;height:48px;font-size:28px}.brand-sub{font-size:7px;letter-spacing:.2em}.top-controls{width:100%;justify-content:flex-end}.top-controls .live{display:none}.hero-strip{margin-top:8px;padding:10px 12px}.layout{margin-top:14px}.sidebar{grid-template-columns:1fr}.panel-heading h1{font-size:24px}.viewport{min-height:330px}.eventpanel{padding:15px}.actionbar{grid-template-columns:repeat(2,minmax(0,1fr));display:grid}.action{min-height:46px;padding-inline:8px}.toolbar{font-size:9px}.start-menu-card{padding:28px 18px}.start-menu h1{font-size:37px}}
 @media(prefers-reduced-motion:reduce){.topbar:after{display:none}.action,.icon-btn,.modal-option{transition:none}.world-canvas{filter:none}}
+
+/* Pixel art keeps its authored cyan/teal palette and nearest-neighbour edges. */
+#viewport .pixel-canvas{filter:contrast(1.08) saturate(1.25) brightness(var(--crt-brightness,1.04));image-rendering:pixelated;image-rendering:crisp-edges}
+[data-crt-accessible=true] #viewport .pixel-canvas{filter:contrast(1.08) saturate(1.15) brightness(var(--crt-brightness,1.04))}

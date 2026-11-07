@@ -12,7 +12,7 @@ test('original gameplay catalog remains present after the ASCII presentation upg
   assert.equal(SECTORS.length, 9);
 });
 
-test('original controls remain wired while the visual selector is intentionally unified', () => {
+test('original controls remain wired while Pixel and ASCII modes coexist', () => {
   const main = readFileSync('apps/web/src/main.ts', 'utf8');
   for (const id of ['mutations-btn','pulse-btn','neural-btn','fire-btn-gene','phase-btn','scan-btn','travel-btn','atlas-btn','market-btn','house-btn','down-btn','up-btn','interact-btn','target-btn','attack-btn','fire-btn','pickup-btn','heal-btn','harvest-btn','craft-btn','ecology-btn','inventory-btn','swap-btn','journal-btn','wait-btn']) {
     assert.match(main, new RegExp(`id="${id}"`), `missing control ${id}`);
@@ -20,7 +20,8 @@ test('original controls remain wired while the visual selector is intentionally 
   for (const key of ["key==='c'", "key==='l'", "key==='n'", "key==='p'", "key==='k'", "key==='o'", "key==='y'", "key==='j'", "key==='u'", "key==='b'", "key==='v'", "key==='m'"]) {
     assert.match(main, new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `missing keyboard action ${key}`);
   }
-  assert.doesNotMatch(main, /art-mode-btn|toggleArt|PÍXEL/);
+  assert.match(main, /art-mode-btn/);
+  assert.match(main, /setArtMode/);
 });
 
 test('save serialization still preserves game state while excluding transient view fields', () => {

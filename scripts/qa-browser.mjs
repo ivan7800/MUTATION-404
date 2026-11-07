@@ -195,7 +195,11 @@ try{
     assert.equal(await page.locator('#start-menu').isVisible(),false);
     await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
     const mode=await page.locator('#viewport').getAttribute('data-art-mode');
-    assert.equal(mode,'ascii');
+    assert.equal(mode,'pixel',`${scene} debe arrancar en pixel; errores: ${errors.join(' | ')}`);
+    await page.locator('#art-mode-btn').click();
+    await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-art-mode')==='ascii');
+    await page.locator('#art-mode-btn').click();
+    await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-art-mode')==='pixel');
     if(eye){
       assert.match(await page.locator('#location').textContent(),/Ojo del Silencio/i);
       assert.match(await page.locator('#biome-description').textContent(),/Las paredes repiten pensamientos/i);
@@ -231,7 +235,8 @@ try{
   await regionPage.goto(base+'?profile=1',{waitUntil:'networkidle',timeout:45000});
   await regionPage.locator('#start-continue').click();
   await regionPage.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
-  assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'ascii');
+  await regionPage.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-art-mode')==='pixel',{timeout:25000});
+  assert.equal(await regionPage.locator('#viewport').getAttribute('data-art-mode'),'pixel');
   // Performance diagnostics are scoped to the scene builder, NOT GPU time/FPS.
   await regionPage.waitForFunction(()=>window.__mutation404RenderProfile?.builds>=2,{timeout:10000});
   const firstProfile=await regionPage.evaluate(()=>window.__mutation404RenderProfile);
@@ -278,7 +283,7 @@ try{
     assert.match(await pg.locator('#nacar-boss-warning').textContent(),/IMPACTO PRÓXIMO/);
     const screenshot=`qa-evidence/nacar-v29-phase-${phase}.png`;
     await pg.screenshot({path:screenshot,fullPage:true,animations:'disabled'});
-    assert.equal(await pg.locator('#viewport').getAttribute('data-art-mode'),'ascii');
+    assert.equal(await pg.locator('#viewport').getAttribute('data-art-mode'),'pixel');
     assert.deepEqual(pageErrors,[],'Nácar phase screen caused browser errors');
     results.push({scene:`nacar-phase-${phase}`,screenshot,errors:pageErrors});
     await ctx.close();
@@ -353,6 +358,12 @@ try{
       await page.locator('#start-continue').click();
       const expected=mode==='webgl'?'pixi-webgl':'canvas2d';
       await page.waitForFunction(value=>document.querySelector('#viewport')?.dataset.renderer===value,expected);
+      if(mode==='webgl'){
+        await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='pixel',{timeout:25000});
+        await page.screenshot({path:`qa-evidence/enemy-pixel-${kind}.png`,fullPage:true,animations:'disabled'});
+        await page.locator('#art-mode-btn').click();
+        await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='ascii');
+      }
       await page.evaluate(()=>{window.__attackRows=[];});
       await page.locator('#wait-btn').click();
       const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);
