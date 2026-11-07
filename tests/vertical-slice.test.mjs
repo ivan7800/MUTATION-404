@@ -6,6 +6,8 @@ import {composition} from '../play/js/apps/web/src/ascii-art.js';
 const renderer=readFileSync('apps/web/src/pixi-renderer.ts','utf8');
 const main=readFileSync('apps/web/src/main.ts','utf8');
 const qa=readFileSync('scripts/qa-browser.mjs','utf8');
+const pixel=readFileSync('apps/web/src/pixel-renderer.ts','utf8');
+const atlas=readFileSync('apps/web/public/pixel/atlas.svg','utf8');
 
 test('static map floor is drawn in a dedicated cached Graphics layer',()=>{
  assert.match(renderer,/terrainFloor=new Graphics\(\)/);
@@ -28,11 +30,15 @@ test('v2.9 death banner is hidden for living characters',()=>{
  assert.match(main,/classList\.toggle\('hidden',stats\.hp>0\)/);
  assert.match(css,/\.death-banner\.hidden\s*\{\s*display:\s*none\s*\}/);
 });
-test('ASCII is the single visual language across renderers',()=>{
- assert.match(main,/ASCII ISOMÉTRICO/);
- assert.doesNotMatch(main,/art-mode-btn|toggleArt|PÍXEL/);
+test('Pixel and ASCII renderers share the same game controls',()=>{
+ assert.match(main,/art-mode-btn/);
+ assert.match(main,/setArtMode/);
  assert.ok(renderer.includes("get mode(): 'ascii'"));
- assert.doesNotMatch(renderer,/toggleArt\(\)/);
+ assert.match(pixel,/get mode|readonly mode='pixel'/);
+ assert.match(pixel,/loadPixelAtlas/);
+ assert.match(atlas,/id="hero-idle"/);
+ assert.match(atlas,/id="crawler"/);
+ assert.match(atlas,/id="ruin"/);
 });
 test('browser QA exercises both artistic scenes in the unified ASCII mode',()=>{
  assert.ok(qa.includes('faro-ascii-unified'));

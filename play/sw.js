@@ -1,5 +1,5 @@
-const VERSION='6a6440ee60f661e3';
-const ASSETS=["./","./assets/CanvasPool-DqHWAWxU.js","./assets/CanvasRenderer-BazSeAHX.js","./assets/RenderTargetSystem-Dr_bhGdu.js","./assets/WebGLRenderer-CDE6qkX4.js","./assets/WebGPURenderer-o-k8KqkO.js","./assets/browserAll-BsOX_m0K.js","./assets/canvasUtils-C-jSOAPk.js","./assets/getTexelRangeRects-jGz6uG5T.js","./assets/index-AYI6NTfo.js","./assets/index-DOm_3IMS.css","./assets/pixi-renderer-YFCqY6VP.js","./assets/webworkerAll-BgT4T1Gr.js","./icon.svg","./index.html","./manifest.webmanifest"];
+const VERSION='722e88528afea5e0';
+const ASSETS=["./","./assets/BitmapFont-y4ms5rym.js","./assets/CanvasPool-Bf7Q8S1m.js","./assets/CanvasRenderer-DwcTayu5.js","./assets/Filter-D8qwqj6J.js","./assets/RenderTargetSystem-C1vv_OdY.js","./assets/WebGLRenderer-CquWQm9m.js","./assets/WebGPURenderer-DVPK54mC.js","./assets/browserAll-Bd_U0TeC.js","./assets/canvasUtils-BdLV8XSt.js","./assets/getTexelRangeRects-D9unyl4N.js","./assets/index-DMnGsZPr.js","./assets/index-Dnvsysx1.css","./assets/index-Dq_aX-yc.js","./assets/pixel-renderer-BUs9fKht.js","./assets/pixi-renderer-DLLzTXDK.js","./assets/webworkerAll-BqQIRVo4.js","./icon.svg","./index.html","./manifest.webmanifest"];
 const PREFIX=`mutation404:${new URL(self.registration.scope).pathname}:`;
 const CACHE=PREFIX+VERSION;
 self.addEventListener('install',event=>{

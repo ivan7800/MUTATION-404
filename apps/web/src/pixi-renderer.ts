@@ -505,6 +505,7 @@ export class PixiAsciiRenderer {
     this.ambientFrame=requestAnimationFrame(loop);
   }
   pauseAmbience():void{if(this.ambientFrame)cancelAnimationFrame(this.ambientFrame);this.ambientFrame=0;}
+  destroy():void{this.pauseAmbience();if(this.heroTimer)clearTimeout(this.heroTimer);this.app.destroy(true,{children:true});}
   setReducedMotion(value:boolean):void{
     this.reducedMotion=value;
     if(value){this.pauseAmbience();this.effectUntil=0;this.heroUntil=0;if(this.heroTimer)clearTimeout(this.heroTimer);this.heroTimer=0;this.flashes.clear();this.echoes.length=0;this.fieldBursts.length=0;this.bossBursts.length=0;}

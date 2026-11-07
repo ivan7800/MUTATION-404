@@ -603,6 +603,8 @@ export class PixiAsciiRenderer {
     }
     pauseAmbience() { if (this.ambientFrame)
         cancelAnimationFrame(this.ambientFrame); this.ambientFrame = 0; }
+    destroy() { this.pauseAmbience(); if (this.heroTimer)
+        clearTimeout(this.heroTimer); this.app.destroy(true, { children: true }); }
     setReducedMotion(value) {
         this.reducedMotion = value;
         if (value) {

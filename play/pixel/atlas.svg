@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128" shape-rendering="crispEdges">
+  <rect width="256" height="128" fill="none"/>
+  <!-- 32px original pixel atlas: hero, creatures, architecture, effects. -->
+  <g id="hero-idle" transform="translate(0 0)">
+    <path fill="#07151b" d="M9 28h14v3H9zM6 25h20v3H6zM11 20h10v5H11z"/>
+    <path fill="#d2b07a" d="M13 5h7v2h3v7h-2v3h-9v-3h-2V9h3z"/><path fill="#5c3d39" d="M14 8h7v5h-2v2h-5z"/>
+    <path fill="#4bd2cf" d="M16 9h3v3h-3z"/><path fill="#122c38" d="M10 15h13v8h-3v5h-7v-5h-3z"/>
+    <path fill="#8d4c59" d="M8 18h4v8h3v4H6v-5h2zM21 18h4v7h2v5h-8v-4h2z"/>
+    <path fill="#d2b07a" d="M11 27h4v3h-6zM20 27h4v3h-2z"/>
+  </g>
+  <g id="hero-walk" transform="translate(32 0)"><use href="#hero-idle" transform="translate(-1 0)"/><path fill="#d2b07a" d="M10 30h5v2h-7zM21 29h5v3h-3z"/></g>
+  <g id="hero-attack" transform="translate(64 0)"><use href="#hero-idle" transform="translate(-32 0)"/><path fill="#d8e7df" d="M22 15h9v2h-9zM25 13h6v2h-6z"/><path fill="#b87355" d="M24 17h7v2h-7z"/></g>
+  <g id="hero-hurt" transform="translate(96 0)"><use href="#hero-idle" transform="translate(-96 0)"/><path fill="#e97979" d="M7 8h3v3H7zM23 20h3v3h-3zM10 24h2v2h-2z"/></g>
+  <g id="hero-death" transform="translate(128 0)"><path fill="#4d2734" d="M5 26h22v4H5zM9 22h14v4H9z"/><path fill="#c56f70" d="M8 15h4v4H8zM20 15h4v4h-4zM12 19h8v3h-8z"/><path fill="#07151b" d="M10 8h3v5h-3zM19 8h3v5h-3z"/></g>
+  <g id="crawler" transform="translate(160 0)"><path fill="#07151b" d="M5 26h23v4H5z"/><path fill="#6c4d5b" d="M8 10h17v13H8zM5 14h4v8H5zM23 14h4v8h-4z"/><path fill="#d27378" d="M10 12h3v3h-3zM19 12h3v3h-3z"/><path fill="#b58b75" d="M6 23h5v3H6zM13 23h4v4h-4zM21 23h5v3h-5z"/><path fill="#36243c" d="M7 9h4v3H7zM21 9h4v3h-4z"/></g>
+  <g id="sentinel" transform="translate(192 0)"><path fill="#07151b" d="M7 28h19v3H7z"/><path fill="#527a83" d="M12 4h9v5h4v12h-3v5H10v-5H7V9h5z"/><path fill="#b9e9d7" d="M14 7h5v4h-5zM12 12h3v3h-3zM20 12h3v3h-3z"/><path fill="#a17c52" d="M9 21h15v3H9zM14 24h5v4h-5z"/><path fill="#dd716d" d="M8 9h3v3H8zM22 9h3v3h-3z"/></g>
+  <g id="larva" transform="translate(224 0)"><path fill="#07151b" d="M5 28h23v3H5z"/><path fill="#76558e" d="M8 7h16v5h4v12H7V12h1z"/><path fill="#d6b4e8" d="M10 10h4v4h-4zM19 10h4v4h-4z"/><path fill="#ae6f9e" d="M6 15h4v5H6zM23 15h4v5h-4zM10 24h5v4h-5zM19 24h5v4h-5z"/><path fill="#4bc8c1" d="M14 17h5v3h-5z"/></g>
+  <g id="floor" transform="translate(0 32)"><path fill="#101b27" d="M0 0h32v32H0z"/><path fill="#1d3d46" d="M0 25h12v3H0zM18 8h14v3H18zM7 15h9v2H7zM24 26h8v2h-8z"/><path fill="#39777a" d="M3 7h5v2H3zM14 22h4v2h-4zM22 14h3v2h-3z"/></g>
+  <g id="rock" transform="translate(32 32)"><path fill="#0b151c" d="M0 28h32v4H0z"/><path fill="#334753" d="M5 17l7-11h9l7 11v10H5z"/><path fill="#66818a" d="M13 7h7v5h4v6h-4v-4h-7z"/><path fill="#1c2c37" d="M8 20h17v7H8z"/><path fill="#9bb2ad" d="M12 13h3v3h-3zM22 18h3v2h-3z"/></g>
+  <g id="ruin" transform="translate(64 32)"><path fill="#081319" d="M0 27h32v5H0z"/><path fill="#3d4b55" d="M4 8h6v19H4zM22 8h6v19h-6zM8 5h16v5H8z"/><path fill="#a28767" d="M8 7h16v3H8zM10 12h12v3H10z"/><path fill="#101b26" d="M12 15h8v12h-8z"/><path fill="#65c7c4" d="M14 17h4v4h-4z"/></g>
+  <g id="plant" transform="translate(96 32)"><path fill="#07151b" d="M3 28h26v4H3z"/><path fill="#244f4a" d="M14 11h5v17h-5z"/><path fill="#58b978" d="M14 15h-8v-5h8zM19 11h8v5h-8zM14 20H5v-5h9zM19 19h9v5h-9z"/><path fill="#b1e399" d="M8 11h4v2H8zM21 14h4v2h-4z"/></g>
+  <g id="tree" transform="translate(128 32)"><path fill="#07151b" d="M3 28h26v4H3z"/><path fill="#5d463d" d="M14 14h6v14h-6z"/><path fill="#2d6258" d="M9 4h14v5h5v9h-7v5h-9v-5H5V9h4z"/><path fill="#74bd87" d="M12 6h7v4h-7zM7 11h6v4H7zM20 12h6v4h-6z"/></g>
+  <g id="mutation" transform="translate(160 32)"><path fill="#07151b" d="M3 28h26v4H3z"/><path fill="#612b56" d="M12 7h9v5h5v12H7V12h5z"/><path fill="#d060a1" d="M14 10h5v5h-5zM10 16h5v4h-5zM20 17h5v4h-5z"/><path fill="#8ce6dc" d="M15 20h4v5h-4z"/></g>
+  <g id="shadow" transform="translate(192 32)"><path fill="#02070b" d="M2 15h28v8H2zM6 11h20v16H6z"/><path fill="#0d2024" d="M8 16h16v4H8z"/></g>
+  <g id="attack" transform="translate(224 32)"><path fill="#e6bc69" d="M14 2h4v8h-4zM14 22h4v8h-4zM2 14h8v4H2zM22 14h8v4h-8z"/><path fill="#fff0ae" d="M14 11h4v10h-4zM11 14h10v4H11z"/><path fill="#6ce5df" d="M6 6h3v3H6zM23 23h3v3h-3z"/></g>
+  <g id="damage" transform="translate(0 64)"><path fill="#ef7778" d="M4 5h5v5H4zM22 22h5v5h-5zM14 2h4v8h-4zM14 22h4v8h-4z"/><path fill="#fff0ae" d="M12 12h8v8h-8z"/></g>
+  <g id="mutation-fx" transform="translate(32 64)"><path fill="#bd8ff0" d="M14 1h4v10h-4zM14 21h4v10h-4zM1 14h10v4H1zM21 14h10v4H21z"/><path fill="#e6d6ff" d="M14 12h4v8h-4zM12 14h8v4h-8z"/></g>
+</svg>
