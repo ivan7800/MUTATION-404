@@ -13,6 +13,8 @@ const failures=[],results=[];
 const browserExecutable=process.env.CHROME_PATH||process.env.CHROMIUM_PATH||'/usr/bin/chromium';
 await mkdir('qa-evidence',{recursive:true});
 let browser;
+const launchBrowser=()=>chromium.launch({headless:true,executablePath:browserExecutable,args:['--no-sandbox','--disable-dev-shm-usage','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const resetBrowser=async()=>{await browser?.close();browser=await launchBrowser();};
 try{
   let ready=false;
   for(let n=0;n<120;n++){
@@ -21,7 +23,7 @@ try{
     await new Promise(r=>setTimeout(r,100));
   }
   assert.ok(ready,`QA server did not become ready at ${base}`);
-  browser=await chromium.launch({headless:true,executablePath:browserExecutable,args:['--no-sandbox','--disable-dev-shm-usage','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+  browser=await launchBrowser();
   for(const mode of ['webgl','canvas-fallback']){
     const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
     if(mode==='canvas-fallback'){
@@ -139,6 +141,7 @@ try{
   }
   // Production audit: exercise the on-screen D-pad at phone and tablet sizes.
   // Record actual viewport overflow instead of assuming the desktop checks cover it.
+  await resetBrowser();
   for(const [width,height] of [[390,844],[768,1024]]){
     const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:width===390,hasTouch:width===390});
     const page=await context.newPage(),errors=[];
@@ -173,6 +176,7 @@ try{
     await context.close();
   }
   // Unified ASCII isometric presentation in the overworld and Ojo del Silencio.
+  await resetBrowser();
   const state=createGame(404),room=generateRuin(404,-1,-1,2);
   state.zone='ruin--1--1-2';state.tiles=room.tiles;state.seen=room.seen;
   state.fields=room.fields;state.ground=room.ground;state.enemies=room.enemies;
@@ -225,6 +229,7 @@ try{
   }
   // v2.9: exercise a previously glyph-only overworld biome in the unified mode.
   // Capture evidence without changing gameplay state, save schema or seed.
+  await resetBrowser();
   const regionState=createGame(404);
   regionState.player={x:6,y:8};
   refreshVisibility(regionState);
@@ -257,6 +262,7 @@ try{
   await regionContext.close();
   // v2.9: an actual living boss at every phase, plus a pre-impact tell.
   // Each save is real and loaded via the normal Continue button.
+  await resetBrowser();
   for(const [phase,hp] of [[1,45],[2,25],[3,5]]){
     const bossState=createGame(404),room=generateDepth(404,3);
     bossState.zone='zero-3';
@@ -291,6 +297,7 @@ try{
   // v2.8: verify an actual end-to-end finale UI using a valid pre-finale save.
   // Combat is verified separately by the core campaign tests; this fixture
   // represents the point after the final guardian has been defeated.
+  await resetBrowser();
   const endState=createGame(404),heartRoom=generateDepth(404,3);
   endState.zone='zero-3';endState.tiles=heartRoom.tiles;endState.seen=heartRoom.seen;
   endState.enemies=[];endState.fields=[];endState.ground=[];endState.player={x:14,y:10};
@@ -326,7 +333,9 @@ try{
   await endingContext.close();
   // Isolated combat scenes verify the real UI dispatch and both glyph painters.
   // Fixtures position a living enemy; attacks themselves use the normal wait command.
+  await resetBrowser();
   for(const mode of ['webgl','canvas-fallback'])for(const kind of Object.keys(ENEMY_DEFS)){
+    if(mode==='webgl')await resetBrowser();
     const fixture=createGame(404);
     fixture.zone='zero-1';fixture.tiles.fill('.');fixture.fields=[];fixture.player={x:20,y:20};
     fixture.enemies=[{id:'visual-'+kind,kind,x:21,y:20,hp:ENEMY_DEFS[kind].hp,mode:'hunting',lastKnown:{x:20,y:20},searchTurns:3}];

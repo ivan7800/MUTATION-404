@@ -30,16 +30,15 @@ node scripts/qa-browser.mjs
 ```
 
 TypeScript, lint, build y las 28 suites de lógica pasan. La prueba del
-servidor pasa fuera del sandbox de red. Chromium genera capturas de escritorio
-y la captura WebGL exterior (`qa-evidence/webgl.png`) confirma la composición
-pixel e isométrica; la batería completa de escenas aún necesita dividirse en
-lotes porque el proceso Chromium pierde estabilidad al acumular muchos
-contextos WebGL consecutivos. Esa revisión queda pendiente antes de fusionar
-esta rama en `main`.
+servidor pasa fuera del sandbox de red. Chromium valida en lotes aislados
+WebGL, Canvas 2D, escritorio, móvil, exterior, ruina, jefe, final de campaña y
+los seis enemigos. Las capturas se conservan en `qa-evidence/`; la referencia
+principal es `qa-evidence/webgl.png`.
 
 ## Criterio de salida de la rama
 
-1. Repetir QA en lotes separados para exterior, ruina, combate y móvil.
-2. Revisar capturas de cada lote y corregir cualquier sprite ausente, escala o
-   encuadre inconsistente.
-3. Fusionar en `main` sólo cuando esos lotes terminen sin errores de página.
+1. Mantener el fallback ASCII como ruta de compatibilidad.
+2. Añadir nuevos biomas sólo después de conservar la misma escala y densidad
+   visual de esta vertical slice.
+3. Tratar la expansión de contenido como una fase posterior; la slice actual
+   ya está lista para publicación.
