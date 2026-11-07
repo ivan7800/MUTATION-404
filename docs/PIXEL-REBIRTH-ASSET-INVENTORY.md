@@ -9,12 +9,12 @@ centrado en el pie de la entidad.
 
 | Bioma | Suelo | Landmark | Captura |
 |---|---|---|---|
-| Salinas de Vértice | `floor-salinas` | `prop-salinas` | `qa-evidence/pixel-biomes/salinas.png` |
-| Páramos de Ceniza | `floor-ceniza` | `prop-ceniza` | `qa-evidence/pixel-biomes/ceniza.png` |
-| Cinturón de Hierro | `floor-hierro` | `prop-hierro` | `qa-evidence/pixel-biomes/hierro.png` |
-| Galerías de Vidrio | `floor-vidrio` | `prop-vidrio` | `qa-evidence/pixel-biomes/vidrio.png` |
-| Bosque de Médula | `floor-medula` | `prop-medula` | `qa-evidence/pixel-biomes/medula.png` |
-| Margen del Umbral | `floor-umbral` | `prop-umbral` | `qa-evidence/pixel-biomes/umbral.png` |
+| Salinas de Vértice | `floor-salinas` | `prop-salinas`, `flora-salinas`, `rock-salinas` | `qa-evidence/pixel-biomes/salinas.png` |
+| Páramos de Ceniza | `floor-ceniza` | `prop-ceniza`, `flora-ceniza`, `rock-ceniza` | `qa-evidence/pixel-biomes/ceniza.png` |
+| Cinturón de Hierro | `floor-hierro` | `prop-hierro`, `flora-hierro`, `rock-hierro` | `qa-evidence/pixel-biomes/hierro.png` |
+| Galerías de Vidrio | `floor-vidrio` | `prop-vidrio`, `flora-vidrio`, `rock-vidrio` | `qa-evidence/pixel-biomes/vidrio.png` |
+| Bosque de Médula | `floor-medula` | `prop-medula`, `flora-medula`, `rock-medula` | `qa-evidence/pixel-biomes/medula.png` |
+| Margen del Umbral | `floor-umbral` | `prop-umbral`, `flora-umbral`, `rock-umbral` | `qa-evidence/pixel-biomes/umbral.png` |
 
 Los props se seleccionan desde la biomeología determinista del core. El suelo
 ya no depende de un único tile genérico; roca, vegetación, anomalía, ruina y

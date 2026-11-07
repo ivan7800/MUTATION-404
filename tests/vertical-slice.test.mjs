@@ -45,6 +45,8 @@ test('Pixel Rebirth inventory covers every biome, species, elite and boss',()=>{
  for(const id of ['salinas','ceniza','hierro','vidrio','medula','umbral']){
   assert.match(atlas,new RegExp(`id="floor-${id}"`));
   assert.match(atlas,new RegExp(`id="prop-${id}"`));
+  assert.match(atlas,new RegExp(`id="flora-${id}"`));
+  assert.match(atlas,new RegExp(`id="rock-${id}"`));
   assert.ok(assets.includes(`floor-${id}`));
  }
  for(const id of ['crawler','sentinel','larva','moth','drone','spore']){

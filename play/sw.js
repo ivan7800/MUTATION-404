@@ -1,5 +1,5 @@
-const VERSION='7dbc13126d570d12';
-const ASSETS=["./","./assets/BitmapFont-C4ISkHbn.js","./assets/CanvasPool-C18fJT-0.js","./assets/CanvasRenderer-OtSnx09i.js","./assets/Filter-CZTU0jNw.js","./assets/RenderTargetSystem-kGkocT3U.js","./assets/WebGLRenderer-DJswmUWL.js","./assets/WebGPURenderer-HZWigqk6.js","./assets/browserAll-CwX-L9v-.js","./assets/canvasUtils-BzJtzRV1.js","./assets/getTexelRangeRects-DNVJ6Wo3.js","./assets/index-C6jba_4T.js","./assets/index-CFLQZs7y.js","./assets/index-Dnvsysx1.css","./assets/pixel-renderer-sEIDyhyS.js","./assets/pixi-renderer-CSe4CPJm.js","./assets/webworkerAll-B7xSktvi.js","./icon.svg","./index.html","./manifest.webmanifest"];
+const VERSION='d3d9c0fa945b9d99';
+const ASSETS=["./","./assets/BitmapFont-B-E844rp.js","./assets/CanvasPool-C14WWNr-.js","./assets/CanvasRenderer-DGUfcTtk.js","./assets/Filter-EOo9-nGa.js","./assets/RenderTargetSystem-AzaRw9SR.js","./assets/WebGLRenderer-BXg6Wg87.js","./assets/WebGPURenderer-XtcTq-4-.js","./assets/browserAll-a9_yUzK7.js","./assets/canvasUtils-BbQNNfr7.js","./assets/getTexelRangeRects-BwwQ-8LO.js","./assets/index-CJxfOxRe.js","./assets/index-DYh-iW3y.js","./assets/index-Dnvsysx1.css","./assets/pixel-renderer-zkC3OKGq.js","./assets/pixi-renderer-DjkIPtnJ.js","./assets/webworkerAll--PsPFyto.js","./icon.svg","./index.html","./manifest.webmanifest"];
 const PREFIX=`mutation404:${new URL(self.registration.scope).pathname}:`;
 const CACHE=PREFIX+VERSION;
 self.addEventListener('install',event=>{
