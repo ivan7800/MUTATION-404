@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="320" viewBox="0 0 512 320" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="352" viewBox="0 0 512 352" shape-rendering="crispEdges">
   <rect width="256" height="128" fill="none"/>
   <!-- 32px original pixel atlas: hero, creatures, architecture, effects. -->
   <g id="hero-idle" transform="translate(0 0)">
@@ -70,4 +70,11 @@
   <g id="elite-drone-b" transform="translate(32 256)"><path fill="#07151b" d="M1 29h30v3H1z"/><path fill="#96617d" d="M7 6h18v21H7z"/><path fill="#f1ae67" d="M3 12h8v5H3zM21 12h8v5h-8z"/><path fill="#fff0ae" d="M13 9h6v7h-6z"/><path fill="#f17aa0" d="M14 19h4v6h-4z"/></g>
   <g id="boss-heart-a" transform="translate(64 256)"><path fill="#07151b" d="M1 29h30v3H1z"/><path fill="#4f1f52" d="M7 5h18v5h5v17H2V10h5z"/><path fill="#d459a2" d="M12 9h8v7h5v8H7v-8h5z"/><path fill="#f7b4df" d="M14 13h4v7h-4zM11 16h10v4H11z"/><path fill="#77eee1" d="M4 7h5v4H4zM23 7h5v4h-5z"/></g>
   <g id="boss-heart-b" transform="translate(96 256)"><path fill="#07151b" d="M1 29h30v3H1z"/><path fill="#67245e" d="M6 4h20v6h5v18H1V10h5z"/><path fill="#e06cb3" d="M11 8h10v8h5v8H6v-8h5z"/><path fill="#ffd0eb" d="M14 12h4v8h-4zM10 16h12v4H10z"/><path fill="#8dfff0" d="M3 6h5v4H3zM24 6h5v4h-5z"/></g>
+  <!-- Six biome-specific vegetation silhouettes. -->
+  <g id="flora-salinas" transform="translate(0 288)"><path fill="#07151b" d="M3 29h26v3H3z"/><path fill="#b8a779" d="M14 29V8h4v21zM8 29V15h3v14zM23 29V12h3v17z"/><path fill="#d8c993" d="M4 12h10v3H4zM18 8h12v3H18zM7 20h7v3H7z"/><path fill="#5fc4bd" d="M15 5h3v4h-3z"/></g>
+  <g id="flora-ceniza" transform="translate(32 288)"><path fill="#07151b" d="M2 29h28v3H2z"/><path fill="#864a45" d="M14 29V10h5v19zM7 29V18h4v11zM24 29V14h4v15z"/><path fill="#c47a5d" d="M3 10h11v4H3zM19 7h11v4H19zM6 20h8v3H6z"/><path fill="#e0a176" d="M16 6h4v4h-4z"/></g>
+  <g id="flora-hierro" transform="translate(64 288)"><path fill="#07151b" d="M2 29h28v3H2z"/><path fill="#477e83" d="M13 29V7h5v22zM6 29V17h4v12zM23 29V12h4v17z"/><path fill="#81dad2" d="M2 11h12v3H2zM18 8h12v3H18zM6 21h8v3H6z"/><path fill="#d19a5b" d="M15 4h4v4h-4z"/></g>
+  <g id="flora-vidrio" transform="translate(96 288)"><path fill="#07151b" d="M3 29h26v3H3z"/><path fill="#76528b" d="M14 29V6h4v23zM7 29V14h3v15zM23 29V11h4v18z"/><path fill="#c9a7e6" d="M3 12h11v3H3zM18 8h12v3H18zM7 21h7v3H7z"/><path fill="#f0d5ff" d="M15 3h3v4h-3z"/></g>
+  <g id="flora-medula" transform="translate(128 288)"><path fill="#07151b" d="M2 29h28v3H2z"/><path fill="#407b4a" d="M13 29V5h6v24zM6 29V15h4v14zM24 29V10h4v19z"/><path fill="#8bd879" d="M2 11h13v5H2zM18 6h12v5H18zM7 21h9v4H7z"/><path fill="#d4f4a2" d="M15 2h4v5h-4z"/></g>
+  <g id="flora-umbral" transform="translate(160 288)"><path fill="#07151b" d="M2 29h28v3H2z"/><path fill="#864576" d="M14 29V7h5v22zM6 29V14h4v15zM24 29V11h4v18z"/><path fill="#d786bd" d="M2 11h13v4H2zM19 7h11v4H19zM6 21h9v4H6z"/><path fill="#f2bce3" d="M15 3h4v5h-4z"/></g>
 </svg>

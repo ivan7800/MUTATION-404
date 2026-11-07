@@ -9,7 +9,8 @@ const POS = {
     'crawler-a': [12, 4], 'crawler-b': [13, 4], 'sentinel-a': [14, 4], 'sentinel-b': [15, 4],
     'larva-a': [0, 6], 'larva-b': [1, 6], 'moth-a': [2, 6], 'moth-b': [3, 6], 'drone-a': [4, 6], 'drone-b': [5, 6], 'spore-a': [6, 6], 'spore-b': [7, 6],
     'hero-idle-a': [8, 7], 'hero-idle-b': [9, 7], 'hero-walk-a': [10, 7], 'hero-walk-b': [11, 7], 'hero-attack-a': [12, 7], 'hero-attack-b': [13, 7], 'hero-hurt-a': [14, 7], 'hero-death-a': [15, 7],
-    'elite-drone-a': [0, 8], 'elite-drone-b': [1, 8], 'boss-heart-a': [2, 8], 'boss-heart-b': [3, 8]
+    'elite-drone-a': [0, 8], 'elite-drone-b': [1, 8], 'boss-heart-a': [2, 8], 'boss-heart-b': [3, 8],
+    'flora-salinas': [0, 9], 'flora-ceniza': [1, 9], 'flora-hierro': [2, 9], 'flora-vidrio': [3, 9], 'flora-medula': [4, 9], 'flora-umbral': [5, 9]
 };
 export async function loadPixelAtlas() {
     const atlas = await Assets.load(ATLAS_URL);

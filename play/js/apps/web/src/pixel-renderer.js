@@ -104,11 +104,12 @@ export class PixelRenderer {
     }
     floorAsset(biome) { return `floor-${biome}`; }
     propAsset(biome) { return `prop-${biome}`; }
+    floraAsset(biome) { return `flora-${biome}`; }
     tileAsset(tile, variant, biome) {
         if (tile === '#' || tile === '%' || tile === '=')
             return variant === 2 ? this.propAsset(biome) : 'rock';
         if (tile === '*' || tile === '&')
-            return tile === '&' ? 'tree' : 'plant';
+            return this.floraAsset(biome);
         if (tile === '^')
             return this.propAsset(biome);
         if (tile === '!')
