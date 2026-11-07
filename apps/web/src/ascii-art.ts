@@ -115,6 +115,14 @@ const ACTORS:Record<string,readonly string[][]>={
   'effect:mutation':[['*','{#}','*'],['✺','·','✺']],
   'effect:scan':[['+','·','+'],['◇','·','◇']],
   'enemy:telegraph':[[' . ','/|\\',' /\\'],[' ! ','/|\\','/ \\']],
+  'enemy:recover:s':[[' __','/oo\\','/\\/\\']],
+  'enemy:recover:V':[['[o]','/V\\','| |']],
+  'enemy:recover:l':[[' _ ','(oo','/==~']],
+  'enemy:recover:p':[['\\ /','(o)','/ \\']],
+  'enemy:recover:D':[['/o\\','[=]','/ \\']],
+  'enemy:recover:f':[['.*.','(o)','/|\\']],
+  'enemy:recover:✺':[['\\ | /','--O--','/|X|\\','/ | \\']],
+  'enemy:recover:◆':[['/O\\','[X]','/|\\']],
 };
 export function composition(glyph:string,frame=0):readonly string[]{
   const poses=ACTORS[glyph];

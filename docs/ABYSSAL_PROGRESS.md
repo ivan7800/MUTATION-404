@@ -17,7 +17,7 @@ Resultado: sustituida la mezcla actual por una paleta coherente de fondo negro, 
 ## Fases siguientes
 
 2. Tramas densas y volumétricas del terreno — implementada; 190 pruebas pasan.
-3. Siluetas y coreografía completa de criaturas.
+3. Siluetas y coreografía completa de criaturas — primera entrega implementada; 191 pruebas pasan. Falta QA visual de duración en navegador y revisión humana.
 4. HUD y menús ABYSSAL TERMINAL.
 5. Paridad, rendimiento, offline y accesibilidad.
 6. Recorrido real de campaña y QA de release.

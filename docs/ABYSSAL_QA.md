@@ -13,7 +13,7 @@
 | Campaña humana completa | Pendiente |
 | Revisión física de hardware | Pendiente |
 
-Tras la Fase 2, la suite pasa con 190/190 pruebas. Se añadió una regresión para exigir tramas de terreno densas, estables y deterministas en los materiales principales.
+Tras la Fase 2, la suite pasó con 190/190 pruebas. Tras la primera entrega de Fase 3, pasa con 191/191: se añadió una regresión para exigir una recuperación legible para cada especie, élites y Nácar.
 
 ## Regla de las siguientes entregas
 

@@ -336,7 +336,8 @@ export class PixiAsciiRenderer {
       const creatureGlyph=nacar?'✺':elite?'◆':def.glyph;
       const enemyLift=terrainHeight(state.tiles[index(enemy.x,enemy.y)],terrainHash(state.seed+119,enemy.x,enemy.y))*.35;
       const action=this.enemyActions.get(state.zone+':'+enemy.id),now=performance.now();
-      const actionGlyph=action&&now<action.until?(now-action.started<90?'enemy:telegraph':`enemy:attack:${creatureGlyph}`):creatureGlyph;
+      const elapsed=action?now-action.started:Infinity;
+      const actionGlyph=action&&now<action.until?(elapsed<90?'enemy:telegraph':elapsed<250?`enemy:attack:${creatureGlyph}`:`enemy:recover:${creatureGlyph}`):creatureGlyph;
       used=this.drawGlyph(used,flash&&flash.until>now?`enemy:hurt:${creatureGlyph}`:actionGlyph,x,y,flash&&flash.until>now?0xff9d91:nacar?0x92f9ef:elite?0xecb9ff:this.color(def.color),1,enemyLift);
       const health=Math.max(0,Math.min(1,enemy.hp/(nacar?def.hp*3:def.hp)));
       if(health<1){this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,this.cellW-2,2).fill(0x492c33);this.backdrop.rect(x*this.cellW+1,y*this.cellH-3,(this.cellW-2)*health,2).fill(health>.45?0xdcbf83:0xee7373);}

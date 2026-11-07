@@ -37,6 +37,13 @@ test('all original enemy types and boss leave distinct printable ASCII death mar
     for(const row of rows)assert.match(row,/^[\x20-\x7e]+$/);
   }
 });
+test('every creature has a readable post-impact recovery silhouette',()=>{
+  for(const glyph of ['s','V','l','p','D','f','✺','◆']){
+    const rows=composition(`enemy:recover:${glyph}`);
+    assert.ok(rows.length>=3,`${glyph} recovery pose missing`);
+    assert.ok(rows.join('').trim().length>=6,`${glyph} recovery pose is too sparse`);
+  }
+});
 test('terrain keeps volumetric compositions for the original tile vocabulary',()=>{
   for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!','+','?','x','v','T','o']){
     const rows=composition(terrainComposition(tile));

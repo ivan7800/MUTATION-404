@@ -120,6 +120,14 @@ const ACTORS = {
     'effect:mutation': [['*', '{#}', '*'], ['✺', '·', '✺']],
     'effect:scan': [['+', '·', '+'], ['◇', '·', '◇']],
     'enemy:telegraph': [[' . ', '/|\\', ' /\\'], [' ! ', '/|\\', '/ \\']],
+    'enemy:recover:s': [[' __', '/oo\\', '/\\/\\']],
+    'enemy:recover:V': [['[o]', '/V\\', '| |']],
+    'enemy:recover:l': [[' _ ', '(oo', '/==~']],
+    'enemy:recover:p': [['\\ /', '(o)', '/ \\']],
+    'enemy:recover:D': [['/o\\', '[=]', '/ \\']],
+    'enemy:recover:f': [['.*.', '(o)', '/|\\']],
+    'enemy:recover:✺': [['\\ | /', '--O--', '/|X|\\', '/ | \\']],
+    'enemy:recover:◆': [['/O\\', '[X]', '/|\\']],
 };
 export function composition(glyph, frame = 0) {
     const poses = ACTORS[glyph];
