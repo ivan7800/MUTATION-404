@@ -63,10 +63,11 @@ export class PixelRenderer{
   private floorAsset(biome:BiomeId):PixelAsset{return `floor-${biome}` as PixelAsset;}
   private propAsset(biome:BiomeId):PixelAsset{return `prop-${biome}` as PixelAsset;}
   private floraAsset(biome:BiomeId):PixelAsset{return `flora-${biome}` as PixelAsset;}
+  private rockAsset(biome:BiomeId):PixelAsset{return `rock-${biome}` as PixelAsset;}
   private tileAsset(tile:string,variant:number,biome:BiomeId):PixelAsset{
-    if(tile==='#'||tile==='%'||tile==='=')return variant===2?this.propAsset(biome):'rock';
+    if(tile==='#'||tile==='%'||tile==='=')return variant===2?this.propAsset(biome):this.rockAsset(biome);
     if(tile==='*'||tile==='&')return this.floraAsset(biome);
-    if(tile==='^')return this.propAsset(biome);
+    if(tile==='^')return this.rockAsset(biome);
     if(tile==='!')return 'mutation';
     return this.floorAsset(biome);
   }

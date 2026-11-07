@@ -77,4 +77,11 @@
   <g id="flora-vidrio" transform="translate(96 288)"><path fill="#07151b" d="M3 29h26v3H3z"/><path fill="#76528b" d="M14 29V6h4v23zM7 29V14h3v15zM23 29V11h4v18z"/><path fill="#c9a7e6" d="M3 12h11v3H3zM18 8h12v3H18zM7 21h7v3H7z"/><path fill="#f0d5ff" d="M15 3h3v4h-3z"/></g>
   <g id="flora-medula" transform="translate(128 288)"><path fill="#07151b" d="M2 29h28v3H2z"/><path fill="#407b4a" d="M13 29V5h6v24zM6 29V15h4v14zM24 29V10h4v19z"/><path fill="#8bd879" d="M2 11h13v5H2zM18 6h12v5H18zM7 21h9v4H7z"/><path fill="#d4f4a2" d="M15 2h4v5h-4z"/></g>
   <g id="flora-umbral" transform="translate(160 288)"><path fill="#07151b" d="M2 29h28v3H2z"/><path fill="#864576" d="M14 29V7h5v22zM6 29V14h4v15zM24 29V11h4v18z"/><path fill="#d786bd" d="M2 11h13v4H2zM19 7h11v4H19zM6 21h9v4H6z"/><path fill="#f2bce3" d="M15 3h4v5h-4z"/></g>
+  <!-- Six rock signatures used by cliffs, rubble and cave thresholds. -->
+  <g id="rock-salinas" transform="translate(0 320)"><path fill="#07151b" d="M0 28h32v4H0z"/><path fill="#81775f" d="M4 19l7-12h10l7 12v9H4z"/><path fill="#c4b184" d="M11 9h8v5h5v5H8v-5h3z"/><path fill="#d9ca99" d="M13 13h4v3h-4z"/></g>
+  <g id="rock-ceniza" transform="translate(32 320)"><path fill="#07151b" d="M0 28h32v4H0z"/><path fill="#68484a" d="M3 20l8-14h10l8 14v9H3z"/><path fill="#a66a5b" d="M10 8h9v5h6v5H7v-5h3z"/><path fill="#d18a6d" d="M13 12h4v3h-4z"/></g>
+  <g id="rock-hierro" transform="translate(64 320)"><path fill="#07151b" d="M0 28h32v4H0z"/><path fill="#3b626d" d="M4 20l7-13h10l7 13v9H4z"/><path fill="#6fa7ad" d="M11 9h8v5h5v5H8v-5h3z"/><path fill="#c49a63" d="M13 13h4v3h-4z"/></g>
+  <g id="rock-vidrio" transform="translate(96 320)"><path fill="#07151b" d="M0 28h32v4H0z"/><path fill="#604b79" d="M5 20l6-15h10l7 15v9H5z"/><path fill="#aa82c4" d="M11 8h8v5h5v5H8v-5h3z"/><path fill="#e5c7fa" d="M13 12h4v3h-4z"/></g>
+  <g id="rock-medula" transform="translate(128 320)"><path fill="#07151b" d="M0 28h32v4H0z"/><path fill="#3e6848" d="M4 20l7-13h10l7 13v9H4z"/><path fill="#73a85f" d="M11 9h8v5h5v5H8v-5h3z"/><path fill="#c3e997" d="M13 13h4v3h-4z"/></g>
+  <g id="rock-umbral" transform="translate(160 320)"><path fill="#07151b" d="M0 28h32v4H0z"/><path fill="#704066" d="M4 20l7-13h10l7 13v9H4z"/><path fill="#b86a9d" d="M11 9h8v5h5v5H8v-5h3z"/><path fill="#efb1df" d="M13 13h4v3h-4z"/></g>
 </svg>
