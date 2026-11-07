@@ -10,9 +10,9 @@ Evidencia: 189/189 pruebas, lint, typecheck y build normal pasan. La referencia 
 
 ## Fase 1 · Sistema visual cian CRT
 
-Estado: siguiente entrega.
+Estado: implementada en esta rama; pendiente de revisión visual con capturas.
 
-Objetivo: sustituir la mezcla actual de acentos por una paleta coherente de fondo negro, turquesa oscuro, cian, cian iluminado y resalte pálido; añadir configuración de efectos CRT sin tocar el núcleo.
+Resultado: sustituida la mezcla actual por una paleta coherente de fondo negro, turquesa oscuro, cian, cian iluminado y resalte pálido. La capa CRT conserva scanlines, viñeta y movimiento reducido sin tocar el núcleo.
 
 ## Fases siguientes
 

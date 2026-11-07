@@ -285,3 +285,25 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;b
 @keyframes mono-sigil{from{opacity:.66;text-shadow:0 0 8px #cce7b533}to{opacity:1;text-shadow:0 0 26px #d8edbd88}}
 @keyframes mono-blink{0%,48%{opacity:1}49%,100%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){body::after{display:none}.start-sigil,.live-dot{animation:none}.modal-card,.start-menu-card{animation:none}.world-canvas,#viewport .pixi-canvas{filter:grayscale(1) contrast(1.12)}}
+
+/* ABYSSAL TERMINAL 4.0: calibrated cyan phosphor palette. */
+:root{--abyss-bg:#02090b;--abyss-panel:#04171a;--abyss-deep:#07505a;--abyss-mid:#087c89;--abyss-cyan:#0ba5b5;--abyss-glow:#35d6df;--abyss-hot:#a3f7f5;--mono-hot:var(--abyss-hot);--mono-light:#8de3e1;--mono-mid:#55afb0;--mono-dim:#276c73;--mono-line:#087c89;--biome-accent:var(--abyss-cyan);--biome-dark:var(--abyss-panel)}
+body{background:radial-gradient(ellipse at 50% -10%,#07505a 0%,#04171a 32%,#02090b 78%,#010506 100%);color:var(--abyss-glow)}
+body::before{opacity:.16;background:repeating-linear-gradient(0deg,transparent 0 3px,#35d6df0b 3px 4px),repeating-linear-gradient(90deg,transparent 0 11px,#0ba5b508 11px 12px)}
+body::after{background:repeating-linear-gradient(0deg,transparent 0 2px,#a3f7f508 2px 3px);opacity:.8}
+.brand-title,.panel-heading h1,.start-menu-card h1,.modal-card h2,.mission-card h3,.discovery-card h3{color:var(--abyss-hot);text-shadow:0 0 14px #35d6df33}
+.topbar,.hero-strip,.toolbar,.combatbar,.field-notice,.eventpanel,.side-card,.biome-story,.mutation-card,.nacar-boss,.survival-strip{background:var(--abyss-panel);border-color:var(--abyss-deep)}
+.viewport{background:radial-gradient(ellipse at center,#07505a 0%,#04171a 40%,#02090b 85%);border-color:var(--abyss-mid);box-shadow:0 0 0 2px #010506,inset 0 0 48px #000,0 0 34px #0ba5b544}
+.world-canvas,#viewport .pixi-canvas{filter:grayscale(1) sepia(.18) hue-rotate(135deg) saturate(2.3) contrast(1.2) brightness(1.04);box-shadow:0 0 0 1px var(--abyss-mid),0 0 28px #0ba5b533,0 18px 60px #000b}
+.icon-btn,.zoom button,.action,.system-actions button,.modal-option,.dpad button,.start-actions button,.start-settings button{background:#04171a;border-color:var(--abyss-mid);color:var(--abyss-glow);box-shadow:inset 0 0 0 1px #a3f7f51a,3px 3px 0 #010506}
+.icon-btn:hover:not(:disabled),.zoom button:hover,.action:hover:not(:disabled),.system-actions button:hover,.modal-option:hover,.dpad button:hover,.start-actions button:hover:not(:disabled),.start-settings button:hover{background:#07505a;border-color:var(--abyss-hot);color:var(--abyss-hot);box-shadow:inset 0 0 14px #35d6df33,1px 1px 0 #010506}
+.action.primary,.start-actions .start-primary{background:#07505a;border-color:var(--abyss-hot);color:var(--abyss-hot);box-shadow:inset 0 0 18px #35d6df33,3px 3px 0 #010506}
+.action.attack,.action.gene,.action.discovery{background:#04171a;border-color:var(--abyss-cyan);color:var(--abyss-glow)}
+.meter,.nacar-boss-meter{background:#02090b;border-color:var(--abyss-deep)}.meter i,.nacar-boss-meter i{background:var(--abyss-glow);box-shadow:0 0 12px #35d6df99}
+.stat,.pairs,.tiny-label,.section-title span,.map-caption,.save-status,.portrait small,.brand-sub,footer,.live{color:var(--mono-mid)}
+#log p{color:#72c6c5;border-color:var(--abyss-deep)}#log p.latest{color:var(--abyss-hot);border-color:var(--abyss-glow);background:linear-gradient(90deg,#0ba5b52b,transparent)}
+.modal{background:#010506ed}.modal-card{background:#04171a;border-color:var(--abyss-hot);box-shadow:0 0 0 3px #010506,0 24px 80px #000,0 0 32px #0ba5b555}
+.start-menu{background:radial-gradient(ellipse at 50% 20%,#07505af5,#02090b 70%)}.start-menu-card{background:#04171a;border-color:var(--abyss-hot);box-shadow:0 0 0 4px #010506,0 0 0 5px var(--abyss-mid),0 25px 90px #000,0 0 32px #0ba5b555}
+.start-sigil{color:var(--abyss-hot);text-shadow:0 0 18px #35d6df99,0 0 34px #0ba5b555}.live-dot{background:var(--abyss-hot);box-shadow:0 0 12px var(--abyss-hot)}
+:is(button,input,select,textarea,a):focus-visible,.world-canvas:focus-visible{outline-color:var(--abyss-hot);box-shadow:0 0 0 5px #02090b,0 0 18px #35d6df99}
+@media(prefers-reduced-motion:reduce){body::before{opacity:.08}.world-canvas,#viewport .pixi-canvas{filter:grayscale(1) sepia(.12) hue-rotate(135deg) saturate(1.8) contrast(1.14)}}

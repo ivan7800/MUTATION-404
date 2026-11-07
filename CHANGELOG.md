@@ -1,5 +1,9 @@
 # Cambios
 
+## ABYSSAL TERMINAL 4.0 — rama experimental
+
+- Paleta monocromática cian/turquesa y presentación CRT unificada para menús, HUD, diálogos, paneles y mapa.
+
 ## ASCENSION — santuario gótico (sin release)
 
 - Dirección de interfaz con piedra violeta, bronce, vino, luz de vidriera y títulos serif locales. Menú de arco apuntado y paneles coherentes; sin fuentes, imágenes o CDN externos.
