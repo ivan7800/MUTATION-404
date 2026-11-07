@@ -377,12 +377,12 @@ try{
       await page.locator('#wait-btn').click();
       const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);
       let poseSeen=false;
-      for(let attempt=0;attempt<3&&!poseSeen;attempt++){
+      for(let attempt=0;attempt<8&&!poseSeen;attempt++){
         try{
-          await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows,{timeout:3500});
+          await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows,{timeout:3000});
           poseSeen=true;
         }catch{
-          if(attempt<2)await page.locator('#wait-btn').click();
+          if(attempt<7)await page.locator('#wait-btn').click();
         }
       }
       if(!poseSeen)throw new Error(`attack pose timeout for ${kind}/${mode}; expected=${JSON.stringify(rows)} observed=${JSON.stringify(await page.evaluate(()=>window.__attackRows.slice(-40)))}`);

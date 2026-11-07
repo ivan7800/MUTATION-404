@@ -1,5 +1,6 @@
 import {Application,Container,Graphics,Matrix,Sprite,Texture} from 'pixi.js';
-import {ACTORS,biomeAt,BIOMES,ENEMY_DEFS,HEIGHT,WIDTH,settlementCitizens,type GameState} from '../../../packages/core/src/game.js';
+import {ACTORS,biomeAt,BIOMES,HEIGHT,WIDTH,settlementCitizens,type GameState} from '../../../packages/core/src/game.js';
+import type {BiomeId} from '../../../packages/core/src/biomes.js';
 import {index} from '../../../packages/core/src/world.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
@@ -23,6 +24,7 @@ export class PixelRenderer{
   private readonly effects=new Container();
   private readonly fog=new Graphics();
   private readonly sprites:Sprite[]=[];
+  private readonly terrainPool=new Map<string,Sprite>();
   private readonly textures:Map<PixelAsset,Texture>;
   private readonly old:AsciiRenderer;
   private state:GameState|null=null;
@@ -51,22 +53,37 @@ export class PixelRenderer{
   private sprite(name:PixelAsset,x:number,y:number,alpha=1,scale=1,layer=1):void{
     const sprite=new Sprite(this.tex(name));sprite.anchor.set(.5,.86);sprite.position.set((x+.5)*this.cellW,(y+.5)*this.cellH);sprite.scale.set(scale);sprite.alpha=alpha;sprite.zIndex=x*this.cellW+y*this.cellH+layer*.01;this.actors.addChild(sprite);this.sprites.push(sprite);
   }
-  private terrainSprite(name:PixelAsset,x:number,y:number,alpha=1):void{
-    const sprite=new Sprite(this.tex(name));sprite.anchor.set(.5,.72);sprite.position.set((x+.5)*this.cellW,(y+.5)*this.cellH);sprite.scale.set(.9);sprite.alpha=alpha;sprite.zIndex=x*this.cellW+y*this.cellH;sprite.tint=0xffffff;this.terrain.addChild(sprite);this.sprites.push(sprite);
+  private terrainSprite(name:PixelAsset,x:number,y:number,alpha=1,key=`${x}:${y}`):void{
+    const texture=this.tex(name);
+    let sprite=this.terrainPool.get(key);
+    if(!sprite){sprite=new Sprite(texture);sprite.anchor.set(.5,.72);sprite.scale.set(.9);this.terrainPool.set(key,sprite);this.terrain.addChild(sprite);}
+    else if(sprite.texture!==texture)sprite.texture=texture;
+    sprite.visible=true;sprite.position.set((x+.5)*this.cellW,(y+.5)*this.cellH);sprite.alpha=alpha;sprite.zIndex=x*this.cellW+y*this.cellH;sprite.tint=0xffffff;this.sprites.push(sprite);
   }
-  private tileAsset(tile:string,variant:number):PixelAsset{
-    if(tile==='#'||tile==='%'||tile==='=')return variant===2?'ruin':'rock';
+  private floorAsset(biome:BiomeId):PixelAsset{return `floor-${biome}` as PixelAsset;}
+  private propAsset(biome:BiomeId):PixelAsset{return `prop-${biome}` as PixelAsset;}
+  private tileAsset(tile:string,variant:number,biome:BiomeId):PixelAsset{
+    if(tile==='#'||tile==='%'||tile==='=')return variant===2?this.propAsset(biome):'rock';
     if(tile==='*'||tile==='&')return tile==='&'?'tree':'plant';
-    if(tile==='^')return 'rock';
+    if(tile==='^')return this.propAsset(biome);
     if(tile==='!')return 'mutation';
-    return 'floor';
+    return this.floorAsset(biome);
   }
-  private actorAsset(glyph:string):PixelAsset{
-    return glyph==='s'?'crawler':glyph==='V'?'sentinel':glyph==='l'?'larva':'crawler';
+  private actorAsset(kind:string,id:string,frame:number):PixelAsset{
+    if(id.includes('campaign-heart')||id.includes('final-guardian'))return `boss-heart-${frame?'b':'a'}` as PixelAsset;
+    if(id.includes('elite-')||id.includes('resonance-guardian'))return `elite-drone-${frame?'b':'a'}` as PixelAsset;
+    const species=kind==='crawler'?'crawler':kind==='sentinel'?'sentinel':kind==='larva'?'larva':kind==='moth'?'moth':kind==='drone'?'drone':'spore';
+    return `${species}-${frame?'b':'a'}` as PixelAsset;
+  }
+  private heroAsset(action:HeroAction|null,dead:boolean,frame:number):PixelAsset{
+    if(dead)return 'hero-death-a';
+    if(action==='damage')return 'hero-hurt-a';
+    const pose=action==='attack'?'attack':action==='walk'?'walk':'idle';
+    return `hero-${pose}-${frame?'b':'a'}` as PixelAsset;
   }
   draw(state:GameState):void{
     const started=performance.now();
-    this.state=state;this.clearLayer(this.terrain);this.clearLayer(this.shadows);this.clearLayer(this.actors);this.clearLayer(this.effects);this.fog.clear();this.sprites.length=0;
+    this.state=state;for(const sprite of this.terrainPool.values())sprite.visible=false;this.clearLayer(this.shadows);this.clearLayer(this.actors);this.clearLayer(this.effects);this.fog.clear();this.sprites.length=0;
     const ox=Math.max(0,Math.min(WIDTH-47,state.player.x-23)),oy=Math.max(0,Math.min(HEIGHT-27,state.player.y-13));
     // Keep the player at the centre of the viewport while the visible window
     // moves through the larger simulation map. This is the same projection
@@ -82,16 +99,17 @@ export class PixelRenderer{
       const visible=state.visible[at]===1,dist=Math.hypot(x-state.player.x,y-state.player.y),radius=12;
       const alpha=visible?Math.max(.28,1-Math.max(0,dist-radius*.3)/radius*.68):.14;
       const biome=biomeAt(state.seed,x,y),tile=state.tiles[at],variant=Math.floor(terrainHash(state.seed+917,x,y)*3);
-      this.terrainSprite(this.tileAsset(tile,variant),cx,cy,alpha);
+      this.terrainSprite(this.tileAsset(tile,variant,biome),cx,cy,alpha,`${x}:${y}`);
       if(visible&&surface&&dist<9){const light=new Graphics();light.circle((cx+.5)*this.cellW,(cy+.48)*this.cellH,Math.max(1,(9-dist)*2)).fill({color:BIOMES[biome].palette,alpha:.025});this.effects.addChild(light);}
     }
     for(const field of state.fields)if(state.visible[index(field.x,field.y)]===1){const x=field.x-ox,y=field.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite(field.kind==='fire'?'attack':field.kind==='electric'?'mutation-fx':'plant',x,y,.82,1.05,2);}
     for(const node of state.ecology.nodes)if(node.zone===state.zone&&node.quantity>0&&state.visible[index(node.x,node.y)]===1){const x=node.x-ox,y=node.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite(node.kind==='spores'?'mutation':node.kind==='crystal'?'mutation-fx':'rock',x,y,.96,1.02,2);}
     for(const item of state.ground)if(state.visible[index(item.x,item.y)]===1){const x=item.x-ox,y=item.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite('mutation-fx',x,y,.75,.7,2);}
     for(const npc of [...(state.zone==='surface'?ACTORS:[]),...settlementCitizens(state.zone,state.tick)])if(state.visible[index(npc.x,npc.y)]===1){const x=npc.x-ox,y=npc.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite('sentinel',x,y,.8,.75,3);}
-    for(const enemy of state.enemies)if(enemy.hp>0&&state.visible[index(enemy.x,enemy.y)]===1){const x=enemy.x-ox,y=enemy.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite(this.actorAsset(ENEMY_DEFS[enemy.kind].glyph),x,y,1,1.03,4);}
+    const enemyFrame=Math.floor(this.ambience/2)%2;
+    for(const enemy of state.enemies)if(enemy.hp>0&&state.visible[index(enemy.x,enemy.y)]===1){const x=enemy.x-ox,y=enemy.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite(this.actorAsset(enemy.kind,enemy.id,enemyFrame),x,y,1,1.03,4);}
     const hero=this.heroAction&&performance.now()<this.heroUntil?this.heroAction:null;
-    this.sprite(hero==='attack'?'hero-attack':hero==='damage'?'hero-hurt':state.stats.hp<=0?'hero-death':hero==='walk'?'hero-walk':'hero-idle',state.player.x-ox,state.player.y-oy,1,1.08,5);
+    this.sprite(this.heroAsset(hero,state.stats.hp<=0,Math.floor(this.ambience/2)%2),state.player.x-ox,state.player.y-oy,1,1.08,5);
     if(this.effectUntil>performance.now()&&!this.reducedMotion)this.sprite(this.effectKind==='damage'?'damage':this.effectKind==='mutation'?'mutation-fx':'attack',state.player.x-ox,state.player.y-oy,.85,1.3,6);
     this.ambience++;
     this.cachedCells=cells;

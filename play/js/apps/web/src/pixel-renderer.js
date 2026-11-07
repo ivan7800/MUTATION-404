@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Matrix, Sprite, Texture } from 'pixi.js';
-import { ACTORS, biomeAt, BIOMES, ENEMY_DEFS, HEIGHT, WIDTH, settlementCitizens } from '../../../packages/core/src/game.js';
+import { ACTORS, biomeAt, BIOMES, HEIGHT, WIDTH, settlementCitizens } from '../../../packages/core/src/game.js';
 import { index } from '../../../packages/core/src/world.js';
 import { coordsForZone } from '../../../packages/core/src/frontier.js';
 import { terrainHash } from '../../../packages/core/src/biomes.js';
@@ -21,6 +21,7 @@ export class PixelRenderer {
     effects = new Container();
     fog = new Graphics();
     sprites = [];
+    terrainPool = new Map();
     textures;
     old;
     state = null;
@@ -82,35 +83,59 @@ export class PixelRenderer {
         this.actors.addChild(sprite);
         this.sprites.push(sprite);
     }
-    terrainSprite(name, x, y, alpha = 1) {
-        const sprite = new Sprite(this.tex(name));
-        sprite.anchor.set(.5, .72);
+    terrainSprite(name, x, y, alpha = 1, key = `${x}:${y}`) {
+        const texture = this.tex(name);
+        let sprite = this.terrainPool.get(key);
+        if (!sprite) {
+            sprite = new Sprite(texture);
+            sprite.anchor.set(.5, .72);
+            sprite.scale.set(.9);
+            this.terrainPool.set(key, sprite);
+            this.terrain.addChild(sprite);
+        }
+        else if (sprite.texture !== texture)
+            sprite.texture = texture;
+        sprite.visible = true;
         sprite.position.set((x + .5) * this.cellW, (y + .5) * this.cellH);
-        sprite.scale.set(.9);
         sprite.alpha = alpha;
         sprite.zIndex = x * this.cellW + y * this.cellH;
         sprite.tint = 0xffffff;
-        this.terrain.addChild(sprite);
         this.sprites.push(sprite);
     }
-    tileAsset(tile, variant) {
+    floorAsset(biome) { return `floor-${biome}`; }
+    propAsset(biome) { return `prop-${biome}`; }
+    tileAsset(tile, variant, biome) {
         if (tile === '#' || tile === '%' || tile === '=')
-            return variant === 2 ? 'ruin' : 'rock';
+            return variant === 2 ? this.propAsset(biome) : 'rock';
         if (tile === '*' || tile === '&')
             return tile === '&' ? 'tree' : 'plant';
         if (tile === '^')
-            return 'rock';
+            return this.propAsset(biome);
         if (tile === '!')
             return 'mutation';
-        return 'floor';
+        return this.floorAsset(biome);
     }
-    actorAsset(glyph) {
-        return glyph === 's' ? 'crawler' : glyph === 'V' ? 'sentinel' : glyph === 'l' ? 'larva' : 'crawler';
+    actorAsset(kind, id, frame) {
+        if (id.includes('campaign-heart') || id.includes('final-guardian'))
+            return `boss-heart-${frame ? 'b' : 'a'}`;
+        if (id.includes('elite-') || id.includes('resonance-guardian'))
+            return `elite-drone-${frame ? 'b' : 'a'}`;
+        const species = kind === 'crawler' ? 'crawler' : kind === 'sentinel' ? 'sentinel' : kind === 'larva' ? 'larva' : kind === 'moth' ? 'moth' : kind === 'drone' ? 'drone' : 'spore';
+        return `${species}-${frame ? 'b' : 'a'}`;
+    }
+    heroAsset(action, dead, frame) {
+        if (dead)
+            return 'hero-death-a';
+        if (action === 'damage')
+            return 'hero-hurt-a';
+        const pose = action === 'attack' ? 'attack' : action === 'walk' ? 'walk' : 'idle';
+        return `hero-${pose}-${frame ? 'b' : 'a'}`;
     }
     draw(state) {
         const started = performance.now();
         this.state = state;
-        this.clearLayer(this.terrain);
+        for (const sprite of this.terrainPool.values())
+            sprite.visible = false;
         this.clearLayer(this.shadows);
         this.clearLayer(this.actors);
         this.clearLayer(this.effects);
@@ -134,7 +159,7 @@ export class PixelRenderer {
                 const visible = state.visible[at] === 1, dist = Math.hypot(x - state.player.x, y - state.player.y), radius = 12;
                 const alpha = visible ? Math.max(.28, 1 - Math.max(0, dist - radius * .3) / radius * .68) : .14;
                 const biome = biomeAt(state.seed, x, y), tile = state.tiles[at], variant = Math.floor(terrainHash(state.seed + 917, x, y) * 3);
-                this.terrainSprite(this.tileAsset(tile, variant), cx, cy, alpha);
+                this.terrainSprite(this.tileAsset(tile, variant, biome), cx, cy, alpha, `${x}:${y}`);
                 if (visible && surface && dist < 9) {
                     const light = new Graphics();
                     light.circle((cx + .5) * this.cellW, (cy + .48) * this.cellH, Math.max(1, (9 - dist) * 2)).fill({ color: BIOMES[biome].palette, alpha: .025 });
@@ -165,14 +190,15 @@ export class PixelRenderer {
                 if (x >= 0 && y >= 0 && x < 47 && y < 27)
                     this.sprite('sentinel', x, y, .8, .75, 3);
             }
+        const enemyFrame = Math.floor(this.ambience / 2) % 2;
         for (const enemy of state.enemies)
             if (enemy.hp > 0 && state.visible[index(enemy.x, enemy.y)] === 1) {
                 const x = enemy.x - ox, y = enemy.y - oy;
                 if (x >= 0 && y >= 0 && x < 47 && y < 27)
-                    this.sprite(this.actorAsset(ENEMY_DEFS[enemy.kind].glyph), x, y, 1, 1.03, 4);
+                    this.sprite(this.actorAsset(enemy.kind, enemy.id, enemyFrame), x, y, 1, 1.03, 4);
             }
         const hero = this.heroAction && performance.now() < this.heroUntil ? this.heroAction : null;
-        this.sprite(hero === 'attack' ? 'hero-attack' : hero === 'damage' ? 'hero-hurt' : state.stats.hp <= 0 ? 'hero-death' : hero === 'walk' ? 'hero-walk' : 'hero-idle', state.player.x - ox, state.player.y - oy, 1, 1.08, 5);
+        this.sprite(this.heroAsset(hero, state.stats.hp <= 0, Math.floor(this.ambience / 2) % 2), state.player.x - ox, state.player.y - oy, 1, 1.08, 5);
         if (this.effectUntil > performance.now() && !this.reducedMotion)
             this.sprite(this.effectKind === 'damage' ? 'damage' : this.effectKind === 'mutation' ? 'mutation-fx' : 'attack', state.player.x - ox, state.player.y - oy, .85, 1.3, 6);
         this.ambience++;
