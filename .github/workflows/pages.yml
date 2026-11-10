@@ -13,8 +13,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: mutation-404-pages
-  cancel-in-progress: false
+  group: mutation-404-pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
