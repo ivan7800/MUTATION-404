@@ -6,7 +6,7 @@ const root='qa-evidence/isometric';await mkdir(root,{recursive:true});
 const server=spawn(process.execPath,['scripts/server.mjs','--no-open'],{env:{...process.env,PORT:'8881'},stdio:'ignore'});
 let browser;const results=[];
 try{
- for(let n=0;n<100;n++){try{if((await fetch('http://127.0.0.1:8881')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
+ for(let n=0;n<100;n++){try{if((await fetch('http://127.0.0.1:8881')).ok)break;}catch{/* local server is still starting */}await new Promise(r=>setTimeout(r,100));}
  browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  for(const backend of ['webgl','canvas']){
   const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
