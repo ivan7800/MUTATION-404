@@ -29,14 +29,14 @@ test('shared catalogue covers volumetric terrain and boss',()=>{
 test('v2.9 death banner is hidden for living characters',()=>{
  const css=readFileSync('apps/web/src/style.css','utf8');
  assert.match(main,/classList\.toggle\('hidden',stats\.hp>0\)/);
- assert.match(css,/\.death-banner\.hidden\s*\{\s*display:\s*none\s*\}/);
+ assert.match(css,/\.hidden\{display:none!important\}/);
 });
 test('Pixel and ASCII renderers share the same game controls',()=>{
  assert.match(main,/art-mode-btn/);
  assert.match(main,/setArtMode/);
  assert.ok(renderer.includes("get mode(): 'ascii'"));
  assert.match(pixel,/get mode|readonly mode='pixel'/);
- assert.match(pixel,/loadPixelAtlas/);
+ assert.match(pixel,/isometric\/nacar\.json/);
  assert.match(atlas,/id="hero-idle"/);
  assert.match(atlas,/id="crawler"/);
  assert.match(atlas,/id="ruin"/);
@@ -55,16 +55,16 @@ test('Pixel Rebirth inventory covers every biome, species, elite and boss',()=>{
  }
  assert.match(atlas,/id="elite-drone-a"/);
  assert.match(atlas,/id="boss-heart-a"/);
- assert.match(pixel,/campaign-heart/);
- assert.match(pixel,/elite-/);
- assert.match(pixel,/Math\.floor\(this\.ambience\/2\)%2/);
+ assert.match(pixel,/includes\('heart'\)/);
+ assert.match(pixel,/includes\('elite'\)/);
+ assert.match(pixel,/Math\.floor\(now\/180\)%4/);
  assert.match(readFileSync('scripts/qa-pixel-biomes.mjs','utf8'),/Object\.entries\(points\)/);
 });
-test('Pixel renderer reuses world terrain sprites between animation frames',()=>{
- assert.match(pixel,/terrainPool=new Map<string,Sprite>\(\)/);
- assert.match(pixel,/for\(const sprite of this\.terrainPool\.values\(\)\)sprite\.visible=false/);
- assert.match(pixel,/this\.terrainPool\.get\(key\)/);
- assert.match(pixel,/else if\(sprite\.texture!==texture\)sprite\.texture=texture/);
+test('Pixel renderer caches the floor separately from animation presentation',()=>{
+ assert.match(pixel,/private floor=document.createElement/);
+ assert.match(pixel,/ctx.drawImage\(this.floor/);
+ assert.match(pixel,/this.render\(now\)/);
+ assert.doesNotMatch(pixel,/clearLayer|new Sprite\(this.tex/);
 });
 test('browser QA exercises both artistic scenes in the unified ASCII mode',()=>{
  assert.ok(qa.includes('faro-ascii-unified'));
@@ -132,7 +132,7 @@ test('Nácar shows distinct phase text and persistent accessible boss HUD',()=>{
  assert.match(renderer,/this\.reducedMotion\?\.58/);
  assert.match(main,/id="nacar-boss"/);
  assert.match(main,/bossPanel\.classList\.toggle\('hidden',!guardian\)/);
- assert.match(css,/\.nacar-boss\.hidden\{display:none\}/);
+ assert.match(css,/\.hidden\{display:none!important\}/);
 });
 
 test('v2.9 boss danger telegraph uses shared strike positions and supports reduced motion',()=>{
@@ -167,8 +167,8 @@ test('v2.9 final chamber art is localized to zero-3 and preserves fog-of-war',()
  assert.match(renderer,/this\.reducedMotion\?0\.22/);
  assert.match(main,/class="epilogue-stage"/);
  assert.match(main,/data-ending="\$\{choice\}"/);
- assert.match(css,/\.epilogue-stage\[data-ending=erase\]/);
- assert.match(css,/@media\(prefers-reduced-motion:no-preference\)/);
+ assert.match(css,/\.epilogue-verdict/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
 
 test('v2.9 Pixi sprite pool is lazy and only hides previously active elements',()=>{

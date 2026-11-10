@@ -247,8 +247,8 @@ try{
   const firstProfile=await regionPage.evaluate(()=>window.__mutation404RenderProfile);
   await regionPage.waitForTimeout(700);
   const latestProfile=await regionPage.evaluate(()=>window.__mutation404RenderProfile);
-  assert.ok(latestProfile.builds>firstProfile.builds,'pixel ambience must redraw when active');
-  assert.ok(latestProfile.floorDraws<latestProfile.builds,'static floor must be reused across ambience draws');
+  assert.ok(latestProfile.frames>firstProfile.frames,'pixel ambience must redraw when active');
+  assert.ok(latestProfile.floorDraws<latestProfile.frames,'static floor must be reused across ambience draws');
   assert.ok(latestProfile.cachedCells>0,'region cache must contain world cells');
   assert.ok(latestProfile.allocatedSprites>=latestProfile.activeSprites,'sprite pool must cover visible cells');
   assert.ok(latestProfile.allocatedSprites<47*27+250,'regional view should not eagerly allocate the entire pool');
@@ -374,7 +374,7 @@ try{
         await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='ascii');
       }
       await page.evaluate(()=>{window.__attackRows=[];});
-      await page.locator('#wait-btn').click();
+      await page.locator('.secondary-actions').evaluate(el=>el.open=true);await page.locator('#wait-btn').click();
       const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);
       let poseSeen=false;
       for(let attempt=0;attempt<8&&!poseSeen;attempt++){
@@ -382,7 +382,7 @@ try{
           await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows,{timeout:3000});
           poseSeen=true;
         }catch{
-          if(attempt<7)await page.locator('#wait-btn').click();
+          if(attempt<7)await page.locator('.secondary-actions').evaluate(el=>el.open=true);await page.locator('#wait-btn').click();
         }
       }
       if(!poseSeen)throw new Error(`attack pose timeout for ${kind}/${mode}; expected=${JSON.stringify(rows)} observed=${JSON.stringify(await page.evaluate(()=>window.__attackRows.slice(-40)))}`);

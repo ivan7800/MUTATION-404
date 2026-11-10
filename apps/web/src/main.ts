@@ -14,7 +14,7 @@ const root=document.querySelector<HTMLElement>('#app');if(!root)throw new Error(
 if(!import.meta.url.includes('/src/')&&'serviceWorker' in navigator)window.addEventListener('load',()=>{void navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(()=>{/* offline development can disable workers */});});
 root.innerHTML=`
 <div class="shell">
-<header class="topbar"><div class="brand"><span class="brand-mark">◈</span><div><div class="brand-title">MUTATION <em>404</em></div><div class="brand-sub">NÁCAR // ARCHIVO 11 — ECOS DE NÁCAR</div></div></div><div class="top-controls"><span class="live"><span class="live-dot"></span>SEÑAL INESTABLE</span><button class="icon-btn" id="menu-btn">☰ MENÚ</button><button class="icon-btn" id="audio-btn" aria-pressed="false">♫ ACTIVAR SONIDO</button><button class="icon-btn" id="help-btn">? AYUDA</button></div></header>
+<header class="topbar"><div class="brand"><span class="brand-mark">◈</span><div><div class="brand-title">MUTATION <em>404</em></div><div class="brand-sub">CRÓNICAS DE LA INTERRUPCIÓN</div></div></div><div class="top-controls"><span class="live"><span class="live-dot"></span>SEÑAL INESTABLE</span><button class="icon-btn" id="menu-btn">☰ MENÚ</button><button class="icon-btn" id="audio-btn" aria-pressed="false">♫ ACTIVAR SONIDO</button><button class="icon-btn" id="help-btn">? AYUDA</button></div></header>
 <div class="hero-strip"><span><span id="biome-strip">REGIÓN / SALINAS DE VÉRTICE</span></span><span id="clock">07:00</span><span id="coords">X:32 Y:32</span><span class="strip-accent" id="exploration">EXPLORACIÓN 0%</span></div>
 <main class="layout">
 <section class="game-column" aria-label="Área de juego">
@@ -31,21 +31,22 @@ root.innerHTML=`
 <div id="nacar-boss" class="nacar-boss hidden" role="status" aria-live="off" data-phase="1"><div class="nacar-boss-title"><span id="nacar-boss-phase">NÁCAR · FASE I</span><strong id="nacar-boss-label">RESONANCIA ELÉCTRICA</strong></div><div class="nacar-boss-meter"><i id="nacar-boss-fill"></i></div><div id="nacar-boss-warning" class="nacar-boss-warning" aria-live="polite"></div></div>
 <div id="survival-strip" class="survival-strip" role="status" aria-live="off" data-risk="stable">SUPERVIVENCIA // INICIANDO INSTRUMENTOS</div>
 <div class="actionbar"><button id="mutations-btn" class="action gene">[U] MUTACIONES</button><button id="pulse-btn" class="action gene">[1] PULSO</button><button id="neural-btn" class="action gene">[2] GRITO NEURAL</button><button id="fire-btn-gene" class="action gene">[3] IGNICIÓN</button><button id="phase-btn" class="action gene">[4] PASO DE FASE</button><button id="scan-btn" class="action discovery">[R] SONDEAR</button><button id="travel-btn" class="action discovery">[V] REGIONES</button><button id="atlas-btn" class="action discovery">[M] ATLAS</button><button id="market-btn" class="action discovery">[C] COMERCIAR</button><button id="house-btn" class="action discovery">[L] EDIFICIO / SALIR</button><button id="down-btn" class="action">[N] DESCENDER</button><button id="up-btn" class="action">[P] ASCENDER</button><button id="interact-btn" class="action primary">[E] INTERACTUAR</button><button id="target-btn" class="action">[T] OBJETIVO</button><button id="attack-btn" class="action attack">[X] GOLPEAR</button><button id="fire-btn" class="action attack">[F] DISPARAR</button><button id="pickup-btn" class="action">[G] RECOGER</button><button id="heal-btn" class="action">[H] CURAR</button><button id="harvest-btn" class="action discovery">[K] RECOLECTAR</button><button id="craft-btn" class="action discovery">[O] FABRICAR</button><button id="ecology-btn" class="action discovery">[Y] ECOLOGÍA</button><button id="inventory-btn" class="action">[B] EQUIPO</button><button id="swap-btn" class="action">[Q] CAMBIAR ARMA</button><button id="journal-btn" class="action">[J] DIARIO</button><button id="wait-btn" class="action">[ESPACIO] ESPERAR</button></div>
+<details class="secondary-actions"><summary>EXPLORACIÓN Y EQUIPO · MÁS ACCIONES</summary><div id="secondary-deck"></div></details>
 <div class="touch-controls"><div class="dpad"><span></span><button data-move="up" aria-label="Ir al norte">▲</button><span></span><button data-move="left" aria-label="Ir al oeste">◀</button><button data-move="down" aria-label="Ir al sur">▼</button><button data-move="right" aria-label="Ir al este">▶</button></div><p>Controles táctiles / alternativa al teclado</p></div>
 <div id="death-banner" class="death-banner hidden" role="alert">SEÑAL VITAL PERDIDA · CARGA UNA PARTIDA O INICIA UNA NUEVA</div>
 <div class="eventpanel"><div class="section-title">BITÁCORA DE CAMPO <span>REGISTRO ACTIVO</span></div><div id="log" aria-live="polite" role="status"></div></div>
 </section>
 <aside class="sidebar"><div class="side-card"><div class="section-title">SUJETO // 404 <span>ERRANTE</span></div><div class="portrait"><span>@</span><div><strong>SIN NOMBRE</strong><small>Origen: Nacido del Polvo</small><small id="actor-state">Estado: Estable</small></div></div><div class="stat"><span>VITALIDAD</span><span id="hp-text">32 / 32</span></div><div class="meter"><i id="hp-bar" style="width:100%"></i></div><div class="stat"><span>CONCENTRACIÓN</span><span id="focus-text">18 / 18</span></div><div class="meter focus"><i id="focus-bar" style="width:100%"></i></div><div class="stat"><span>EXPERIENCIA · <span id="level">NV 1</span></span><span id="xp-text">0/12</span></div><div class="meter xp"><i id="xp-bar" style="width:0%"></i></div><div class="stat"><span>EXPOSICIÓN BIOLÓGICA</span><span id="exposure-text">0%</span></div><div class="meter exposure"><i id="exposure-bar" style="width:0%"></i></div><div class="pairs"><span>GENES DISPONIBLES</span><b id="genes">1</b><span>MUTACIONES</span><b id="gene-count">2 / 9</b><span>EFECTOS ACTIVOS</span><b id="field-count">0</b><span>TURNO</span><b id="turn">0</b><span>SEMILLA</span><b id="seed">404</b><span>BAJAS</span><b id="kills">0</b><span>ARMADURA</span><b id="armor">1</b><span>REGIÓN</span><b id="region">FARO CIEGO</b></div></div>
-<div class="side-card mutation-card"><div class="section-title">GENOMA / 404 <span>W4</span></div><p id="gene-summary">Tu cuerpo no recuerda su forma original.</p><div id="mutant-skills"></div><button id="mutations-side-btn" class="action gene">[U] ABRIR GENOMA</button></div><div class="side-card discovery-card"><div class="section-title">ECOSISTEMA <span>EXPLORACIÓN</span></div><h3 id="biome-name">Salinas de Vértice</h3><p id="biome-lore">La sal cruje bajo tus pies.</p><div class="weather-line"><span>CLIMA</span><b id="weather-info">Calma</b></div><div class="weather-line"><span>ARCHIVOS RECUPERADOS</span><b id="research-count">0 / 6</b><span>PRESIÓN TERRITORIAL</span><b id="ecology-pressure">0 / 5</b></div><p class="hint">Pulsa <kbd>R</kbd> para sondear el bioma. Consume 4 puntos de concentración.</p></div>
+<div class="side-card mutation-card"><div class="section-title">GENOMA / 404 <span>EVOLUCIÓN</span></div><p id="gene-summary">Tu cuerpo no recuerda su forma original.</p><div id="mutant-skills"></div><button id="mutations-side-btn" class="action gene">[U] ABRIR GENOMA</button></div><div class="side-card discovery-card"><div class="section-title">ECOSISTEMA <span>EXPLORACIÓN</span></div><h3 id="biome-name">Salinas de Vértice</h3><p id="biome-lore">La sal cruje bajo tus pies.</p><div class="weather-line"><span>CLIMA</span><b id="weather-info">Calma</b></div><div class="weather-line"><span>ARCHIVOS RECUPERADOS</span><b id="research-count">0 / 6</b><span>PRESIÓN TERRITORIAL</span><b id="ecology-pressure">0 / 5</b></div><p class="hint">Pulsa <kbd>R</kbd> para sondear el bioma. Consume 4 puntos de concentración.</p></div>
 <div class="side-card"><div class="section-title">CARTOGRAFÍA <span>SECTOR 01</span></div><canvas id="minimap" class="minimap" aria-label="Minimapa y amenazas visibles"></canvas><div class="map-caption">Los enemigos se muestran al entrar en tu campo de visión.</div></div>
 <div class="side-card mission-card"><div class="section-title">MISIÓN EN CURSO <span>PRINCIPAL</span></div><h3 id="quest-name">Eco bajo la sal</h3><p id="quest-text">Habla con Mara Venn, en la plaza.</p><div class="quest-state" id="quest-state">● SIN INICIAR</div></div>
-<div class="side-card"><div class="section-title">EQUIPO Y SUMINISTROS <span>W3</span></div><div id="equipment-summary" class="equipment-summary"></div></div>
-<div class="side-card"><div class="section-title">SISTEMA <span>v1.0</span></div><div class="system-actions"><button id="save-btn">GUARDAR</button><button id="load-btn">CARGAR</button><button id="export-btn">EXPORTAR COPIA</button><button id="new-btn">NUEVA PARTIDA</button></div><div class="save-status" id="save-status">Autoguardado local activado.</div></div></aside></main>
-<footer><span>FARO CIEGO / NACAR_404</span><span>W13 — ECOS DE NÁCAR</span><span>JUGABLE SIN CONEXIÓN EXTERNA</span></footer>
+<div class="side-card"><div class="section-title">EQUIPO Y SUMINISTROS <span>SUMINISTROS</span></div><div id="equipment-summary" class="equipment-summary"></div></div>
+<div class="side-card"><div class="section-title">SISTEMA <span>PARTIDA LOCAL</span></div><div class="system-actions"><button id="save-btn">GUARDAR</button><button id="load-btn">CARGAR</button><button id="export-btn">EXPORTAR COPIA</button><button id="new-btn">NUEVA PARTIDA</button></div><div class="save-status" id="save-status">Autoguardado local activado.</div></div></aside></main>
+<footer><span>FARO CIEGO / NACAR_404</span><span>NÁCAR · EL MUNDO RECUERDA</span><span>JUGABLE SIN CONEXIÓN EXTERNA</span></footer>
 </div>
 <div id="start-menu" class="start-menu" role="dialog" aria-modal="true" aria-labelledby="start-title">
   <div class="start-menu-card">
-    <div class="start-eyebrow">TRANSMISIÓN // ARCHIVO 404 · ASCENSION EN DESARROLLO</div>
+    <div class="start-eyebrow">UN RPG DE EXPLORACIÓN Y HORROR CÓSMICO</div>
     <div class="start-sigil" aria-hidden="true">◈</div>
     <h1 id="start-title">MUTATION <em>404</em></h1>
     <p class="start-tagline">NÁCAR TE RECUERDA. TÚ TODAVÍA NO.</p>
@@ -75,11 +76,14 @@ root.innerHTML=`
     </div>
     <p id="start-save-info" class="start-save-info">Buscando datos guardados…</p>
     <p id="start-message" role="status" aria-live="polite"></p>
-    <div class="start-footer">WASD / FLECHAS PARA EXPLORAR · ASCII ISOMÉTRICO UNIFICADO</div>
+    <div class="start-footer">WASD / FLECHAS · EXPLORA LAS SALINAS DE VÉRTICE</div>
   </div>
 </div>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-header"><span id="modal-caption">TRANSMISIÓN LOCAL</span><button id="modal-close" aria-label="Cerrar diálogo">✕</button></div><h2 id="modal-title">Registro</h2><div id="modal-content"></div><div id="modal-options"></div></div></div>`;
 const $=<T extends HTMLElement>(selector:string):T=>{const el=document.querySelector<T>(selector);if(!el)throw new Error(`Elemento ${selector} ausente`);return el;};
+const secondary=$('#secondary-deck');
+for(const id of ['mutations-btn','scan-btn','travel-btn','atlas-btn','market-btn','house-btn','down-btn','up-btn','pickup-btn','harvest-btn','craft-btn','ecology-btn','inventory-btn','swap-btn','journal-btn','wait-btn'])secondary.appendChild($('#'+id));
+// Give hidden secondary actions accessible direct keyboard routes and keep IDs stable.
 let renderer:AsciiRenderer|PixiAsciiRenderer|PixelRenderer=new AsciiRenderer($<HTMLDivElement>('#viewport'));
 const asciiRenderer=renderer as AsciiRenderer;
 let asciiWebgl:PixiAsciiRenderer|null=null;
@@ -91,7 +95,7 @@ const audio=new AtmosphereAudio();
 const AUDIO_SETTINGS_KEY='mutation404.audio.v27';
 const CRT_SETTINGS_KEY='mutation404.crt.v1';
 type CrtSettings={scanlines:boolean;noise:boolean;vignette:boolean;glow:boolean;accessible:boolean;brightness:number};
-const DEFAULT_CRT:Readonly<CrtSettings>={scanlines:true,noise:true,vignette:true,glow:true,accessible:false,brightness:100};
+const DEFAULT_CRT:Readonly<CrtSettings>={scanlines:false,noise:false,vignette:false,glow:false,accessible:false,brightness:100};
 function readCrtSettings():CrtSettings{
   try{
     const raw=localStorage.getItem(CRT_SETTINGS_KEY);if(!raw)return {...DEFAULT_CRT};
@@ -125,7 +129,8 @@ function setArtMode(next:'ascii'|'pixel'):void{
   const active=next==='pixel'?$<HTMLCanvasElement>('#viewport canvas.pixel-canvas'):asciiWebgl?$<HTMLCanvasElement>('#viewport canvas.pixi-canvas'):$<HTMLCanvasElement>('#viewport canvas.world-canvas');
   active.style.display='block';
   artMode=next;$<HTMLElement>('#viewport').dataset.artMode=next;
-  const button=$<HTMLButtonElement>('#art-mode-btn');button.textContent=next==='pixel'?'PIXEL ART':'ASCII';button.setAttribute('aria-pressed',String(next==='pixel'));
+  const button=$<HTMLButtonElement>('#art-mode-btn');button.textContent=next==='pixel'?'ISOMÉTRICO':'ASCII';
+  $('.toolbar').textContent=next==='pixel'?'◈ ERRANTE   ·   ◇ HABITANTES   ·   ✦ ANOMALÍAS   ·   Selecciona amenazas con T':'@ ERRANTE · M HABITANTES · T OBJETIVO';button.setAttribute('aria-pressed',String(next==='pixel'));
   draw();if(gameStarted)renderer.startAmbience();renderer.focus();
 }
 let gameStarted=false;
@@ -261,6 +266,11 @@ function draw():void{
   for(const value of [ITEM_DEFS[state.equipment.melee].name,ITEM_DEFS[state.equipment.ranged].name,ITEM_DEFS[state.equipment.armor].name,`Ampollas: ${stackCount(state.inventory,'medkit')}`]){
     const p=document.createElement('p');p.textContent=value;equip.appendChild(p);
   }
+  const nearbyLoot=state.ground.some(i=>i.x===state.player.x&&i.y===state.player.y);
+  $('#pickup-btn').title=nearbyLoot?'Recoger el botín bajo tus pies':'Acércate a una casilla con botín para recogerlo';
+  $('#market-btn').title='Comercio: requiere estar junto a un mercader';
+  $('#down-btn').title='Requiere una escalera o acceso de descenso';
+  $('#up-btn').title='Requiere una salida de la planta actual';
   $<HTMLElement>('#death-banner').classList.toggle('hidden',stats.hp>0);
 }
 function showModal(title:string,body:string,options:{id:string;label:string}[],mode:NonNullable<typeof modalMode>):void{
@@ -613,28 +623,15 @@ draw();
 renderer.pauseAmbience();
 updateStartMenu();
 $<HTMLButtonElement>(savedRaw()?'#start-continue':'#start-new').focus();
-// WebGL upgrade is asynchronous: controls and Canvas 2D work immediately.
-// A WebGL failure never blocks input, saves or the offline release.
-void import('./pixi-renderer.js').then(async ({PixiAsciiRenderer})=>{
-  const candidate=await PixiAsciiRenderer.create($<HTMLDivElement>('#viewport'),asciiRenderer);
-  asciiWebgl=candidate;renderer=candidate;
-  $('#viewport').dataset.renderer='pixi-webgl';
-  state.log.push('GRÁFICOS // Renderizado PixiJS WebGL ASCII activado.');
-  try{
-    const {PixelRenderer}=await import('./pixel-renderer.js');
-    pixelRenderer=await PixelRenderer.create($<HTMLDivElement>('#viewport'),asciiRenderer);
-    setArtMode('pixel');
-    state.log.push('GRÁFICOS // Atlas pixel art original activado.');
-  }catch(pixelError){
-    console.warn('Pixel art no disponible; se conserva ASCII:',pixelError);
-    setArtMode('ascii');
-  }
-  draw();if(gameStarted){renderer.startAmbience();renderer.focus();}
+// Pixel artwork initializes independently of GPU support.
+void import('./pixel-renderer.js').then(async ({PixelRenderer})=>{
+  try{const {PixiAsciiRenderer}=await import('./pixi-renderer.js');asciiWebgl=await PixiAsciiRenderer.create($<HTMLDivElement>('#viewport'),asciiRenderer);}catch{/* Canvas recovery remains available. */}
+  pixelRenderer=await PixelRenderer.create($<HTMLDivElement>('#viewport'),asciiRenderer);
+  setArtMode('pixel');draw();
+  if(gameStarted){renderer.startAmbience();renderer.focus();}
 }).catch(error=>{
   $('#viewport').dataset.renderer='canvas2d';
-  $('#viewport').dataset.artMode='ascii';
   $('#art-mode-btn').setAttribute('disabled','true');
-  state.log.push('GRÁFICOS // WebGL no disponible; motor Canvas 2D operativo.');
-  console.warn('PixiJS WebGL fallback:',error);
-  draw();
+  state.log.push('No se pudo cargar el atlas de Nácar. Recarga para reintentar; el modo de recuperación sigue operativo.');
+  console.warn('Atlas initialization failed:',error);draw();
 });

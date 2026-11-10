@@ -30,7 +30,7 @@ test('ABYSSAL CRT controls are independent, persistent and accessible',()=>{
 });
 test('premium interface keeps hierarchy and responsive console treatment',()=>{
   assert.match(style,/--premium-cyan/);
-  assert.match(style,/premium-sweep/);
+  assert.match(style,/--surface/);
   assert.match(style,/\.command-deck|\.actionbar/);
   assert.match(style,/max-width:1760px/);
   assert.match(style,/@media\(max-width:620px\)/);

@@ -60,6 +60,10 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: node scripts/qa-pixel-biomes.mjs
+      - name: Verify isometric Canvas and WebGL presentation
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: node scripts/qa-isometric.mjs
       - name: Verify offline installation under a Pages subpath
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
