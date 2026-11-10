@@ -36,7 +36,7 @@ try{
       });
     }
     const page=await context.newPage(),errors=[];
-    page.on('pageerror',e=>errors.push(e.message));
+    page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning')console.log('BROWSER',m.text());});
     await page.goto(base,{waitUntil:'networkidle',timeout:45000});
     assert.ok(await page.locator('#start-menu').isVisible(),'startup menu must open before gameplay');
     assert.equal(await page.locator('#start-file').isVisible(),false,'native file picker stays hidden until import is requested');
@@ -145,7 +145,7 @@ try{
   for(const [width,height] of [[390,844],[768,1024]]){
     const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:width===390,hasTouch:width===390});
     const page=await context.newPage(),errors=[];
-    page.on('pageerror',e=>errors.push(e.message));
+    page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning')console.log('BROWSER',m.text());});
     await page.goto(base,{waitUntil:'networkidle',timeout:45000});
     await page.locator('#start-new').click();
     await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
@@ -362,7 +362,7 @@ try{
         };
       },{raw:serialize(fixture),fallback:mode==='canvas-fallback'});
       const page=await context.newPage(),errors=[];
-      page.on('pageerror',e=>errors.push(e.message));
+      page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning')console.log('BROWSER',m.text());});
       await page.goto(base,{waitUntil:'networkidle'});
       await page.locator('#start-continue').click();
       const expected=mode==='webgl'?'pixi-webgl':'canvas2d';

@@ -18,7 +18,7 @@ export class PixelRenderer{
  private floorCtx:CanvasRenderingContext2D;
  private state:GameState|null=null;
  private entries:Entry[]=[];
- private scale=1;private origin={x:0,y:0};
+ private scale=1.15;private origin={x:0,y:0};
  private reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
  private raf=0;private running=false;private lastFrame=0;
  private heroAction:HeroAction|null=null;private heroUntil=0;
@@ -36,20 +36,21 @@ export class PixelRenderer{
   const r=new PixelRenderer(mount,old,image,assets);
   // Canvas remains the rendering source, so lack of GPU never changes the artwork.
   try{
-   const {Application,Texture,Sprite}=await import('pixi.js');
-   const probe=document.createElement('canvas');const gl=probe.getContext('webgl2')??probe.getContext('webgl');
-   if(!gl)throw new Error('WebGL unavailable');gl.getExtension('WEBGL_lose_context')?.loseContext();
+   const {Application,Texture,Sprite,CanvasSource}=await import('pixi.js');
    const app=new Application();await app.init({preference:'webgl',width:1175,height:783,antialias:false,background:0x10151b});
-   const texture=Texture.from(r.canvas);texture.source.scaleMode='nearest';app.stage.addChild(new Sprite(texture));
+   const texture=new Texture({source:new CanvasSource({resource:r.canvas})});texture.source.scaleMode='nearest';app.stage.addChild(new Sprite(texture));
    r.present=()=>{texture.source.update();};r.dispose=()=>app.destroy(true,{children:true,texture:true});
    app.canvas.className='world-canvas pixel-canvas';app.canvas.tabIndex=0;app.canvas.setAttribute('aria-label','Mapa isométrico de Nácar. WASD para moverse.');
    mount.append(app.canvas);r.backend='pixi-webgl';
-  }catch{r.canvas.className='world-canvas pixel-canvas';r.canvas.tabIndex=0;r.canvas.setAttribute('aria-label','Mapa isométrico de Nácar. WASD para moverse.');mount.append(r.canvas);}
+  }catch(error){console.warn('Isometric WebGL presenter unavailable:',error);r.canvas.className='world-canvas pixel-canvas';r.canvas.tabIndex=0;r.canvas.setAttribute('aria-label','Mapa isométrico de Nácar. WASD para moverse.');mount.append(r.canvas);}
   mount.dataset.renderer=r.backend;
   const active=mount.querySelector<HTMLCanvasElement>('.pixel-canvas')!;
   active.addEventListener('pointermove',event=>{
    if(!r.state)return;const rect=active.getBoundingClientRect();
-   const p=unproject(((event.clientX-rect.left)*1175/rect.width-r.origin.x)/r.scale,((event.clientY-rect.top)*783/rect.height-r.origin.y)/r.scale);
+   const fit=Math.min(rect.width/1175,rect.height/783);
+   const px=(event.clientX-rect.left-(rect.width-1175*fit)/2)/fit;
+   const py=(event.clientY-rect.top-(rect.height-783*fit)/2)/fit;
+   const p=unproject((px-r.origin.x)/r.scale,(py-r.origin.y)/r.scale);
    const x=Math.round(p.x),y=Math.round(p.y);
    const valid=x>=0&&y>=0&&x<WIDTH&&y<HEIGHT&&r.state.visible[index(x,y)]===1;
    active.title=valid?`Casilla ${x}, ${y} · ${BIOMES[biomeAt(r.state.seed,x,y)].name}`:'Territorio desconocido';
@@ -107,7 +108,7 @@ export class PixelRenderer{
    let asset=e.asset;const p=project(e.x,e.y),hero=project(state.player.x,state.player.y);
    if(e.id){ctx.fillStyle='#060c16';ctx.globalAlpha=.6;ctx.beginPath();ctx.ellipse(p.x,p.y+1,15,6,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
    if(asset==='hero'){
-    const pose=state.stats.hp<=0?'death':this.heroUntil>now?this.heroAction==='walk'?'walk':this.heroAction==='attack'?'attack':this.heroAction==='damage'?'hurt':'idle':'idle';
+    const pose=state.stats.hp<=0?'death':!this.reducedMotion&&this.heroUntil>now?this.heroAction==='walk'?'walk':this.heroAction==='attack'?'attack':this.heroAction==='damage'?'hurt':'idle':'idle';
     const f=pose==='walk'||pose==='attack'?phase:pose==='idle'?phase%2:0;
     asset=`hero-${direction(state.genome.facing.dx,state.genome.facing.dy)}-${pose}-${f}`;
    }else if(e.id)asset=`${e.asset}-${(this.hits.get(e.id)??0)>now?'hurt':(this.enemyActions.get(e.id)??0)>now?'attack':'idle'}-${phase%2}`;
@@ -117,7 +118,7 @@ export class PixelRenderer{
    if(e.id&&e.id!=='hero'&&e.id===state.targetId){ctx.strokeStyle='#d5aa65';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,24,10,0,0,Math.PI*2);ctx.stroke();const enemy=state.enemies.find(n=>n.id===e.id);ctx.fillStyle='#c65362';ctx.fillRect(p.x-17,p.y-57,34*Math.min(1,(enemy?.hp??0)/25),3);}
   }
   for(const field of state.fields)if(state.visible[index(field.x,field.y)]===1){const p=project(field.x,field.y);ctx.strokeStyle=field.kind==='fire'?'#e69a5c':field.kind==='electric'?'#58cabf':'#ac8ebc';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(p.x,p.y,24,10,0,0,Math.PI*2);ctx.stroke();}
-  for(const cue of this.cues)if(cue.until>now){
+  for(const cue of this.cues)if(cue.until>now&&!this.reducedMotion){
    const p=project(cue.x,cue.y),t=this.reducedMotion ? .35 :1-(cue.until-now)/650;
    ctx.globalAlpha=1-t;ctx.strokeStyle=cue.kind==='damage'?'#e56b75':cue.kind==='pyrokinesis'?'#f2aa67':cue.kind==='neural-shock'?'#b69bdd':'#83f3e2';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=3;
    if(cue.kind==='pyrokinesis')for(let i=0;i<5;i++){const x=p.x-15+i*8;ctx.beginPath();ctx.moveTo(x-4,p.y);ctx.lineTo(x+3,p.y-24-22*t);ctx.lineTo(x+8,p.y);ctx.fill();}

@@ -23,6 +23,10 @@ try{
    if(id==='inventory-btn')await page.screenshot({path:`${root}/inventory-${backend}.png`});
    await page.locator('#modal-close').click();
   }
+  for(const id of ['scan-btn','interact-btn','target-btn','attack-btn','fire-btn','pickup-btn','heal-btn','harvest-btn','house-btn','down-btn','up-btn','swap-btn','wait-btn','market-btn']){
+   await page.locator('#'+id).click();
+   if(await page.locator('#modal').isVisible())await page.locator('#modal-close').click();
+  }
   await page.locator('#save-btn').click();const raw=await page.evaluate(()=>localStorage.getItem('mutation404.v10.save'));
   await page.waitForTimeout(800);assert.equal(await page.evaluate(()=>localStorage.getItem('mutation404.v10.save')),raw,'visual frames must not modify stored simulation');
   await page.locator('#zoom-in').click();await page.locator('#zoom-out').click();
