@@ -130,7 +130,7 @@ function setArtMode(next:'ascii'|'pixel'):void{
   active.style.display='block';
   artMode=next;$<HTMLElement>('#viewport').dataset.artMode=next;
   const button=$<HTMLButtonElement>('#art-mode-btn');button.textContent=next==='pixel'?'ISOMÉTRICO':'ASCII';
-  $('.toolbar').textContent=next==='pixel'?'◈ ERRANTE   ·   ◇ HABITANTES   ·   ✦ ANOMALÍAS   ·   Selecciona amenazas con T':'@ ERRANTE · M HABITANTES · T OBJETIVO';button.setAttribute('aria-pressed',String(next==='pixel'));
+  $('.toolbar > span').textContent=next==='pixel'?'◈ ERRANTE   ·   ◇ HABITANTES   ·   ✦ ANOMALÍAS   ·   Selecciona amenazas con T':'@ ERRANTE · M HABITANTES · T OBJETIVO';button.setAttribute('aria-pressed',String(next==='pixel'));
   draw();if(gameStarted)renderer.startAmbience();renderer.focus();
 }
 let gameStarted=false;
