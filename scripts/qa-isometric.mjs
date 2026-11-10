@@ -14,8 +14,8 @@ try{
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:8881/?profile=1');await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='pixel');
   await page.screenshot({path:`${root}/menu-${backend}.png`});await page.locator('#start-new').click();
-  assert.equal(await page.locator('#viewport').getAttribute('data-renderer'),backend==='canvas'?'canvas2d':'pixi-webgl');
   await page.screenshot({path:`${root}/world-${backend}.png`,fullPage:true});
+  assert.equal(await page.locator('#viewport').getAttribute('data-renderer'),backend==='canvas'?'canvas2d':'pixi-webgl');
   const before=await page.locator('#coords').textContent();await page.keyboard.press('ArrowRight');assert.notEqual(await page.locator('#coords').textContent(),before);
   await page.locator('.secondary-actions summary').click();
   for(const id of ['inventory-btn','journal-btn','atlas-btn','travel-btn','craft-btn','ecology-btn','mutations-btn']){

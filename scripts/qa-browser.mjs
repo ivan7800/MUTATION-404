@@ -151,7 +151,7 @@ try{
     await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
     const before=await page.locator('#coords').textContent();
     if(width===390){
-      assert.ok(await page.locator('#viewport').evaluate(el=>el.scrollLeft>0),'mobile camera must center the player inside the scroll viewport');
+      assert.ok(await page.locator('#viewport').evaluate(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('canvas.pixel-canvas').getBoundingClientRect();return Math.abs((a.left+a.right-b.left-b.right)/2)<2;}),'mobile camera canvas must remain centered in the viewport');
       assert.ok(await page.locator('.touch-controls').isVisible(),'mobile D-pad must be visible');
       await page.locator('[data-move="right"]').click();
       assert.notEqual(await page.locator('#coords').textContent(),before,'touch D-pad did not move character');

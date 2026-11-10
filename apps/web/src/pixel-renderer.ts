@@ -1,4 +1,4 @@
-import {ACTORS,biomeAt,BIOMES,HEIGHT,WIDTH,settlementCitizens,type GameState} from '../../../packages/core/src/game.js';
+import {ACTORS,ENEMY_DEFS,biomeAt,BIOMES,HEIGHT,WIDTH,settlementCitizens,type GameState} from '../../../packages/core/src/game.js';
 import {index} from '../../../packages/core/src/world.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
@@ -115,7 +115,7 @@ export class PixelRenderer{
    // Tall foreground structures become transparent only when actually overlapping the hero.
    const alpha=e.asset.startsWith('wall-')&&e.order>depth(state.player.x,state.player.y)&&Math.abs(p.x-hero.x)<63&&p.y-hero.y<115?e.alpha*.35:e.alpha;
    this.paint(ctx,asset,e.x,e.y,alpha);
-   if(e.id&&e.id!=='hero'&&e.id===state.targetId){ctx.strokeStyle='#d5aa65';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,24,10,0,0,Math.PI*2);ctx.stroke();const enemy=state.enemies.find(n=>n.id===e.id);ctx.fillStyle='#c65362';ctx.fillRect(p.x-17,p.y-57,34*Math.min(1,(enemy?.hp??0)/25),3);}
+   if(e.id&&e.id!=='hero'&&e.id===state.targetId){ctx.strokeStyle='#d5aa65';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,24,10,0,0,Math.PI*2);ctx.stroke();const enemy=state.enemies.find(n=>n.id===e.id);ctx.fillStyle='#c65362';ctx.fillRect(p.x-17,p.y-57,34*Math.min(1,(enemy?.hp??0)/(enemy?ENEMY_DEFS[enemy.kind].hp*(e.asset==='boss'?3:1):1)),3);}
   }
   for(const field of state.fields)if(state.visible[index(field.x,field.y)]===1){const p=project(field.x,field.y);ctx.strokeStyle=field.kind==='fire'?'#e69a5c':field.kind==='electric'?'#58cabf':'#ac8ebc';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(p.x,p.y,24,10,0,0,Math.PI*2);ctx.stroke();}
   for(const cue of this.cues)if(cue.until>now&&!this.reducedMotion){
