@@ -17,14 +17,14 @@ export function ruinId(x:number,y:number,depth:1|2):RuinId{return `ruin-${x}-${y
 export function ruinName(id:string):string {const r=parseRuin(id);return r?`${themeForRuin(r.x,r.y).name} / Estrato ${r.depth}`:ZONE_NAMES[id]??id;}
 /** Eight authored identities layered on deterministic procedural floorplans. */
 export const RUIN_THEMES = [
- {name:'Ojo del Silencio',symbol:'?',hazard:'spores',lore:'Las paredes repiten pensamientos que todavía no has tenido.',reward:'Archivo de pensamientos anticipados'},
- {name:'Fundición de Ceniza',symbol:'%',hazard:'fire',lore:'La escoria respira; el horno no tiene combustible.',reward:'Núcleo de la última fragua'},
- {name:'Catedral Refractada',symbol:'v',hazard:'electric',lore:'Los vitrales muestran un cielo imposible bajo la tierra.',reward:'Prisma de los dos amaneceres'},
- {name:'Osario de Motores',symbol:'%',hazard:'electric',lore:'Una cadena de engranajes late como un corazón.',reward:'Memoria ferruginosa'},
- {name:'Mausoleo de Cobre',symbol:'=',hazard:'electric',lore:'Las máquinas han construido lápidas para sus operadores.',reward:'Sello del custodio cero'},
- {name:'Invernadero de la Médula',symbol:'&',hazard:'spores',lore:'Hay raíces dentro de los conductos de ventilación.',reward:'Semilla de la quinta estación'},
- {name:'Archivo del Espejo',symbol:'v',hazard:'spores',lore:'Un espejo registra las fechas en las que desaparecerás.',reward:'Lente de la ausencia'},
- {name:'Santuario de la Última Voz',symbol:'?',hazard:'fire',lore:'La radio reproduce el silencio de una multitud.',reward:'Transmisor sin emisor'}
+ {name:'Ojo del Silencio',symbol:'?',hazard:'spores',lore:'Las paredes repiten pensamientos que todavía no has tenido.',reward:'Archivo de pensamientos anticipados',guardian:'El Repetidor',guardianKind:'sentinel'},
+ {name:'Fundición de Ceniza',symbol:'%',hazard:'fire',lore:'La escoria respira; el horno no tiene combustible.',reward:'Núcleo de la última fragua',guardian:'La Maestra de Escoria',guardianKind:'crawler'},
+ {name:'Catedral Refractada',symbol:'v',hazard:'electric',lore:'Los vitrales muestran un cielo imposible bajo la tierra.',reward:'Prisma de los dos amaneceres',guardian:'El Astrónomo Ciego',guardianKind:'moth'},
+ {name:'Osario de Motores',symbol:'%',hazard:'electric',lore:'Una cadena de engranajes late como un corazón.',reward:'Memoria ferruginosa',guardian:'El Capataz de Hierro',guardianKind:'drone'},
+ {name:'Mausoleo de Cobre',symbol:'=',hazard:'electric',lore:'Las máquinas han construido lápidas para sus operadores.',reward:'Sello del custodio cero',guardian:'La Notaria Cero',guardianKind:'sentinel'},
+ {name:'Invernadero de la Médula',symbol:'&',hazard:'spores',lore:'Hay raíces dentro de los conductos de ventilación.',reward:'Semilla de la quinta estación',guardian:'El Jardinero de Médula',guardianKind:'spore'},
+ {name:'Archivo del Espejo',symbol:'v',hazard:'spores',lore:'Un espejo registra las fechas en las que desaparecerás.',reward:'Lente de la ausencia',guardian:'Tu Reflejo Tardío',guardianKind:'larva'},
+ {name:'Santuario de la Última Voz',symbol:'?',hazard:'fire',lore:'La radio reproduce el silencio de una multitud.',reward:'Transmisor sin emisor',guardian:'El Coro Hueco',guardianKind:'moth'}
 ] as const;
 export function themeForRuin(x:number,y:number){
  const positions=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
@@ -68,7 +68,8 @@ export function generateRuin(seed:number,x:number,y:number,depth:1|2):ZoneMemory
    generated.tiles[index(22,12)]='?'; // preserve existing resonance after corridor carving
    generated.tiles[index(26,12)]='o';
    generated.enemies=generated.enemies.filter(e=>!(e.x>=25&&e.x<=34&&e.y>=8&&e.y<=17));
-   generated.enemies.push({id:`elite-${x}-${y}-${depth}`,kind:'drone',x:30,y:12,hp:ENEMY_DEFS.drone.hp,mode:'idle',searchTurns:0});
+   const kind=theme.guardianKind;
+   generated.enemies.push({id:`elite-${x}-${y}-${depth}`,kind,x:30,y:12,hp:ENEMY_DEFS[kind].hp+4,mode:'idle',searchTurns:0});
  }
  for(const e of generated.enemies)if(!e.id.startsWith('elite-'))e.id=`ruin-${x}-${y}-${depth}-${e.id}`;
  return generated;

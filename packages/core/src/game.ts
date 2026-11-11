@@ -1,5 +1,5 @@
 import { RECIPES, RESOURCE_INFO, seedResources, initialEcology, ecologicalPulse, type EcologyState } from './ecology.js';
-import {campaignProgress, endingStory, FINAL_GUARDIAN_ID, nacarPhase, nacarStrikeOffsets, nacarMark, NACAR_MARK_PREFIX, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
+import {campaignProgress, campaignResonanceChoices, endingStory, FINAL_GUARDIAN_ID, nacarPhase, nacarStrikeOffsets, nacarMark, NACAR_MARK_PREFIX, FINALE_EVENT_PREFIX, type FinaleChoice} from './campaign.js';
 import { TASKS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior, generateInterior, type Citizen } from './civilizations.js';
 import { SECTORS, coordsForZone, generateSector, sectorName, zoneForSector } from './frontier.js';
 import { generateDepth, generateRuin, ruinId, ruinName, parseRuin, themeForRuin, ZONE_NAMES, type ZoneId, type ZoneMemory } from './depths.js';
@@ -22,7 +22,7 @@ export { SECTORS, coordsForZone, sectorName } from './frontier.js';
 export { TASKS, GOODS, priceFor, settlementCitizens, interiorForSector, exteriorForInterior } from './civilizations.js';
 export { RECIPES, RESOURCE_INFO } from './ecology.js';
 export { BIOMES, WEATHER, biomeAt, weatherAt } from './biomes.js';
-export {campaignProgress,campaignObjective,campaignArchiveList,endingStory,CAMPAIGN_SITES} from './campaign.js';
+export {campaignProgress,campaignObjective,campaignArchiveList,campaignResonanceChoices,endingStory,CAMPAIGN_SITES,CAMPAIGN_CHAPTERS} from './campaign.js';
 export type { Tile, Actor, Landmark } from './world.js';
 export interface Position { x: number; y: number }
 export type QuestStatus = 'undiscovered' | 'active' | 'signal-found' | 'completed';
@@ -321,6 +321,7 @@ export function dispatch(s:GameState, command:Command):ActionResult {
         // Neutralization changes this physical floor and survives zone snapshots.
         s.fields=s.fields.filter(field=>manhattan(field,{x:22,y:12})>6);
         message(s,'RESONANCIA // El condensador absorbe la frecuencia. Exposición -25, concentración +8.');
+        if(r) s.events.push(`chapter-choice:${r.x}:${r.y}:stabilize`);
       }else{
         s.exposure=Math.min(100,s.exposure+18);s.genome.genePoints++;
         placeField(s.fields,{x:22,y:12,kind:themeForRuin(r!.x,r!.y).hazard,ttl:5});
@@ -335,6 +336,7 @@ export function dispatch(s:GameState, command:Command):ActionResult {
           }
         }
         message(s,'RESONANCIA // La frecuencia entra en tu carne. +1 gen, exposición +18; el suelo despierta.');
+        if(r) s.events.push(`chapter-choice:${r.x}:${r.y}:absorb`);
       }
       s.events.push(key);advance(s,100);return reply(true,100,'Decisión de resonancia registrada.');
     }
@@ -343,7 +345,7 @@ export function dispatch(s:GameState, command:Command):ActionResult {
       const p=campaignProgress(s);
       if(s.zone!=='zero-3'||!p.ready||!p.finaleAwakened||p.ending||s.enemies.some(e=>e.id===FINAL_GUARDIAN_ID&&e.hp>0))
         return reply(false,0,'El corazón todavía no acepta esa decisión.');
-      const ending=endingStory(choice,s.quest.outcome==='broadcast'?'broadcast':'isolate');
+      const ending=endingStory(choice,s.quest.outcome==='broadcast'?'broadcast':'isolate',campaignResonanceChoices(s.events));
       s.events.push(FINALE_EVENT_PREFIX+choice);
       if(choice==='bind'){s.reputation.concordia+=8;s.exposure=Math.max(0,s.exposure-30);}
       if(choice==='release'){s.genome.genePoints+=2;s.reputation.ferral+=4;}
@@ -608,7 +610,7 @@ export function dispatch(s:GameState, command:Command):ActionResult {
       const p=campaignProgress(s);
       if(p.ending){
         const choice=p.ending as FinaleChoice;
-        const ending=endingStory(choice,s.quest.outcome==='broadcast'?'broadcast':'isolate');
+        const ending=endingStory(choice,s.quest.outcome==='broadcast'?'broadcast':'isolate',campaignResonanceChoices(s.events));
         s.dialogue={speaker:'ARCHIVO DE EPÍLOGO',text:ending.description,options:[{id:'leave',label:'Continuar explorando Nácar'}]};
         return reply(true,0,'El epílogo permanece en la memoria de Nácar.');
       }
@@ -681,7 +683,9 @@ export function dispatch(s:GameState, command:Command):ActionResult {
       s.events.push(key);
       s.stats.credits+=15;
       addStack(s.inventory,'capacitor',1);
-      message(s,`ARCHIVO ÚNICO // ${themeForRuin(r.x,r.y).reward}: +15 créditos y 1 condensador.`);
+      const theme=themeForRuin(r.x,r.y);
+      message(s,`CUSTODIO // ${theme.guardian}: el registro ya no está protegido.`);
+      message(s,`CAPÍTULO COMPLETADO // ${theme.reward}: +15 créditos y 1 condensador.`);
       advance(s,100);
       return reply(true,100,'Archivo del custodio recuperado.');
     }
