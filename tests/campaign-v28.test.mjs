@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createGame,dispatch,serialize,deserialize,campaignObjective,campaignProgress,campaignArchiveList} from '../dist/core/core/src/game.js';
 import {CAMPAIGN_SITES,FINAL_GUARDIAN_ID} from '../dist/core/core/src/campaign.js';
+import {RUIN_THEMES,generateRuin} from '../dist/core/core/src/depths.js';
 
 function finale(seed=404,choice='broadcast'){
  const s=createGame(seed);
@@ -65,6 +66,32 @@ test('the initial signal decision influences epilogue tone',async()=>{
   assert.ok(on.description.length>120);
   assert.notEqual(on.title,'');
  }
+});
+
+test('eight campaign chapters have distinct dilemmas and named custodians with different combat families',()=>{
+ const chapters=campaignArchiveList(createGame(404));
+ assert.equal(chapters.length,8);
+ assert.equal(new Set(chapters.map(x=>x.chapter.title)).size,8);
+ assert.equal(new Set(chapters.map(x=>x.chapter.problem)).size,8);
+ assert.equal(new Set(chapters.map(x=>x.chapter.guardian)).size,8);
+ assert.equal(new Set(chapters.map(x=>x.chapter.method)).size,8);
+ assert.ok(new Set(RUIN_THEMES.map(x=>x.guardianKind)).size>=6,'custodians must use multiple enemy families');
+ for(const {x,y} of CAMPAIGN_SITES){
+  const elite=generateRuin(404,x,y,2).enemies.find(e=>e.id===`elite-${x}-${y}-2`);
+  assert.equal(elite.kind,RUIN_THEMES[CAMPAIGN_SITES.findIndex(p=>p.x===x&&p.y===y)].guardianKind);
+ }
+});
+
+test('regional resonance decisions persist and alter the final epilogue',async()=>{
+ const {campaignResonanceChoices,endingStory}=await import('../dist/core/core/src/campaign.js');
+ const s=createGame(404);
+ s.events.push('chapter-choice:-1:-1:absorb','chapter-choice:0:-1:absorb','chapter-choice:1:-1:stabilize');
+ const choices=campaignResonanceChoices(s.events);
+ assert.deepEqual(choices,{stabilized:1,absorbed:2});
+ const restored=deserialize(serialize(s));
+ assert.deepEqual(campaignResonanceChoices(restored.events),choices);
+ assert.match(endingStory('bind','broadcast',choices).description,/absorbiste 2 resonancias/i);
+ assert.match(endingStory('bind','broadcast',{stabilized:4,absorbed:1}).description,/estabilizaste 4 resonancias/i);
 });
 
 test('Nácar phase hazards are deterministic, signalled and compatible with save/load',async()=>{
