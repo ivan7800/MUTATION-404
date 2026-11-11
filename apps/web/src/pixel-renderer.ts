@@ -132,10 +132,24 @@ export class PixelRenderer{
   for(const cue of this.cues)if(cue.until>now&&!this.reducedMotion){
    const p=project(cue.x,cue.y),t=this.reducedMotion ? .35 :1-(cue.until-now)/650;
    ctx.globalAlpha=1-t;ctx.strokeStyle=cue.kind==='damage'?'#e56b75':cue.kind==='pyrokinesis'?'#f2aa67':cue.kind==='neural-shock'?'#b69bdd':'#83f3e2';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=3;
-   if(cue.kind==='fire'&&cue.from){const from=project(cue.from.x,cue.from.y);ctx.strokeStyle='#f1cb87';ctx.beginPath();ctx.moveTo(from.x,from.y-28);ctx.lineTo(from.x+(p.x-from.x)*Math.min(1,t*3),from.y-28+(p.y-from.y)*Math.min(1,t*3));ctx.stroke();}
+   if(cue.kind==='fire'&&cue.from){
+    const from=project(cue.from.x,cue.from.y),u=Math.min(1,t*3),x=from.x+(p.x-from.x)*u,y=from.y-28+(p.y-from.y)*u;
+    ctx.strokeStyle='#ed9560';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(from.x,from.y-28);ctx.lineTo(x,y);ctx.stroke();
+    ctx.strokeStyle='#fff0bd';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(from.x,from.y-28);ctx.lineTo(x,y);ctx.stroke();
+    ctx.fillStyle='#ffe0a1';ctx.beginPath();ctx.arc(x,y,4+3*(1-t),0,Math.PI*2);ctx.fill();
+    for(let i=0;i<3;i++){const q=u*(i+1)/4;ctx.fillStyle=i%2?'#f5b276':'#fff0bd';ctx.fillRect(from.x+(p.x-from.x)*q-2,from.y-28+(p.y-from.y)*q-2,3,3);}
+   }
    else if(cue.kind==='heal'){ctx.strokeStyle='#8fe0b4';ctx.strokeRect(p.x-12,p.y-34,24,6);ctx.strokeRect(p.x-3,p.y-43,6,24);}
    else if(cue.kind==='pyrokinesis')for(let i=0;i<5;i++){const x=p.x-15+i*8;ctx.beginPath();ctx.moveTo(x-4,p.y);ctx.lineTo(x+3,p.y-24-22*t);ctx.lineTo(x+8,p.y);ctx.fill();}
-   else if(cue.kind==='damage'||cue.kind==='attack'){for(let i=0;i<5;i++){const a=i*1.26;ctx.fillRect(p.x+Math.cos(a)*(9+22*t),p.y-20+Math.sin(a)*20*t,3,6);}}
+   else if(cue.kind==='attack'){
+    ctx.strokeStyle='#f2d79b';ctx.lineWidth=5;ctx.beginPath();ctx.arc(p.x-5,p.y-25,31,-1.9+t*.8,.4+t*.8);ctx.stroke();
+    ctx.strokeStyle='#83f3e2';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x-5,p.y-25,38,-1.8+t*.8,.25+t*.8);ctx.stroke();
+    for(let i=0;i<4;i++){const q=i/3;ctx.fillStyle=q<.5?'#fff1c8':'#83f3e2';ctx.fillRect(p.x-24+q*38,p.y-47+q*17,3,3);}
+   }
+   else if(cue.kind==='damage'){
+    ctx.strokeStyle='#e56b75';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(p.x,p.y-18,10+26*t,5+13*t,0,0,Math.PI*2);ctx.stroke();
+    for(let i=0;i<6;i++){const a=i*Math.PI/3;const r=13+17*t;ctx.beginPath();ctx.moveTo(p.x+Math.cos(a)*r,p.y-18+Math.sin(a)*r*.5);ctx.lineTo(p.x+Math.cos(a)*(r+8),p.y-18+Math.sin(a)*(r+8)*.5);ctx.stroke();}
+   }
    else if(cue.kind==='phase-step'){ctx.strokeRect(p.x-12-20*t,p.y-52,24,48);ctx.strokeRect(p.x+6+20*t,p.y-48,24,48);}
    else if(cue.kind==='neural-shock'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(p.x,p.y-30,10+28*t+i*8,0,Math.PI*2);ctx.stroke();}}
    else if(cue.kind==='kinetic-pulse'){ctx.beginPath();ctx.moveTo(p.x-24,p.y-20);ctx.lineTo(p.x,p.y-42-18*t);ctx.lineTo(p.x+24,p.y-20);ctx.lineTo(p.x,p.y);ctx.closePath();ctx.stroke();}
