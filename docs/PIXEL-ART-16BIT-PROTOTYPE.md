@@ -2,16 +2,16 @@
 
 ## Alcance
 
-Esta rama prueba el lenguaje visual en **Salinas** únicamente. No cambia reglas,
-campaña, controles, progresión ni formato de guardado; los otros cinco biomas
-siguen renderizándose igual que en `main`.
+Esta rama prueba el lenguaje visual en los seis biomas: Salinas, Ceniza, Hierro,
+Vidrio, Médula y Umbral. No cambia reglas, campaña, controles, progresión ni
+formato de guardado.
 
 ## Tratamiento visual
 
-- La escena de Salinas se compone en una superficie lógica de 392×187 píxeles.
-- Se amplía al viewport con nearest-neighbour para conservar bloques nítidos.
-- Suelo, afloramientos, coral óseo y arquitectura tienen sprites propios,
-  dibujados en una cuadrícula de 48×64 y exportados como atlas alternativo.
+- Cada escena se compone en una superficie lógica de 392×187 píxeles y se
+  amplía al viewport con nearest-neighbour.
+- Suelo, afloramientos, flora y arquitectura tienen sprites propios por bioma,
+  con paletas dedicadas, dibujados en una cuadrícula de 48×64.
 - Personajes, habitantes y criaturas conservan sus poses y animaciones, con
   frames reducidos a la misma cuadrícula de producción.
 - El tratamiento se limita al canvas del mapa; texto, HUD y controles HTML
@@ -29,5 +29,5 @@ profundidad y animación.
 ## Comprobación
 
 El contrato de escala se prueba para los seis biomas; las pruebas comprueban la
-integridad del atlas, el uso de sprites de Salinas y el buffer de baja
-resolución.
+integridad del atlas, la selección de sprites y el buffer de baja resolución.
+Chromium captura una escena de cada bioma.

@@ -15,7 +15,7 @@ export class PixelRenderer{
  readonly mode='pixel' as const;
  private canvas=document.createElement('canvas');
  private floor=document.createElement('canvas');
- // Preview-only low-resolution target for the first authored 16-bit biome.
+ // Shared low-resolution target for the authored 16-bit biome family.
  private pixelBuffer=document.createElement('canvas');
  private ctx:CanvasRenderingContext2D;
  private floorCtx:CanvasRenderingContext2D;
@@ -176,8 +176,8 @@ export class PixelRenderer{
    ctx.globalAlpha=1;
   }
   this.cues=this.cues.filter(c=>c.until>now);ctx.setTransform(1,0,0,1,0,0);
-  // The 16-bit treatment is intentionally limited to Salinas for this playable art test.
-  // Render at a 392×187 logical resolution, then enlarge with nearest-neighbour pixels.
+  // All six biomes render at the same 392×187 logical resolution, then enlarge
+  // with nearest-neighbour pixels so terrain, actors and effects share one grid.
   if(pixelArtScaleForBiome(climate)>1){
    this.pixelCtx.setTransform(1,0,0,1,0,0);this.pixelCtx.imageSmoothingEnabled=false;
    this.pixelCtx.clearRect(0,0,this.pixelBuffer.width,this.pixelBuffer.height);

@@ -1,4 +1,4 @@
-"""Build the original low-resolution 16-bit sprite family for Salinas."""
+"""Build handcrafted, biome-specific low-resolution 16-bit sprite families."""
 from pathlib import Path
 import json
 import math
@@ -12,13 +12,21 @@ COLS = 8
 W, H = 96, 128
 LOW_W, LOW_H = 48, 64
 
-P = {
+PALETTES = {
+ 'salinas': {
     'void': '#111923', 'outline': '#30383a', 'shadow': '#4b5354',
     'stone': '#777a72', 'mid': '#a5a38f', 'light': '#d2cbb5',
     'bright': '#eee5ce', 'warm': '#c2b499', 'gold': '#927f65',
     'teal': '#49c2ba', 'glow': '#a4f5e5', 'deep_teal': '#267c7b',
     'crimson': '#87394d', 'dark_red': '#512d3c', 'dust': '#8c8a7b',
+ },
+ 'ceniza': {'void':'#171615','outline':'#332b27','shadow':'#51403a','stone':'#69564d','mid':'#8d7060','light':'#bd9270','bright':'#e7bb87','warm':'#a67a5d','gold':'#805d49','teal':'#e27643','glow':'#ffd08a','deep_teal':'#a64d35','crimson':'#a33d32','dark_red':'#542b2c','dust':'#716057'},
+ 'hierro': {'void':'#10191c','outline':'#27383b','shadow':'#3d5558','stone':'#5e7778','mid':'#82999a','light':'#afc0b7','bright':'#e2e0c9','warm':'#a68c6b','gold':'#79674f','teal':'#56c9bd','glow':'#b8fff0','deep_teal':'#287e83','crimson':'#9e4e4c','dark_red':'#542f38','dust':'#66787a'},
+ 'vidrio': {'void':'#111a26','outline':'#2d4152','shadow':'#526b80','stone':'#718ca0','mid':'#a3bdca','light':'#c9e2e6','bright':'#f0ffff','warm':'#9ab7c5','gold':'#66889c','teal':'#60d9ed','glow':'#c9ffff','deep_teal':'#348da9','crimson':'#a54d71','dark_red':'#57344d','dust':'#8298a3'},
+ 'medula': {'void':'#1c151a','outline':'#45333a','shadow':'#694a51','stone':'#89646a','mid':'#b08382','light':'#d2a9a0','bright':'#f0d5bb','warm':'#c0907b','gold':'#906b5b','teal':'#66b9aa','glow':'#c8ffe0','deep_teal':'#397d78','crimson':'#bd5268','dark_red':'#633344','dust':'#987c75'},
+ 'umbral': {'void':'#151321','outline':'#332d48','shadow':'#51496c','stone':'#6b6484','mid':'#9489ab','light':'#b8afca','bright':'#e2ddf0','warm':'#a18d9a','gold':'#75677f','teal':'#8e80d4','glow':'#d5c8ff','deep_teal':'#5147a0','crimson':'#b65378','dark_red':'#582e57','dust':'#777187'},
 }
+P = PALETTES['salinas']
 
 
 def polygon(draw, points, color):
@@ -149,20 +157,23 @@ def salt_arch(v):
     return im
 
 
-def hand_painted(name):
+def hand_painted(name, biome):
     kind, _, suffix = name.rpartition('-')
-    if name.startswith('floor-salinas-'):
+    if name.startswith(f'floor-{biome}-'):
         return floor_tile(int(suffix))
-    if name.startswith('rock-salinas-'):
+    if name.startswith(f'rock-{biome}-'):
         return salt_rock(int(suffix))
-    if name.startswith('flora-salinas-'):
+    if name.startswith(f'flora-{biome}-'):
         return bone_coral(int(suffix))
-    if name.startswith('wall-salinas-'):
+    if name.startswith(f'wall-{biome}-'):
         return salt_arch(int(suffix))
     return None
 
 
-names = [name for name in SOURCE_META if name.startswith(('floor-salinas-', 'rock-salinas-', 'flora-salinas-', 'wall-salinas-', 'hero-', 'npc-', 'crawler-', 'sentinel-', 'larva-', 'moth-', 'drone-', 'spore-', 'elite-', 'boss-'))]
+biomes = tuple(PALETTES)
+environment = [name for name in SOURCE_META if name.startswith(tuple(f'{kind}-{biome}-' for biome in biomes for kind in ('floor','rock','flora','wall')))]
+actors = [name for name in SOURCE_META if name.startswith(('hero-', 'npc-', 'crawler-', 'sentinel-', 'larva-', 'moth-', 'drone-', 'spore-', 'elite-', 'boss-'))]
+names = environment + actors
 cols = COLS
 rows = math.ceil(len(names) / cols)
 sheet = Image.new('RGBA', (cols * W, rows * H))
@@ -171,7 +182,10 @@ for index, name in enumerate(names):
     source_meta = SOURCE_META[name]
     sx, sy, sw, sh = source_meta['rect']
     src = SOURCE.crop((sx, sy, sx + sw, sy + sh))
-    sprite = hand_painted(name)
+    biome = next((b for b in biomes if name.startswith(('floor-','rock-','flora-','wall-')) and name.startswith(tuple(f'{kind}-{b}-' for kind in ('floor','rock','flora','wall')))), None)
+    if biome:
+        P = PALETTES[biome]
+    sprite = hand_painted(name, biome) if biome else None
     if sprite is None:
         # Actors keep their anatomy and animation, but are redrawn onto a true
         # 48×64 pixel grid rather than filtered after the whole scene is painted.
