@@ -126,6 +126,85 @@ def architecture(d,p,v,biome):
    d.ellipse((46,48,52,54),fill='#58cabf')
    if v==2:d.line([(49,42),(49,25)],fill='#e5ddc9',width=4);poly(d,[(45,27),(49,15),(54,27)],'#d7d0b8')
   return
+ if biome!='salinas':
+  # Keep architecture readable across adjacent wall cells by mixing a low
+  # terrain fragment, one mid-height motif and a rare biome landmark.
+  if biome=='ceniza':
+   if v==0:
+    poly(d,[(19,110),(27,96),(42,91),(53,100),(70,95),(78,110),(48,121)],'#514d54')
+    poly(d,[(27,96),(42,91),(48,99),(34,103)],'#a08d80')
+    for x,y in [(31,106),(55,105),(64,108)]:d.point((x,y),fill='#ed9560')
+   elif v==1:
+    d.line([(27,112),(30,72),(39,60),(45,82),(45,115)],fill='#81776f',width=7)
+    d.line([(63,113),(61,78),(69,64),(74,107)],fill='#5d5960',width=7)
+    d.arc((31,44,68,91),190,350,fill='#c8a18c',width=4)
+    d.line([(39,67),(47,74),(57,68)],fill='#ed9560',width=2)
+   else:
+    d.rectangle((31,58,65,116),fill='#45444c');d.rectangle((39,68,57,110),fill='#282d35')
+    poly(d,[(28,59),(37,35),(48,48),(61,32),(70,60)],'#746b70')
+    d.rectangle((43,76,54,101),fill='#ed9560');d.rectangle((46,82,51,97),fill='#f6c47d')
+    d.line([(34,109),(63,109)],fill='#bd9585',width=3)
+  elif biome=='hierro':
+   if v==0:
+    d.rectangle((22,95,73,113),fill='#45535a');d.rectangle((29,87,65,98),fill='#806953')
+    for x in range(30,68,9):d.rectangle((x,100,x+4,108),fill='#bd9568')
+    d.line([(24,113),(75,113)],fill='#72c9c4',width=2)
+   elif v==1:
+    d.line([(25,113),(27,69),(37,58),(43,90),(43,114)],fill='#657078',width=6)
+    d.line([(64,114),(64,82),(73,69),(75,111)],fill='#4c5a61',width=6)
+    d.arc((34,43,67,92),190,350,fill='#bd9568',width=5)
+    d.line([(29,84),(39,84),(39,76)],fill='#72c9c4',width=3)
+   else:
+    d.rectangle((32,57,65,117),fill='#49565c');d.rectangle((39,68,58,110),fill='#27333a')
+    d.rectangle((37,49,60,61),fill='#bd9568');d.rectangle((41,42,56,51),fill='#45545a')
+    d.line([(49,42),(49,20)],fill='#72c9c4',width=4)
+    for y in [77,88,99]:d.line([(41,y),(55,y)],fill='#bd9568',width=3)
+  elif biome=='vidrio':
+   if v==0:
+    for x,h in [(25,24),(38,40),(54,29),(68,18)]:poly(d,[(x-6,112),(x-4,111-h),(x,105-h),(x+7,111-h),(x+5,114)],'#6485a4')
+    d.line([(38,69),(39,105)],fill='#b1d2e0',width=2);d.line([(54,80),(54,105)],fill='#88edd5',width=2)
+   elif v==1:
+    for x,h in [(29,35),(65,39)]:poly(d,[(x-7,112),(x-5,112-h),(x,103-h),(x+7,111-h),(x+6,114)],'#6485a4')
+    d.arc((30,40,66,104),195,345,fill='#b1d2e0',width=4)
+    d.line([(48,67),(48,110)],fill='#88edd5',width=3)
+   else:
+    for x,h in [(28,45),(47,68),(68,52)]:poly(d,[(x-8,114),(x-5,114-h),(x,105-h),(x+8,112-h),(x+6,115)],'#6485a4')
+    d.line([(47,47),(47,108)],fill='#d4f4fa',width=3);d.line([(31,80),(34,106)],fill='#88edd5',width=2)
+    d.ellipse((43,37,52,47),fill='#88edd5')
+  elif biome=='medula':
+   if v==0:
+    d.ellipse((21,91,75,118),fill='#4a5c4d')
+    for x,y in [(28,98),(40,88),(55,92),(66,99)]:
+     d.line([(x,111),(x+2,y),(x-2,y-8)],fill='#b2b48b',width=4)
+     d.ellipse((x-5,y-9,x+3,y-2),fill='#c8969f')
+   elif v==1:
+    d.line([(28,114),(33,78),(29,55)],fill='#647b65',width=6)
+    d.line([(68,114),(63,78),(68,52)],fill='#526b58',width=6)
+    d.arc((30,42,66,100),180,360,fill='#b2b48b',width=5)
+    for x,y in [(36,67),(60,65),(49,54)]:d.ellipse((x-4,y-4,x+4,y+4),fill='#c8969f')
+   else:
+    d.line([(47,116),(43,76),(49,44),(46,24)],fill='#647b65',width=8)
+    d.line([(46,82),(30,62),(25,45)],fill='#526b58',width=5)
+    d.line([(49,73),(66,55),(70,39)],fill='#647b65',width=5)
+    d.ellipse((38,20,57,41),fill='#c8969f');d.ellipse((43,25,52,36),fill='#343d3d')
+    for x,y in [(25,43),(69,37),(45,52)]:d.ellipse((x-4,y-4,x+4,y+4),fill='#b2b48b')
+  else: # umbral
+   if v==0:
+    poly(d,[(19,112),(27,95),(39,100),(48,88),(58,99),(73,92),(79,111),(49,122)],'#292a43')
+    d.line([(29,106),(39,102),(46,106),(57,101)],fill='#72dfd3',width=2)
+    d.line([(47,93),(45,103),(51,108)],fill='#9a85b6',width=2)
+   elif v==1:
+    d.line([(27,113),(31,64),(39,51),(45,79),(42,113)],fill='#4b4663',width=7)
+    d.line([(62,113),(63,74),(70,57),(75,110)],fill='#373750',width=7)
+    d.arc((32,39,67,96),190,350,fill='#9a85b6',width=4)
+    d.line([(41,76),(48,68),(56,77)],fill='#72dfd3',width=2)
+   else:
+    poly(d,[(33,116),(36,54),(45,27),(50,52),(52,116)],'#5c5379')
+    poly(d,[(51,116),(54,60),(64,36),(68,58),(69,112)],'#373750')
+    d.line([(43,102),(46,57),(47,39)],fill='#9a85b6',width=3)
+    d.line([(59,100),(61,64),(64,47)],fill='#72dfd3',width=2)
+    d.ellipse((43,65,54,77),fill='#292a43');d.ellipse((47,69,51,73),fill='#72dfd3')
+  return
  # buttressed structure, separately occluded by its ground anchor
  poly(d,[(19,109),(19,49),(49,32),(78,47),(78,109),(49,123)],a)
  poly(d,[(19,49),(49,32),(78,47),(48,63)],c);poly(d,[(19,49),(48,63),(48,123),(19,109)],b)
