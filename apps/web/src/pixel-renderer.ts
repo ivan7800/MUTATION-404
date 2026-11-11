@@ -90,12 +90,16 @@ export class PixelRenderer{
    const at=index(x,y);if(!state.seen[at])continue;
    const p=project(x,y);if(Math.abs((p.x-center.x)*this.scale)>700||Math.abs((p.y-center.y)*this.scale)>540)continue;
    const v=Math.floor(terrainHash(state.seed+917,x,y)*6),b=this.biome(state,x,y),tile=state.tiles[at];
+   const propVariant=Math.floor(terrainHash(state.seed+113,x,y)*6),propRoll=terrainHash(state.seed+1721,x,y);
    const alpha=state.visible[at]===1?1:.24;
    this.paint(ctx,`floor-${b}-${v}`,x,y,alpha);
    let prop:string|null=null;
-   if(tile==='#')prop=`wall-${b}-${wallVariant(x,y,v)}`;
-   else if(tile==='^'||tile==='%')prop=`rock-${b}-${v%3}`;
-   else if(['*','&',';',',','v','?'].includes(tile)&&v<3)prop=`flora-${b}-${v%3}`;
+   if(tile==='#'){
+    const landmark=wallVariant(x,y,v),common=Math.floor(terrainHash(state.seed+313,x,y)*4);
+    prop=`wall-${b}-${landmark===1?4:landmark===2?5:common}`;
+   }
+   else if(tile==='^'||tile==='%')prop=`rock-${b}-${propVariant}`;
+   else if(['*','&',';',',','v','?'].includes(tile)&&propRoll<(b==='ceniza'?.22:b==='hierro'?.24:b==='umbral'?.3:.45))prop=`flora-${b}-${propVariant}`;
    else if(tile==='~')prop='water';else if(tile==='+')prop='door';else if(tile==='o')prop='down';else if(tile==='x')prop='up';else if(tile==='T'||tile==='=')prop='terminal';else if(tile==='!')prop=`rock-${b}-2`;
    if(prop)this.entries.push({asset:prop,x,y,alpha,order:depth(x,y)});
   }

@@ -2,8 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {project,unproject,depth,direction,wallVariant,ambientCells,pixelArtScaleForBiome} from '../play/js/apps/web/src/isometric.js';
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {inflateSync} from 'node:zlib';
 const meta=JSON.parse(readFileSync('apps/web/public/isometric/nacar.json'));
 const pixelMeta=JSON.parse(readFileSync('apps/web/public/isometric/nacar-salinas-16bit.json'));
+const atlasPixels=decodeRgbaPng(readFileSync('apps/web/public/isometric/nacar-salinas-16bit.png'));
+function decodeRgbaPng(file){
+ assert.equal(file.toString('hex',0,8),'89504e470d0a1a0a');let width,height,bitDepth,colorType;const chunks=[];
+ for(let p=8;p<file.length;){const n=file.readUInt32BE(p),type=file.toString('ascii',p+4,p+8),data=file.subarray(p+8,p+8+n);p+=12+n;if(type==='IHDR'){width=data.readUInt32BE(0);height=data.readUInt32BE(4);bitDepth=data[8];colorType=data[9];}if(type==='IDAT')chunks.push(data);}
+ assert.equal(bitDepth,8);assert.equal(colorType,6);const stride=width*4,raw=inflateSync(Buffer.concat(chunks)),pixels=Buffer.alloc(height*stride);let offset=0;
+ const paeth=(a,b,c)=>{const q=a+b-c,da=Math.abs(q-a),db=Math.abs(q-b),dc=Math.abs(q-c);return da<=db&&da<=dc?a:db<=dc?b:c;};
+ for(let y=0;y<height;y++){const filter=raw[offset++],row=y*stride;for(let x=0;x<stride;x++){const value=raw[offset++],left=x>=4?pixels[row+x-4]:0,up=y?pixels[row-stride+x]:0,ul=y&&x>=4?pixels[row-stride+x-4]:0;const predictor=filter===0?0:filter===1?left:filter===2?up:filter===3?Math.floor((left+up)/2):filter===4?paeth(left,up,ul):(()=>{throw new Error(`unsupported PNG filter ${filter}`)})();pixels[row+x]=(value+predictor)&255;}}
+ return {width,height,pixels};
+}
+function spriteHash(name){const {rect:[x,y,w,h]}=pixelMeta[name],{width,pixels}=atlasPixels,hash=createHash('sha256');for(let row=0;row<h;row++)hash.update(pixels.subarray((y+row)*width*4+x*4,(y+row)*width*4+(x+w)*4));return hash.digest('hex');}
 test('projection round trips world positions across zoom and camera offsets',()=>{
  for(const zoom of [.65,1,1.6])for(const [x,y] of [[0,0],[32,32],[95,63],[12.4,18.8]]){
   const p=project(x,y),px=p.x*zoom+137,py=p.y*zoom-84;
@@ -37,11 +49,20 @@ test('all six surface biomes share the 16-bit rendering grid',()=>{
 test('the handcrafted 16-bit atlas contains six biome families and complete actor frames',()=>{
  for(const biome of ['salinas','ceniza','hierro','vidrio','medula','umbral']){
   for(let i=0;i<6;i++)assert.ok(pixelMeta[`floor-${biome}-${i}`]);
-  for(const prop of ['rock','flora','wall'])for(let i=0;i<3;i++)assert.ok(pixelMeta[`${prop}-${biome}-${i}`]);
+  for(const prop of ['rock','flora','wall'])for(let i=0;i<6;i++)assert.ok(pixelMeta[`${prop}-${biome}-${i}`]);
  }
  for(const d of ['north','south','east','west'])for(const [pose,n] of [['idle',2],['walk',4],['attack',4],['hurt',1],['death',1]])for(let i=0;i<n;i++)assert.ok(pixelMeta[`hero-${d}-${pose}-${i}`]);
  for(const kind of ['crawler','sentinel','larva','moth','drone','spore','elite','boss'])for(const pose of ['idle','attack','hurt'])for(let i=0;i<2;i++)assert.ok(pixelMeta[`${kind}-${pose}-${i}`]);
  for(const [name,a] of Object.entries(pixelMeta)){assert.deepEqual(a.pivot,[48,112],name);assert.equal(a.rect[2],96);assert.equal(a.rect[3],128);}
+});
+test('biome props and every enemy family have distinct handcrafted silhouettes and poses',()=>{
+ for(const biome of ['salinas','ceniza','hierro','vidrio','medula','umbral'])for(const prop of ['floor','rock','flora','wall']){
+  const hashes=Array.from({length:6},(_,v)=>spriteHash(`${prop}-${biome}-${v}`));assert.equal(new Set(hashes).size,6,`${biome} ${prop} variants must not repeat`);
+ }
+ const kinds=['crawler','sentinel','larva','moth','drone','spore','elite','boss'];
+ assert.equal(Object.keys(pixelMeta).length,246,'the atlas should contain six complete biome families and actor animation frames');
+ assert.equal(new Set(kinds.map(k=>spriteHash(`${k}-idle-0`))).size,kinds.length,'each enemy species must have a unique silhouette');
+ for(const kind of kinds){const poses=['idle','attack','hurt'].map(p=>spriteHash(`${kind}-${p}-0`));assert.equal(new Set(poses).size,3,`${kind} poses must differ`);for(const pose of ['idle','attack','hurt'])assert.notEqual(spriteHash(`${kind}-${pose}-0`),spriteHash(`${kind}-${pose}-1`),`${kind} ${pose} frames must differ`);}
 });
 test('production atlas includes complete directional poses and six biomes',()=>{
  for(const d of ['north','south','east','west'])for(const [pose,n] of [['idle',2],['walk',4],['attack',4],['hurt',1],['death',1]])for(let i=0;i<n;i++)assert.ok(meta[`hero-${d}-${pose}-${i}`]);
