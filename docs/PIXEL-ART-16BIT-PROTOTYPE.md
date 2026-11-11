@@ -10,6 +10,10 @@ siguen renderizándose igual que en `main`.
 
 - La escena de Salinas se compone en una superficie lógica de 392×187 píxeles.
 - Se amplía al viewport con nearest-neighbour para conservar bloques nítidos.
+- Suelo, afloramientos, coral óseo y arquitectura tienen sprites propios,
+  dibujados en una cuadrícula de 48×64 y exportados como atlas alternativo.
+- Personajes, habitantes y criaturas conservan sus poses y animaciones, con
+  frames reducidos a la misma cuadrícula de producción.
 - El tratamiento se limita al canvas del mapa; texto, HUD y controles HTML
   conservan su resolución normal.
 - Canvas y la presentación PixiJS/WebGL reutilizan la misma imagen final.
@@ -18,13 +22,12 @@ siguen renderizándose igual que en `main`.
 
 La prueba debe verse como una decisión artística deliberada y seguir siendo
 legible durante movimiento, selección, exploración y combate. Esta pasada es un
-prototipo de resolución: no pretende afirmar todavía que el atlas actual tenga
-la densidad de ilustración de la referencia. La siguiente iteración, si la
-dirección funciona, sustituirá los sprites geométricos de Salinas por sprites
-pixelados dibujados a mano y conservará los contratos de pivote, profundidad y
-animación.
+prototipo: la revisión visual debe decidir si el atlas alternativo y la
+composición mejoran la lectura. Se conservan los contratos de pivote,
+profundidad y animación.
 
 ## Comprobación
 
-El contrato de escala se prueba para los seis biomas y la prueba del pintor
-comprueba que la escena de Salinas atraviesa el buffer de baja resolución.
+El contrato de escala se prueba para los seis biomas; las pruebas comprueban la
+integridad del atlas, el uso de sprites de Salinas y el buffer de baja
+resolución.
