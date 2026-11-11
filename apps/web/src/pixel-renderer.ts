@@ -6,7 +6,7 @@ import type {AsciiRenderer} from './renderer.js';
 import type {HeroAction} from './ascii-art.js';
 import {parseRuin,themeForRuin} from '../../../packages/core/src/depths.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
-import {project,unproject,depth,direction,wallVariant,ambientCells} from './isometric.js';
+import {project,unproject,depth,direction,wallVariant,ambientCells,pixelArtScaleForBiome} from './isometric.js';
 type Asset={rect:[number,number,number,number];pivot:[number,number]};
 type Entry={asset:string;x:number;y:number;alpha:number;order:number;id?:string};
 type Cue={x:number;y:number;kind:string;until:number;from?:{x:number;y:number}};
@@ -15,8 +15,11 @@ export class PixelRenderer{
  readonly mode='pixel' as const;
  private canvas=document.createElement('canvas');
  private floor=document.createElement('canvas');
+ // Shared low-resolution target for the authored 16-bit biome family.
+ private pixelBuffer=document.createElement('canvas');
  private ctx:CanvasRenderingContext2D;
  private floorCtx:CanvasRenderingContext2D;
+ private pixelCtx:CanvasRenderingContext2D;
  private state:GameState|null=null;
  private entries:Entry[]=[];
  private scale=1.15;private origin={x:0,y:0};
@@ -27,14 +30,19 @@ export class PixelRenderer{
  private frames=0;private builds=0;private totalMs=0;private lastMs=0;
  private present:(()=>void)|null=null;private dispose:(()=>void)|null=null;
  private backend='canvas2d';
- private constructor(private mount:HTMLElement,private old:AsciiRenderer,private atlas:HTMLImageElement,private assets:Record<string,Asset>){
+ private constructor(private mount:HTMLElement,private old:AsciiRenderer,private atlas:HTMLImageElement,private assets:Record<string,Asset>,private pixelAtlas:HTMLImageElement,private pixelAssets:Record<string,Asset>){
   this.canvas.width=this.floor.width=1175;this.canvas.height=this.floor.height=560;
-  this.ctx=this.canvas.getContext('2d')!;this.floorCtx=this.floor.getContext('2d')!;
+  this.pixelBuffer.width=392;this.pixelBuffer.height=187;
+  this.ctx=this.canvas.getContext('2d')!;this.floorCtx=this.floor.getContext('2d')!;this.pixelCtx=this.pixelBuffer.getContext('2d')!;
  }
  static async create(mount:HTMLElement,old:AsciiRenderer):Promise<PixelRenderer>{
-  const image=new Image();image.src='./isometric/nacar.png';
-  const [assets]=await Promise.all([fetch('./isometric/nacar.json').then(r=>{if(!r.ok)throw new Error('Atlas metadata unavailable');return r.json() as Promise<Record<string,Asset>>;}),image.decode()]);
-  const r=new PixelRenderer(mount,old,image,assets);
+  const image=new Image(),pixelImage=new Image();image.src='./isometric/nacar.png';pixelImage.src='./isometric/nacar-salinas-16bit.png';
+  const [assets,pixelAssets]=await Promise.all([
+   fetch('./isometric/nacar.json').then(r=>{if(!r.ok)throw new Error('Atlas metadata unavailable');return r.json() as Promise<Record<string,Asset>>;}),
+   fetch('./isometric/nacar-salinas-16bit.json').then(r=>{if(!r.ok)throw new Error('16-bit atlas metadata unavailable');return r.json() as Promise<Record<string,Asset>>;}),
+   image.decode(),pixelImage.decode(),
+  ]);
+  const r=new PixelRenderer(mount,old,image,assets,pixelImage,pixelAssets);
   // Canvas remains the rendering source, so lack of GPU never changes the artwork.
   try{
    const {Application,Texture,Sprite,CanvasSource}=await import('pixi.js');
@@ -63,8 +71,9 @@ export class PixelRenderer{
  }
  get profile(){return {backend:this.backend,builds:this.builds,frames:this.frames,meanBuildMs:this.builds?this.totalMs/this.builds:0,lastBuildMs:this.lastMs,floorDraws:this.builds,cachedCells:this.entries.length,textures:Object.keys(this.assets).length,allocatedSprites:this.entries.length,activeSprites:this.entries.length,peakActiveSprites:this.entries.length};}
  private paint(ctx:CanvasRenderingContext2D,name:string,x:number,y:number,alpha=1){
-  const a=this.assets[name];if(!a)return;
-  const p=project(x,y);ctx.globalAlpha=alpha;ctx.drawImage(this.atlas,...a.rect,Math.round(p.x-a.pivot[0]),Math.round(p.y-a.pivot[1]),a.rect[2],a.rect[3]);ctx.globalAlpha=1;
+  const pixel=this.state&&pixelArtScaleForBiome(this.biome(this.state,x,y))>1?this.pixelAssets[name]:undefined;
+  const atlas=pixel?this.pixelAtlas:this.atlas,a=pixel??this.assets[name];if(!a)return;
+  const p=project(x,y);ctx.globalAlpha=alpha;ctx.drawImage(atlas,...a.rect,Math.round(p.x-a.pivot[0]),Math.round(p.y-a.pivot[1]),a.rect[2],a.rect[3]);ctx.globalAlpha=1;
  }
  private camera(ctx:CanvasRenderingContext2D){ctx.setTransform(this.scale,0,0,this.scale,this.origin.x,this.origin.y);ctx.imageSmoothingEnabled=false;}
  private biome(s:GameState,x:number,y:number){
@@ -166,7 +175,16 @@ export class PixelRenderer{
    else{ctx.beginPath();ctx.ellipse(p.x,p.y-8,12+65*t,6+32*t,0,0,Math.PI*2);ctx.stroke();}
    ctx.globalAlpha=1;
   }
-  this.cues=this.cues.filter(c=>c.until>now);ctx.setTransform(1,0,0,1,0,0);this.present?.();
+  this.cues=this.cues.filter(c=>c.until>now);ctx.setTransform(1,0,0,1,0,0);
+  // All six biomes render at the same 392×187 logical resolution, then enlarge
+  // with nearest-neighbour pixels so terrain, actors and effects share one grid.
+  if(pixelArtScaleForBiome(climate)>1){
+   this.pixelCtx.setTransform(1,0,0,1,0,0);this.pixelCtx.imageSmoothingEnabled=false;
+   this.pixelCtx.clearRect(0,0,this.pixelBuffer.width,this.pixelBuffer.height);
+   this.pixelCtx.drawImage(this.canvas,0,0,this.pixelBuffer.width,this.pixelBuffer.height);
+   ctx.imageSmoothingEnabled=false;ctx.drawImage(this.pixelBuffer,0,0,1176,561);
+  }
+  this.present?.();
  }
  renderMinimap(s:GameState,c:HTMLCanvasElement){this.old.renderMinimap(s,c);}
  focus(){this.mount.querySelector<HTMLCanvasElement>('.pixel-canvas')?.focus({preventScroll:true});}
