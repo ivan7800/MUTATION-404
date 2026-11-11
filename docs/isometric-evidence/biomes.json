@@ -1,0 +1,59 @@
+{
+  "status": "passed",
+  "results": [
+    {
+      "biome": "salinas",
+      "name": "Salinas de Vértice",
+      "coordinate": [
+        34,
+        32
+      ],
+      "screenshot": "qa-evidence/pixel-biomes/salinas.png"
+    },
+    {
+      "biome": "ceniza",
+      "name": "Páramos de Ceniza",
+      "coordinate": [
+        4,
+        3
+      ],
+      "screenshot": "qa-evidence/pixel-biomes/ceniza.png"
+    },
+    {
+      "biome": "hierro",
+      "name": "Cinturón de Hierro",
+      "coordinate": [
+        90,
+        3
+      ],
+      "screenshot": "qa-evidence/pixel-biomes/hierro.png"
+    },
+    {
+      "biome": "vidrio",
+      "name": "Galerías de Vidrio",
+      "coordinate": [
+        3,
+        61
+      ],
+      "screenshot": "qa-evidence/pixel-biomes/vidrio.png"
+    },
+    {
+      "biome": "medula",
+      "name": "Bosque de Médula",
+      "coordinate": [
+        92,
+        61
+      ],
+      "screenshot": "qa-evidence/pixel-biomes/medula.png"
+    },
+    {
+      "biome": "umbral",
+      "name": "Margen del Umbral",
+      "coordinate": [
+        51,
+        62
+      ],
+      "screenshot": "qa-evidence/pixel-biomes/umbral.png"
+    }
+  ]
+}

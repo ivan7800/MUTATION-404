@@ -1,37 +1,61 @@
-# Nácar — transformación isométrica
+# Nácar — entrega isométrica para revisión
 
-Trabajo en rama desde `66eac19591e79a5f1cd80259c791994e59056dc1`.
+Código validado: `b63262931a6f1adf6cfee318d777664d259a858b`, basado en main `66eac19591e79a5f1cd80259c791994e59056dc1`. Los archivos de evidencia posteriores documentan ese código. PR: https://github.com/ivan7800/MUTATION-404/pull/13.
 
-## Implementado
+## Cambios
 
-- Proyección explícita e inversa en isometric.ts, sprites verticales con pie común y orden global por profundidad.
-- Un pintor Canvas con presentación opcional WebGL; el fallback conserva atlas y proyección. ASCII permanece seleccionable para recuperación.
-- Atlas original reproducible de 200 sprites con metadatos: 6 suelos y 3 rocas, flora y módulos de arquitectura por bioma; protagonista en cuatro orientaciones y estados, seis especies, élite, jefe, seis arquetipos NPC y objetos.
-- Fondo de terreno retenido durante animación; animaciones usan reloj visual sin modificar el core.
-- CSS consolidado, navegación secundaria plegable, menús y paneles con tokens compartidos y CRT menos invasivo por defecto.
+- Proyección explícita e inversa, personajes verticales con pie común y orden global entre arquitectura y actores. El jugador mantiene una posición estable al hacer zoom.
+- Un pintor Canvas compartido con presentación WebGL opcional. El fallback conserva los mismos recursos y la misma perspectiva; ASCII permanece seleccionable.
+- Atlas original de 200 sprites: seis variantes de suelo y tres de roca, flora y arquitectura por bioma; Errante en cuatro direcciones y estados; seis especies, élite, jefe, arquetipos NPC y objetos.
+- Materiales diferenciados para los seis biomas y selección temática de interiores. Suelo bajo los props, sombras de contacto, niebla y atenuación de arquitectura delante del personaje.
+- Animaciones con reloj visual separado, suelo retenido durante animación, efectos diferenciados y marcas del próximo ataque del jefe tomadas de sus coordenadas guardadas.
+- CSS consolidado, misión más visible, acciones secundarias plegables, inventario legible, controles móviles y opciones CRT menos invasivas por defecto.
+- Precache offline de PNG/JSON y digest dependiente de los recursos; actualización de caché con conservación de guardados.
 
-## Recursos y autoría
+`packages/core` no tiene modificaciones en la PR. Se conservan los turnos, RNG, campaña, progresión, combate, migraciones y guardados.
 
-`python3 scripts/art/build_isometric_assets.py` requiere Pillow y genera `apps/web/public/isometric/nacar.png` y `nacar.json`. Recursos originales escritos para este proyecto; pueden usarse y modificarse con el código del proyecto. No incorporan sprites de terceros. Los PNG de play/ son salida del build.
+## Comprobaciones realizadas
 
-Cada celda del atlas mide 96×128 con pivote (48,112); el suelo es un rombo 64×32. Los elementos verticales se colocan por su pie sin sesgo afín. El generador documenta paletas y siluetas. La dirección de referencia es conceptual; estos recursos tienen un acabado geométrico propio, no equivalen a la ilustración generada.
+[GitHub Actions, ejecución 42929537716](https://github.com/ivan7800/MUTATION-404/actions/runs/42929537716): **validación correcta**. El despliegue se omite por tratarse de una PR.
 
-## Evidencia inicial
+| Comprobación | Resultado |
+|---|---|
+| npm ci, typecheck, lint y build offline | Correctos en CI y en una copia limpia local del commit |
+| test:core / npm test | 201 pruebas únicas aprobadas, 0 fallos; ambos comandos ejecutados localmente |
+| Auditoría de campaña | 3/3 finales y 12 checkpoints |
+| Recorrido general Chromium | 25 escenarios aprobados |
+| Biomas | Seis escenas reales generadas sin excepciones |
+| Isometría y UI | Recorridos WebGL y Canvas aprobados, paneles, acciones, zoom y móvil |
+| Offline | Instalación bajo /MUTATION-404/, recarga sin red, guardado conservado y actualización aplazada hasta cerrar clientes |
+| Compatibilidad artística | Alternancia pixel/ASCII y poses de seis especies en ambos backends |
+| Regresiones nuevas | Proyección e inversa, profundidad, render sin mutar guardados, suelo retenido e invalidación de caché al cambiar atlas |
 
-- `npm ci --no-audit --no-fund`: realizado.
-- `npm run typecheck`, `npm run lint`, `npm run build:offline`: correctos.
-- `npm test`: 201 pruebas, 0 fallos.
-- `node scripts/qa-campaign.mjs`: 3/3 finales, 12 checkpoints.
-- Chromium local bloqueado por sockets AF_UNIX (`Operation not permitted`); ejecución con permisos ampliados rechazada por política. La CI realiza los recorridos en navegador y guarda qa-evidence como artefacto.
+Los reportes originales están en [isometric-evidence](isometric-evidence/). Contienen fixtures, coordenadas, resultados y perfil de construcción de escenas. El artefacto `mutation-404-browser-qa` del run conserva los PNG originales. Las imágenes de [screenshots/isometric](screenshots/isometric/) son recortes o versiones comprimidas para revisión.
 
-## Revisión visual y continuidad
+## Inspección visual
 
-Se han generado y revisado capturas reales de los seis biomas, mundo inicial, inventario y móvil en Chromium. Esa revisión llevó a compactar el encuadre y la cabecera móvil, adelantar la misión y separar las descripciones del inventario.
+Se abrieron y revisaron mundo inicial, seis biomas, inventario, móvil, interior y jefe. La revisión motivó correcciones de encuadre, espaciado móvil, descripciones del inventario y las marcas del jefe. No se presentan imágenes conceptuales como capturas del juego.
 
-Las pruebas de navegador detectaron y motivaron correcciones de preservación del elemento de coordenadas, selección de Canvas sin WebGL y precarga offline de PNG/JSON. Los efectos de mutación tienen geometría propia y los ataques de enemigos usan sus eventos aceptados. Los interiores seleccionan materiales por identidad de zona; el core no cambia.
+![Seis biomas del renderer real](screenshots/isometric/six-biomes.webp)
 
-La guía completa está en ISOMETRIC-ART-GUIDE.md. El run 42928209791 verificó los seis biomas, el recorrido isométrico WebGL/Canvas y el modo offline con actualización de caché. Su batería legacy falló al intentar buscar glifos ASCII sobre el modo pixel Canvas; el recorrido ya selecciona ASCII explícitamente para esa comprobación. Está pendiente cerrar esa batería en el último commit y adjuntar la evidencia. No hay certificación en GPU física, revisión humana de toda la campaña ni equivalencia pictórica con la imagen conceptual. El arte nuevo tiene un acabado geométrico reproducible. La rama no se publica en main por esta PR.
+[Mundo](screenshots/isometric/world.webp) · [Menú](screenshots/isometric/menu.webp) · [Inventario](screenshots/isometric/inventory.webp) · [Móvil](screenshots/isometric/mobile.webp) · [Interior](screenshots/isometric/interior.webp) · [Combate](screenshots/isometric/combat.webp) · [Jefe y casillas anunciadas](screenshots/isometric/boss.webp).
 
-## Reproducir
+## Rendimiento y límites prácticos
 
-Ejecutar los comandos de AGENTS.md. Para navegador: `CHROME_PATH=/ruta/chrome node scripts/qa-browser.mjs`, `qa-pixel-biomes.mjs`, `qa-isometric.mjs` y `qa-offline.mjs`. Las escenas de biomas usan guardados de prueba, no demuestran una campaña jugada de principio a fin. WebGL SwiftShader no acredita GPU física.
+Entorno de navegador: Chromium de GitHub Actions con SwiftShader, no GPU física. El recorrido isométrico registró una media de construcción de escena de 0,758 ms en el presentador WebGL y 0,579 ms en Canvas para sus fixtures. El perfil regional mantuvo tres construcciones de suelo mientras aumentaban los frames presentados. Estos valores describen construcción JavaScript; no miden FPS, transferencia de texturas ni tiempo de GPU. No hay una comparación válida con la versión anterior en el mismo hardware.
+
+Una comparación de los PNG WebGL/Canvas del run previo 42928209791 dio diferencias medias por canal inferiores a 0,02/255 en el mismo encuadre. Es evidencia de paridad de ese fixture, no una certificación universal de todos los dispositivos.
+
+La terminal local bloqueó Chromium por restricciones de sockets y la política rechazó la ampliación de permisos; los recorridos reales se ejecutaron en CI. No se certifican GPU física, altavoces, una sesión larga ni una campaña humana completa. Los tres finales se verifican mediante contratos y fixtures reproducibles.
+
+El arte implementado es pixel art geométrico original. Tiene menos densidad pictórica que la imagen conceptual elegida; su aceptación estética debe hacerse sobre estas capturas reales. La PR no equivale a una publicación en main ni a una garantía de ausencia absoluta de bugs.
+
+## Recursos y reproducción
+
+La [guía de arte](ISOMETRIC-ART-GUIDE.md) detalla el inventario. `python3 scripts/art/build_isometric_assets.py` requiere Pillow y genera PNG/JSON. No necesita Pillow en tiempo de juego. Recursos originales escritos para este proyecto, sin sprites de terceros.
+
+Ejecutar los comandos de AGENTS.md. Para navegador: `CHROME_PATH=/ruta/chrome node scripts/qa-browser.mjs`, y los scripts `qa-pixel-biomes.mjs`, `qa-isometric.mjs` y `qa-offline.mjs`. El build estático para Pages se regenera desde las fuentes; no se editaron únicamente los módulos compilados.
+
+## Continuidad
+
+Implementación y comprobaciones funcionales cerradas en el commit indicado. Revisión pendiente: aceptación estética del usuario antes de decidir una fusión. Main permanece sin modificar. Para publicar, revisar la PR y dar una instrucción expresa de fusión/publicación.
