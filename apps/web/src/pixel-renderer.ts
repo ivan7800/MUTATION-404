@@ -6,7 +6,7 @@ import type {AsciiRenderer} from './renderer.js';
 import type {HeroAction} from './ascii-art.js';
 import {parseRuin,themeForRuin} from '../../../packages/core/src/depths.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
-import {project,unproject,depth,direction,wallVariant,ambientCells} from './isometric.js';
+import {project,unproject,depth,direction,wallVariant,ambientCells,pixelArtScaleForBiome} from './isometric.js';
 type Asset={rect:[number,number,number,number];pivot:[number,number]};
 type Entry={asset:string;x:number;y:number;alpha:number;order:number;id?:string};
 type Cue={x:number;y:number;kind:string;until:number;from?:{x:number;y:number}};
@@ -15,8 +15,11 @@ export class PixelRenderer{
  readonly mode='pixel' as const;
  private canvas=document.createElement('canvas');
  private floor=document.createElement('canvas');
+ // Preview-only low-resolution target for the first authored 16-bit biome.
+ private pixelBuffer=document.createElement('canvas');
  private ctx:CanvasRenderingContext2D;
  private floorCtx:CanvasRenderingContext2D;
+ private pixelCtx:CanvasRenderingContext2D;
  private state:GameState|null=null;
  private entries:Entry[]=[];
  private scale=1.15;private origin={x:0,y:0};
@@ -29,7 +32,8 @@ export class PixelRenderer{
  private backend='canvas2d';
  private constructor(private mount:HTMLElement,private old:AsciiRenderer,private atlas:HTMLImageElement,private assets:Record<string,Asset>){
   this.canvas.width=this.floor.width=1175;this.canvas.height=this.floor.height=560;
-  this.ctx=this.canvas.getContext('2d')!;this.floorCtx=this.floor.getContext('2d')!;
+  this.pixelBuffer.width=392;this.pixelBuffer.height=187;
+  this.ctx=this.canvas.getContext('2d')!;this.floorCtx=this.floor.getContext('2d')!;this.pixelCtx=this.pixelBuffer.getContext('2d')!;
  }
  static async create(mount:HTMLElement,old:AsciiRenderer):Promise<PixelRenderer>{
   const image=new Image();image.src='./isometric/nacar.png';
@@ -166,7 +170,16 @@ export class PixelRenderer{
    else{ctx.beginPath();ctx.ellipse(p.x,p.y-8,12+65*t,6+32*t,0,0,Math.PI*2);ctx.stroke();}
    ctx.globalAlpha=1;
   }
-  this.cues=this.cues.filter(c=>c.until>now);ctx.setTransform(1,0,0,1,0,0);this.present?.();
+  this.cues=this.cues.filter(c=>c.until>now);ctx.setTransform(1,0,0,1,0,0);
+  // The 16-bit treatment is intentionally limited to Salinas for this playable art test.
+  // Render at a 392×187 logical resolution, then enlarge with nearest-neighbour pixels.
+  if(pixelArtScaleForBiome(climate)>1){
+   this.pixelCtx.setTransform(1,0,0,1,0,0);this.pixelCtx.imageSmoothingEnabled=false;
+   this.pixelCtx.clearRect(0,0,this.pixelBuffer.width,this.pixelBuffer.height);
+   this.pixelCtx.drawImage(this.canvas,0,0,this.pixelBuffer.width,this.pixelBuffer.height);
+   ctx.imageSmoothingEnabled=false;ctx.drawImage(this.pixelBuffer,0,0,1176,561);
+  }
+  this.present?.();
  }
  renderMinimap(s:GameState,c:HTMLCanvasElement){this.old.renderMinimap(s,c);}
  focus(){this.mount.querySelector<HTMLCanvasElement>('.pixel-canvas')?.focus({preventScroll:true});}
