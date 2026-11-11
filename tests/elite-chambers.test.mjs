@@ -34,12 +34,12 @@ test('elite archive inaccessible until guardian defeated, then available only on
  assert.equal(dispatch(s,{type:'interact'}).accepted,true);
  assert.equal(s.stats.credits,credits+15);
 });
-test('elite drone creates telegraphed electric hazards without immediate damage',()=>{
+test('elite guardian uses its named, telegraphed electric pattern without immediate damage',()=>{
  const s=createGame(404);
- s.tiles.fill('.');s.player={x:60,y:30};s.fields=[];s.enemies=[{id:'elite-1-0-2',kind:'drone',x:64,y:30,hp:15,mode:'idle',searchTurns:0}];s.tick=400;
+ s.tiles.fill('.');s.player={x:60,y:30};s.fields=[];s.enemies=[{id:'elite-1-0-2',kind:'drone',x:64,y:30,hp:15,mode:'idle',searchTurns:0}];s.tick=800;
  const hp=s.stats.hp,log=[];
  takeEnemyTurn(s,t=>log.push(t));
- assert.ok(log.some(t=>t.includes('ÉLITE')));
- assert.ok(s.fields.some(f=>f.kind==='electric'&&f.x===60&&f.y===30));
+ assert.ok(log.some(t=>t.includes('LA NOTARIA')));
+ assert.ok(s.fields.some(f=>f.kind==='electric'));
  assert.equal(s.stats.hp,hp);
 });

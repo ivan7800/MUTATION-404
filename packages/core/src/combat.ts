@@ -3,6 +3,7 @@ import { hasLineOfSight } from './fov.js';
 import { biomeAt, WEATHER, weatherAt } from './biomes.js';
 import { SeededRng } from './rng.js';
 import { ACTORS, HEIGHT, index, passable, WIDTH, within, type Point, type Tile } from './world.js';
+import { guardianProfileFromId, type GuardianPattern } from './guardian-profiles.js';
 
 export type EnemyKind = 'crawler' | 'sentinel' | 'larva' | 'moth' | 'drone' | 'spore';
 export interface EnemyAction {id:string;kind:EnemyKind;x:number;y:number;action:'attack'|'ability'}
@@ -119,6 +120,29 @@ export function nextStep(tiles:readonly Tile[],from:Point,to:Point,occupied:Set<
   while(parents.get(cursor)!==start&&parents.get(cursor)!==-1)cursor=parents.get(cursor)!;
   return {x:cursor%WIDTH,y:Math.floor(cursor/WIDTH)};
 }
+function guardianCells(pattern:GuardianPattern,enemy:Point,player:Point,tiles:readonly Tile[]):Point[]{
+  const dx=Math.sign(player.x-enemy.x),dy=Math.sign(player.y-enemy.y);
+  const valid=(points:Point[])=>points.filter(p=>within(p.x,p.y)&&passable(tiles[index(p.x,p.y)]));
+  switch(pattern){
+    case 'broadcast': return valid([{...player}]);
+    case 'sweep': return valid([0,1,2].map(n=>({x:player.x+dx*n,y:player.y+dy*n})));
+    case 'prism-cross': {
+      const towardX=Math.abs(dx)>=Math.abs(dy),open=towardX?{x:player.x+dx,y:player.y}:{x:player.x,y:player.y+dy};
+      return valid([{...player},{x:player.x,y:player.y-1},{x:player.x+1,y:player.y},{x:player.x,y:player.y+1},{x:player.x-1,y:player.y}].filter(p=>p.x!==open.x||p.y!==open.y));
+    }
+    case 'lane': {
+      const horizontal=Math.abs(player.x-enemy.x)>=Math.abs(player.y-enemy.y);
+      return valid([-2,-1,0,1,2].map(n=>horizontal?{x:player.x,y:player.y+n}:{x:player.x+n,y:player.y}));
+    }
+    case 'seal': {
+      const towardX=Math.abs(dx)>=Math.abs(dy),open=towardX?{x:player.x+dx,y:player.y}:{x:player.x,y:player.y+dy};
+      return valid([{x:player.x,y:player.y-1},{x:player.x+1,y:player.y},{x:player.x,y:player.y+1},{x:player.x-1,y:player.y}].filter(p=>p.x!==open.x||p.y!==open.y));
+    }
+    case 'bloom': return valid([{...player},...(Math.abs(dx)>=Math.abs(dy)?[{x:player.x,y:player.y-1},{x:player.x,y:player.y+1}]:[{x:player.x-1,y:player.y},{x:player.x+1,y:player.y}])]);
+    case 'echo': return valid([{x:player.x+dx,y:player.y+dy}]);
+    case 'chorus': return valid([{x:player.x-1,y:player.y-1},{x:player.x+1,y:player.y-1},{x:player.x+1,y:player.y+1},{x:player.x-1,y:player.y+1}]);
+  }
+}
 export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void,onAction?:(event:EnemyAction)=>void):void{
   const protectFaro=s.zone===undefined||s.zone==='surface';
   if(s.stats.hp<=0||(protectFaro&&inFaro(s.player)))return;
@@ -135,15 +159,15 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void,onAction?:
     const sight=s.seed===undefined||s.tick===undefined?def.sight:Math.min(def.sight,WEATHER[weatherAt(s.seed,s.tick,biomeAt(s.seed,e.x,e.y))].radius);
     const canSee=dist<=sight&&(e.kind==='larva'?dist<=3||hasLineOfSight(s.tiles,e.x,e.y,s.player.x,s.player.y):hasLineOfSight(s.tiles,e.x,e.y,s.player.x,s.player.y));
     if(canSee){e.mode='hunting';e.lastKnown={...s.player};e.searchTurns=3;}
-    // Unique elite drones issue a visible two-cell electrical warning.
-    // No save-schema extension: elite identity comes from its persistent id.
-    if(e.id.startsWith('elite-')&&canSee&&dist>=2&&dist<=6&&s.fields&&s.tick!==undefined&&Math.floor(s.tick/100)%4===0){
+    // Each regional custodian has a deterministic, authored attack shape and
+    // warning. Their profile is derived from the saved elite id: no migration.
+    const guardian=e.id.startsWith('elite-')?guardianProfileFromId(e.id):undefined;
+    const turn=s.tick===undefined?0:Math.floor(s.tick/100);
+    if(guardian&&canSee&&dist>=1&&dist<=guardian.range&&s.fields&&s.tick!==undefined&&turn>0&&turn%guardian.period===0){
       onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'ability'});
-      const dx=Math.sign(s.player.x-e.x),dy=Math.sign(s.player.y-e.y);
-      placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});
-      const tx=s.player.x+dx,ty=s.player.y+dy;
-      if(within(tx,ty)&&passable(s.tiles[index(tx,ty)]))placeField(s.fields,{x:tx,y:ty,kind:'electric',ttl:3});
-      report('ÉLITE // El custodio de Nácar sobrecarga dos casillas: sal del área antes del siguiente turno.');
+      for(const cell of guardianCells(guardian.pattern,e,s.player,s.tiles))
+        placeField(s.fields,{...cell,kind:guardian.field,ttl:3});
+      report(guardian.warning);
       continue;
     }
     // Warden sentinels force movement with a delayed electrical trap; the
@@ -171,7 +195,7 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void,onAction?:
       continue;
     }
     // Species-specific terrain-changing abilities; telegraphed and subject to sight.
-    if(s.fields&&canSee&&dist>=2&&dist<=4&&s.tick!==undefined){
+    if(!guardian&&s.fields&&canSee&&dist>=2&&dist<=4&&s.tick!==undefined){
       const turn=Math.floor(s.tick/100);
       if(e.kind==='spore'&&turn%4===0){onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'ability'});placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'spores',ttl:3});report('AVISO // El pastor libera una nube de esporas bajo tus pies.');continue;}
       if(e.kind==='drone'&&turn%5===0){onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'ability'});placeField(s.fields,{x:s.player.x,y:s.player.y,kind:'electric',ttl:3});report('AVISO // El cazador polariza el suelo: aléjate del arco eléctrico.');continue;}
@@ -180,8 +204,9 @@ export function takeEnemyTurn(s:EnemyWorld,report:(text:string)=>void,onAction?:
     // Sentinels have low-frequency ranged attacks; require real LoS.
     if((e.kind==='sentinel'||e.kind==='drone')&&e.mode==='hunting'&&canSee&&dist>=2&&dist<=4&&rng.int(0,2)===0){
       onAction?.({id:e.id,kind:e.kind,x:e.x,y:e.y,action:'attack'});
-      const hit=rng.int(1,100)<=60;
-      if(hit){const damage=Math.max(1,rng.int(2,6)-eqArmor(s.equipment));s.stats.hp=Math.max(0,s.stats.hp-damage);report(`DISPARO // Un vigía te alcanza: -${damage} PV.`);}
+      const laneGuardian=guardian?.pattern==='lane';
+      const hit=rng.int(1,100)<=(laneGuardian?45:60);
+      if(hit){const damage=Math.max(1,rng.int(laneGuardian?1:2,laneGuardian?4:6)-eqArmor(s.equipment));s.stats.hp=Math.max(0,s.stats.hp-damage);report(`${laneGuardian?'MOTOR DE LÍNEA':'DISPARO'} // ${laneGuardian?'El Capataz descarga un arco debilitado':'Un vigía te alcanza'}: -${damage} PV.`);}
       else report('DISPARO // Una descarga de cobre pasa a tu lado.');
       if(s.stats.hp<=0){report('ESTADO CRÍTICO // Has caído en las salinas.');break;}
       continue;

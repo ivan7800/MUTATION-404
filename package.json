@@ -15,6 +15,7 @@
     "test": "tsc -p tsconfig.core.json && node --test tests/*.test.mjs",
     "test:core": "tsc -p tsconfig.core.json && node --test tests/*.test.mjs",
     "qa:campaign": "npm run test:core && node scripts/qa-campaign.mjs",
+    "qa:guardians": "npm run build:offline && tsc -p tsconfig.core.json && node scripts/guardian-balance-audit.mjs",
     "lint": "eslint .",
     "start": "node scripts/server.mjs"
   },
