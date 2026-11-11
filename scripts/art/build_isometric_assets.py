@@ -37,6 +37,33 @@ def floor(d,p,v):
    d.line([(55,119),(61,116),(64,117)],fill='#545d61',width=1)
   if v==5:
    d.ellipse((43,106,49,110),fill='#58cabf');d.point((46,108),fill='#e0f1d8')
+ elif p[0]=='#35363d': # ceniza: soot, hairline fractures and buried embers
+  d.line([(22,111),(31,107),(35,109),(42,106)],fill='#292a31',width=2)
+  d.line([(55,101),(52,107),(59,111),(56,117)],fill='#8b7471',width=1)
+  for x,y in [(31+v%3*5,111),(61-v%2*7,108)]:d.point((x,y),fill='#ed9560')
+  if v in (2,5):d.ellipse((39,104,52,112),fill='#2b2e35');d.point((45,108),fill='#d87e59')
+ elif p[0]=='#353f46': # hierro: bolted plates and a broken conductive seam
+  d.line([(22,111),(35,105),(45,110)],fill='#66777a',width=1)
+  d.line([(49,101),(61,106),(72,111)],fill='#28363d',width=2)
+  d.point((30,109),fill='#bd9568');d.point((65,109),fill='#bd9568')
+  if v%2==0:d.line([(34,115),(44,111),(51,114)],fill='#72c9c4',width=1)
+  if v==5:d.rectangle((45,105,51,108),fill='#bd9568');d.point((48,106),fill='#d9c08b')
+ elif p[0]=='#354a60': # vidrio: refracted facets, narrow highlights
+  d.line([(24,111),(34,105),(42,108),(48,103)],fill='#6485a4',width=1)
+  d.line([(51,115),(58,107),(68,109)],fill='#b1d2e0',width=1)
+  d.line([(31,112),(35,109),(38,110)],fill='#88edd5',width=1)
+  if v in (1,4):d.line([(54,103),(59,101),(64,103)],fill='#d1edf2',width=1)
+  if v==5:d.point((47,109),fill='#88edd5');d.point((48,108),fill='#e6ffff')
+ elif p[0]=='#343d3d': # medula: shallow root veins and dormant spores
+  d.line([(22,111),(33,108),(39,111),(47,107)],fill='#647b65',width=2)
+  d.line([(57,101),(55,108),(63,112),(68,111)],fill='#526b58',width=2)
+  d.ellipse((35+v%3*4,106,38+v%3*4,109),fill='#c8969f')
+  if v in (2,5):d.line([(48,116),(50,112),(56,110)],fill='#b2b48b',width=1)
+ elif p[0]=='#292a43': # umbral: angular fractures and faint alien marks
+  d.line([(22,111),(31,107),(36,110),(42,104)],fill='#5c5379',width=1)
+  d.line([(56,117),(54,111),(62,106),(70,109)],fill='#45425f',width=1)
+  if v in (1,4):d.line([(41,109),(45,105),(49,109),(45,113),(41,109)],fill='#72dfd3',width=1)
+  if v==5:d.ellipse((44,106,50,111),outline='#9a85b6',width=1);d.point((47,108),fill='#72dfd3')
 def rock(d,p,v):
  a,b,c,g=p;x=48;h=22+v*7
  poly(d,[(25,108),(28,100-h),(43,88-h),(64,96-h),(72,107),(48,119)],a)
