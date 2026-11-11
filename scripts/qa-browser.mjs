@@ -382,7 +382,7 @@ try{
           await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows,{timeout:3000});
           poseSeen=true;
         }catch{
-          if(attempt<7)await page.locator('.secondary-actions').evaluate(el=>el.open=true);await page.locator('#wait-btn').click();
+          if(attempt<7){await page.locator('.secondary-actions').evaluate(el=>el.open=true);await page.locator('#wait-btn').click();}
         }
       }
       if(!poseSeen)throw new Error(`attack pose timeout for ${kind}/${mode}; expected=${JSON.stringify(rows)} observed=${JSON.stringify(await page.evaluate(()=>window.__attackRows.slice(-40)))}`);

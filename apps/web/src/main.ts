@@ -83,6 +83,7 @@ root.innerHTML=`
 const $=<T extends HTMLElement>(selector:string):T=>{const el=document.querySelector<T>(selector);if(!el)throw new Error(`Elemento ${selector} ausente`);return el;};
 const secondary=$('#secondary-deck');
 for(const id of ['mutations-btn','scan-btn','travel-btn','atlas-btn','market-btn','house-btn','down-btn','up-btn','pickup-btn','harvest-btn','craft-btn','ecology-btn','inventory-btn','swap-btn','journal-btn','wait-btn'])secondary.appendChild($('#'+id));
+const sidebar=$('.sidebar');const subject=sidebar.firstElementChild!;subject.after($('.mission-card'));
 // Give hidden secondary actions accessible direct keyboard routes and keep IDs stable.
 let renderer:AsciiRenderer|PixiAsciiRenderer|PixelRenderer=new AsciiRenderer($<HTMLDivElement>('#viewport'));
 const asciiRenderer=renderer as AsciiRenderer;

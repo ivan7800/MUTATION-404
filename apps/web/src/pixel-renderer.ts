@@ -27,7 +27,7 @@ export class PixelRenderer{
  private present:(()=>void)|null=null;private dispose:(()=>void)|null=null;
  private backend='canvas2d';
  private constructor(private mount:HTMLElement,private old:AsciiRenderer,private atlas:HTMLImageElement,private assets:Record<string,Asset>){
-  this.canvas.width=this.floor.width=1175;this.canvas.height=this.floor.height=783;
+  this.canvas.width=this.floor.width=1175;this.canvas.height=this.floor.height=560;
   this.ctx=this.canvas.getContext('2d')!;this.floorCtx=this.floor.getContext('2d')!;
  }
  static async create(mount:HTMLElement,old:AsciiRenderer):Promise<PixelRenderer>{
@@ -37,7 +37,9 @@ export class PixelRenderer{
   // Canvas remains the rendering source, so lack of GPU never changes the artwork.
   try{
    const {Application,Texture,Sprite,CanvasSource}=await import('pixi.js');
-   const app=new Application();await app.init({preference:'webgl',width:1175,height:783,antialias:false,background:0x10151b});
+   const probe=document.createElement('canvas');const gl=probe.getContext('webgl2')??probe.getContext('webgl');
+   if(!gl)throw new Error('WebGL unavailable');gl.getExtension('WEBGL_lose_context')?.loseContext();
+   const app=new Application();await app.init({preference:'webgl',width:1175,height:560,antialias:false,background:0x10151b});
    const texture=new Texture({source:new CanvasSource({resource:r.canvas})});texture.source.scaleMode='nearest';app.stage.addChild(new Sprite(texture));
    r.present=()=>{texture.source.update();};r.dispose=()=>app.destroy(true,{children:true,texture:true});
    app.canvas.className='world-canvas pixel-canvas';app.canvas.tabIndex=0;app.canvas.setAttribute('aria-label','Mapa isométrico de Nácar. WASD para moverse.');
@@ -47,9 +49,9 @@ export class PixelRenderer{
   const active=mount.querySelector<HTMLCanvasElement>('.pixel-canvas')!;
   active.addEventListener('pointermove',event=>{
    if(!r.state)return;const rect=active.getBoundingClientRect();
-   const fit=Math.min(rect.width/1175,rect.height/783);
+   const fit=Math.min(rect.width/1175,rect.height/560);
    const px=(event.clientX-rect.left-(rect.width-1175*fit)/2)/fit;
-   const py=(event.clientY-rect.top-(rect.height-783*fit)/2)/fit;
+   const py=(event.clientY-rect.top-(rect.height-560*fit)/2)/fit;
    const p=unproject((px-r.origin.x)/r.scale,(py-r.origin.y)/r.scale);
    const x=Math.round(p.x),y=Math.round(p.y);
    const valid=x>=0&&y>=0&&x<WIDTH&&y<HEIGHT&&r.state.visible[index(x,y)]===1;
@@ -72,8 +74,8 @@ export class PixelRenderer{
  }
  draw(state:GameState):void{
   const began=performance.now();this.state=state;this.entries=[];
-  const center=project(state.player.x,state.player.y);this.origin={x:1175/2-center.x*this.scale,y:440-center.y*this.scale};
-  const ctx=this.floorCtx;ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#10151b';ctx.fillRect(0,0,1175,783);this.camera(ctx);
+  const center=project(state.player.x,state.player.y);this.origin={x:1175/2-center.x*this.scale,y:315-center.y*this.scale};
+  const ctx=this.floorCtx;ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#10151b';ctx.fillRect(0,0,1175,560);this.camera(ctx);
   for(let y=Math.max(0,state.player.y-18);y<Math.min(HEIGHT,state.player.y+19);y++)for(let x=Math.max(0,state.player.x-18);x<Math.min(WIDTH,state.player.x+19);x++){
    const at=index(x,y);if(!state.seen[at])continue;
    const p=project(x,y);if(Math.abs((p.x-center.x)*this.scale)>700||Math.abs((p.y-center.y)*this.scale)>540)continue;
