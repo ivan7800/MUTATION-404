@@ -6,7 +6,7 @@ import type {AsciiRenderer} from './renderer.js';
 import type {HeroAction} from './ascii-art.js';
 import {parseRuin,themeForRuin} from '../../../packages/core/src/depths.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
-import {project,unproject,depth,direction,wallVariant} from './isometric.js';
+import {project,unproject,depth,direction,wallVariant,ambientCells} from './isometric.js';
 type Asset={rect:[number,number,number,number];pivot:[number,number]};
 type Entry={asset:string;x:number;y:number;alpha:number;order:number;id?:string};
 type Cue={x:number;y:number;kind:string;until:number;from?:{x:number;y:number}};
@@ -107,6 +107,16 @@ export class PixelRenderer{
   if(!this.state)return;const ctx=this.ctx,state=this.state;this.frames++;
   ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(this.floor,0,0);this.camera(ctx);
   const phase=this.reducedMotion?0:Math.floor(now/180)%4;
+  const climate=this.biome(state,state.player.x,state.player.y);
+  const moteColor:Record<string,string>={salinas:'#d9ffff',ceniza:'#ed9560',hierro:'#72c9c4',vidrio:'#d8f6ff',medula:'#c8969f',umbral:'#9a85b6'};
+  ambientCells(state.seed,state.player.x,state.player.y).forEach((mote,i)=>{
+   if(!within(mote.x,mote.y)||state.visible[index(mote.x,mote.y)]!==1)return;
+   const p=project(mote.x,mote.y),drift=this.reducedMotion?0:Math.sin(now/720+i*1.71)*4;
+   ctx.globalAlpha=.18+((mote.phase%5)*.035);ctx.fillStyle=moteColor[climate]??'#83f3e2';
+   ctx.fillRect(p.x+drift,p.y-18-(this.reducedMotion?0:Math.sin(now/850+i)*5),2.5,2.5);
+   if(i%5===0){ctx.globalAlpha=.28;ctx.fillRect(p.x+drift-1,p.y-19,4.5,1);}
+  });
+  ctx.globalAlpha=1;
   if(state.zone==='zero-3'&&state.tick%400===300&&state.enemies.some(e=>e.id==='campaign-heart-custodian'&&e.hp>0)){
    for(const mark of nacarMark(state.events,state.tick+100)){
     if(!within(mark.x,mark.y)||state.visible[index(mark.x,mark.y)]!==1||!passable(state.tiles[index(mark.x,mark.y)]))continue;

@@ -9,3 +9,11 @@ export function wallVariant(x:number,y:number,variant:number):0|1|2{
  if(variant===5&&(x-y)%7===0)return 2;
  return 0;
 }
+/** Stable ambient particle cells; rendering never consumes the simulation RNG. */
+export function ambientCells(seed:number,cx:number,cy:number,count=14){
+ const base=(seed^Math.imul(cx+17,0x9e3779b1)^Math.imul(cy+29,0x85ebca6b))>>>0;
+ return Array.from({length:count},(_,i)=>{
+  const h=(Math.imul(base^Math.imul(i+1,0x27d4eb2d),0x165667b1)^(base>>>13))>>>0;
+  return {x:cx+(h%25)-12,y:cy+((h>>>8)%25)-12,phase:(h>>>16)&255};
+ });
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {project,unproject,depth,direction,wallVariant} from '../play/js/apps/web/src/isometric.js';
+import {project,unproject,depth,direction,wallVariant,ambientCells} from '../play/js/apps/web/src/isometric.js';
 import {readFileSync} from 'node:fs';
 const meta=JSON.parse(readFileSync('apps/web/public/isometric/nacar.json'));
 test('projection round trips world positions across zoom and camera offsets',()=>{
@@ -23,6 +23,11 @@ test('biome landmarks stay sparse so walls read as terrain, not repeated buildin
  assert.equal(wallVariant(7,0,5),2);assert.equal(wallVariant(6,0,5),0);
  const tall=[];for(let y=0;y<64;y++)for(let x=0;x<96;x++)if(wallVariant(x,y,(x*17+y*31)%6)===2)tall.push([x,y]);
  assert.ok(tall.length<96*64/10,'landmark towers should stay rare across a large map');
+});
+test('ambient particle placement is deterministic and independent of game simulation',()=>{
+ const a=ambientCells(404,32,32),b=ambientCells(404,32,32),other=ambientCells(405,32,32);
+ assert.deepEqual(a,b);assert.notDeepEqual(a,other);assert.equal(a.length,14);
+ for(const p of a){assert.ok(p.x>=20&&p.x<=44);assert.ok(p.y>=20&&p.y<=44);assert.ok(p.phase>=0&&p.phase<=255);}
 });
 test('production atlas includes complete directional poses and six biomes',()=>{
  for(const d of ['north','south','east','west'])for(const [pose,n] of [['idle',2],['walk',4],['attack',4],['hurt',1],['death',1]])for(let i=0;i<n;i++)assert.ok(meta[`hero-${d}-${pose}-${i}`]);
