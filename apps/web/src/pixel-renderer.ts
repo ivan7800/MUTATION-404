@@ -6,7 +6,7 @@ import type {AsciiRenderer} from './renderer.js';
 import type {HeroAction} from './ascii-art.js';
 import {parseRuin,themeForRuin} from '../../../packages/core/src/depths.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
-import {project,unproject,depth,direction} from './isometric.js';
+import {project,unproject,depth,direction,wallVariant} from './isometric.js';
 type Asset={rect:[number,number,number,number];pivot:[number,number]};
 type Entry={asset:string;x:number;y:number;alpha:number;order:number;id?:string};
 type Cue={x:number;y:number;kind:string;until:number;from?:{x:number;y:number}};
@@ -84,7 +84,7 @@ export class PixelRenderer{
    const alpha=state.visible[at]===1?1:.24;
    this.paint(ctx,`floor-${b}-${v}`,x,y,alpha);
    let prop:string|null=null;
-   if(tile==='#')prop=`wall-${b}-${v%3}`;
+   if(tile==='#')prop=`wall-${b}-${wallVariant(x,y,v)}`;
    else if(tile==='^'||tile==='%')prop=`rock-${b}-${v%3}`;
    else if(['*','&',';',',','v','?'].includes(tile)&&v<3)prop=`flora-${b}-${v%3}`;
    else if(tile==='~')prop='water';else if(tile==='+')prop='door';else if(tile==='o')prop='down';else if(tile==='x')prop='up';else if(tile==='T'||tile==='=')prop='terminal';else if(tile==='!')prop=`rock-${b}-2`;
