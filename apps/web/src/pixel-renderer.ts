@@ -1,5 +1,6 @@
 import {ACTORS,ENEMY_DEFS,biomeAt,BIOMES,HEIGHT,WIDTH,settlementCitizens,type GameState,type Command} from '../../../packages/core/src/game.js';
-import {index} from '../../../packages/core/src/world.js';
+import {index,within,passable} from '../../../packages/core/src/world.js';
+import {nacarMark,NACAR_PHASES} from '../../../packages/core/src/campaign.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
 import type {HeroAction} from './ascii-art.js';
@@ -106,6 +107,14 @@ export class PixelRenderer{
   if(!this.state)return;const ctx=this.ctx,state=this.state;this.frames++;
   ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(this.floor,0,0);this.camera(ctx);
   const phase=this.reducedMotion?0:Math.floor(now/180)%4;
+  if(state.zone==='zero-3'&&state.tick%400===300&&state.enemies.some(e=>e.id==='campaign-heart-custodian'&&e.hp>0)){
+   for(const mark of nacarMark(state.events,state.tick+100)){
+    if(!within(mark.x,mark.y)||state.visible[index(mark.x,mark.y)]!==1||!passable(state.tiles[index(mark.x,mark.y)]))continue;
+    const p=project(mark.x,mark.y);ctx.strokeStyle=NACAR_PHASES[mark.phase].color;ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(p.x-29,p.y);ctx.lineTo(p.x,p.y-14);ctx.lineTo(p.x+29,p.y);ctx.lineTo(p.x,p.y+14);ctx.closePath();ctx.stroke();
+    ctx.fillRect(p.x-2,p.y-8,4,10);ctx.fillRect(p.x-2,p.y+5,4,3);
+   }
+  }
   for(const e of this.entries){
    let asset=e.asset;const p=project(e.x,e.y),hero=project(state.player.x,state.player.y);
    if(e.id){ctx.fillStyle='#060c16';ctx.globalAlpha=.6;ctx.beginPath();ctx.ellipse(p.x,p.y+1,15,6,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
