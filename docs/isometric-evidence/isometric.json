@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "results": [
+    {
+      "backend": "webgl",
+      "errors": [],
+      "profile": {
+        "backend": "pixi-webgl",
+        "builds": 24,
+        "frames": 24,
+        "meanBuildMs": 0.7583333333338184,
+        "lastBuildMs": 1.5,
+        "floorDraws": 24,
+        "cachedCells": 35,
+        "textures": 200,
+        "allocatedSprites": 35,
+        "activeSprites": 35,
+        "peakActiveSprites": 35
+      }
+    },
+    {
+      "backend": "canvas",
+      "errors": [],
+      "profile": {
+        "backend": "canvas2d",
+        "builds": 24,
+        "frames": 24,
+        "meanBuildMs": 0.5791666666652114,
+        "lastBuildMs": 0.20000000001164153,
+        "floorDraws": 24,
+        "cachedCells": 35,
+        "textures": 200,
+        "allocatedSprites": 35,
+        "activeSprites": 35,
+        "peakActiveSprites": 35
+      }
+    }
+  ]
+}

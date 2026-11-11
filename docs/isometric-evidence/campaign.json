@@ -1,0 +1,196 @@
+{
+  "status": "passed",
+  "kind": "deterministic-progression-contract",
+  "humanPlaythrough": false,
+  "results": [
+    {
+      "seed": 404,
+      "choice": "bind",
+      "status": "passed",
+      "checkpoints": [
+        {
+          "label": "acto-I",
+          "objective": "ACTO I · ECO BAJO LA SAL",
+          "progress": {
+            "prologueDone": false,
+            "heartFound": false,
+            "archives": 0,
+            "guardians": 0,
+            "total": 8,
+            "ready": false,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "acto-II",
+          "objective": "ACTO III · LOS CUSTODIOS",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": false,
+            "archives": 8,
+            "guardians": 0,
+            "total": 8,
+            "ready": false,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "acto-IV",
+          "objective": "ACTO V · EL CORAZÓN DE NÁCAR",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": true,
+            "archives": 8,
+            "guardians": 8,
+            "total": 8,
+            "ready": true,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "final-bind",
+          "objective": "Nácar — EPÍLOGO COMPLETADO",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": true,
+            "archives": 8,
+            "guardians": 8,
+            "total": 8,
+            "ready": true,
+            "ending": "bind",
+            "finaleAwakened": true
+          }
+        }
+      ]
+    },
+    {
+      "seed": 404,
+      "choice": "release",
+      "status": "passed",
+      "checkpoints": [
+        {
+          "label": "acto-I",
+          "objective": "ACTO I · ECO BAJO LA SAL",
+          "progress": {
+            "prologueDone": false,
+            "heartFound": false,
+            "archives": 0,
+            "guardians": 0,
+            "total": 8,
+            "ready": false,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "acto-II",
+          "objective": "ACTO III · LOS CUSTODIOS",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": false,
+            "archives": 8,
+            "guardians": 0,
+            "total": 8,
+            "ready": false,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "acto-IV",
+          "objective": "ACTO V · EL CORAZÓN DE NÁCAR",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": true,
+            "archives": 8,
+            "guardians": 8,
+            "total": 8,
+            "ready": true,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "final-release",
+          "objective": "Nácar — EPÍLOGO COMPLETADO",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": true,
+            "archives": 8,
+            "guardians": 8,
+            "total": 8,
+            "ready": true,
+            "ending": "release",
+            "finaleAwakened": true
+          }
+        }
+      ]
+    },
+    {
+      "seed": 404,
+      "choice": "erase",
+      "status": "passed",
+      "checkpoints": [
+        {
+          "label": "acto-I",
+          "objective": "ACTO I · ECO BAJO LA SAL",
+          "progress": {
+            "prologueDone": false,
+            "heartFound": false,
+            "archives": 0,
+            "guardians": 0,
+            "total": 8,
+            "ready": false,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "acto-II",
+          "objective": "ACTO III · LOS CUSTODIOS",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": false,
+            "archives": 8,
+            "guardians": 0,
+            "total": 8,
+            "ready": false,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "acto-IV",
+          "objective": "ACTO V · EL CORAZÓN DE NÁCAR",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": true,
+            "archives": 8,
+            "guardians": 8,
+            "total": 8,
+            "ready": true,
+            "ending": null,
+            "finaleAwakened": false
+          }
+        },
+        {
+          "label": "final-erase",
+          "objective": "Nácar — EPÍLOGO COMPLETADO",
+          "progress": {
+            "prologueDone": true,
+            "heartFound": true,
+            "archives": 8,
+            "guardians": 8,
+            "total": 8,
+            "ready": true,
+            "ending": "erase",
+            "finaleAwakened": true
+          }
+        }
+      ]
+    }
+  ]
+}

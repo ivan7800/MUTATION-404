@@ -36,7 +36,7 @@ try{
       });
     }
     const page=await context.newPage(),errors=[];
-    page.on('pageerror',e=>errors.push(e.message));
+    page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning')console.log('BROWSER',m.text());});
     await page.goto(base,{waitUntil:'networkidle',timeout:45000});
     assert.ok(await page.locator('#start-menu').isVisible(),'startup menu must open before gameplay');
     assert.equal(await page.locator('#start-file').isVisible(),false,'native file picker stays hidden until import is requested');
@@ -145,13 +145,13 @@ try{
   for(const [width,height] of [[390,844],[768,1024]]){
     const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:width===390,hasTouch:width===390});
     const page=await context.newPage(),errors=[];
-    page.on('pageerror',e=>errors.push(e.message));
+    page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning')console.log('BROWSER',m.text());});
     await page.goto(base,{waitUntil:'networkidle',timeout:45000});
     await page.locator('#start-new').click();
     await page.waitForFunction(()=>document.querySelector('#viewport')?.getAttribute('data-renderer')==='pixi-webgl',{timeout:25000});
     const before=await page.locator('#coords').textContent();
     if(width===390){
-      assert.ok(await page.locator('#viewport').evaluate(el=>el.scrollLeft>0),'mobile camera must center the player inside the scroll viewport');
+      assert.ok(await page.locator('#viewport').evaluate(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('canvas.pixel-canvas').getBoundingClientRect();return Math.abs((a.left+a.right-b.left-b.right)/2)<2;}),'mobile camera canvas must remain centered in the viewport');
       assert.ok(await page.locator('.touch-controls').isVisible(),'mobile D-pad must be visible');
       await page.locator('[data-move="right"]').click();
       assert.notEqual(await page.locator('#coords').textContent(),before,'touch D-pad did not move character');
@@ -247,8 +247,8 @@ try{
   const firstProfile=await regionPage.evaluate(()=>window.__mutation404RenderProfile);
   await regionPage.waitForTimeout(700);
   const latestProfile=await regionPage.evaluate(()=>window.__mutation404RenderProfile);
-  assert.ok(latestProfile.builds>firstProfile.builds,'pixel ambience must redraw when active');
-  assert.ok(latestProfile.floorDraws<latestProfile.builds,'static floor must be reused across ambience draws');
+  assert.ok(latestProfile.frames>firstProfile.frames,'pixel ambience must redraw when active');
+  assert.ok(latestProfile.floorDraws<latestProfile.frames,'static floor must be reused across ambience draws');
   assert.ok(latestProfile.cachedCells>0,'region cache must contain world cells');
   assert.ok(latestProfile.allocatedSprites>=latestProfile.activeSprites,'sprite pool must cover visible cells');
   assert.ok(latestProfile.allocatedSprites<47*27+250,'regional view should not eagerly allocate the entire pool');
@@ -362,19 +362,18 @@ try{
         };
       },{raw:serialize(fixture),fallback:mode==='canvas-fallback'});
       const page=await context.newPage(),errors=[];
-      page.on('pageerror',e=>errors.push(e.message));
+      page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning')console.log('BROWSER',m.text());});
       await page.goto(base,{waitUntil:'networkidle'});
       await page.locator('#start-continue').click();
       const expected=mode==='webgl'?'pixi-webgl':'canvas2d';
       await page.waitForFunction(value=>document.querySelector('#viewport')?.dataset.renderer===value,expected);
-      if(mode==='webgl'){
-        await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='pixel',{timeout:25000});
-        await page.screenshot({path:`qa-evidence/enemy-pixel-${kind}.png`,fullPage:true,animations:'disabled'});
-        await page.locator('#art-mode-btn').click();
-        await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='ascii');
-      }
+      // Audit the pixel scene on BOTH backends before exercising legacy ASCII poses.
+      await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='pixel',{timeout:25000});
+      await page.screenshot({path:`qa-evidence/enemy-pixel-${kind}-${mode}.png`,fullPage:true,animations:'disabled'});
+      await page.locator('#art-mode-btn').click();
+      await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='ascii');
       await page.evaluate(()=>{window.__attackRows=[];});
-      await page.locator('#wait-btn').click();
+      await page.locator('.secondary-actions').evaluate(el=>el.open=true);await page.locator('#wait-btn').click();
       const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);
       let poseSeen=false;
       for(let attempt=0;attempt<8&&!poseSeen;attempt++){
@@ -382,7 +381,7 @@ try{
           await page.waitForFunction(expectedRows=>expectedRows.every(row=>window.__attackRows.includes(row)),rows,{timeout:3000});
           poseSeen=true;
         }catch{
-          if(attempt<7)await page.locator('#wait-btn').click();
+          if(attempt<7){await page.locator('.secondary-actions').evaluate(el=>el.open=true);await page.locator('#wait-btn').click();}
         }
       }
       if(!poseSeen)throw new Error(`attack pose timeout for ${kind}/${mode}; expected=${JSON.stringify(rows)} observed=${JSON.stringify(await page.evaluate(()=>window.__attackRows.slice(-40)))}`);

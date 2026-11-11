@@ -4,19 +4,13 @@ RPG isométrico de pixel art oscuro con horror cósmico, combate por turnos, exp
 
 **Jugar:** https://ivan7800.github.io/MUTATION-404/
 
-## Estado de la versión final
+## Dirección isométrica de Nácar
 
-La rama `main` contiene la entrega Pixel Rebirth validada en una rama experimental antes de fusionarse. Conserva íntegramente `packages/core`, la campaña, el combate, los guardados de esquema 11, fabricación, mutaciones, mapas, modo offline y el fallback ASCII/Canvas.
+La rama `codex/mutation-404-isometric-integral` introduce proyección explícita, sprites verticales, profundidad global y un atlas original de 200 recursos. Canvas 2D y la presentación WebGL comparten el mismo pintor y la misma imagen; la falta de GPU ya no obliga a cambiar de estilo.
 
-La dirección pixel art incluye:
+El rediseño conserva la simulación en `packages/core`, la campaña y los guardados de esquema 11. La interfaz agrupa las acciones secundarias en un panel desplegable manteniendo sus atajos de teclado. ASCII sigue disponible como modo de recuperación.
 
-- Seis biomas con suelo, roca, flora, arquitectura y paleta propia: Salinas, Ceniza, Hierro, Vidrio, Médula y Umbral.
-- Protagonista con frames de idle, desplazamiento, ataque, daño y muerte.
-- Seis especies diferenciadas con frames alternos: crawler, sentinel, larva, moth, drone y spore.
-- Identidades separadas para élites y jefe de campaña.
-- Proyección isométrica PixiJS/WebGL, oclusión por capas, niebla, sombras, efectos pixelados y fallback ASCII.
-- HUD retro gótico, menú, inventario, mutaciones, mapa, diario, fabricación, sistema, controles móviles y ajustes CRT accesibles.
-- Pool de sprites de terreno reutilizable y atlas SVG original de celdas 32×32.
+El inventario y las decisiones de arte están en [ISOMETRIC-ART-GUIDE](docs/ISOMETRIC-ART-GUIDE.md). El estado, resultados de QA y limitaciones se registran en [ISOMETRIC-INTEGRAL](docs/ISOMETRIC-INTEGRAL.md). Las imágenes conceptuales no son capturas del juego.
 
 ## Verificación
 
@@ -57,12 +51,14 @@ No se necesitan CDN, backend ni conexión externa durante la partida.
 ## Arquitectura y compatibilidad
 
 - `packages/core`: simulación determinista y reglas RPG puras.
-- `apps/web/src/pixel-renderer.ts`: renderer pixel PixiJS.
+- `apps/web/src/pixel-renderer.ts`: pintor isométrico Canvas con presentación WebGL opcional.
+- `apps/web/src/isometric.ts`: proyección, inversión y profundidad compartidas.
 - `apps/web/src/pixi-renderer.ts`: renderer ASCII PixiJS.
-- `apps/web/public/pixel/atlas.svg`: atlas original.
+- `apps/web/public/isometric/nacar.png` y `nacar.json`: atlas original y metadatos; generador en `scripts/art/`.
+- `apps/web/public/pixel/atlas.svg`: atlas histórico conservado para documentación y regresiones.
 - `play/`: salida estática para GitHub Pages y uso offline.
 
-Los guardados existentes mantienen el esquema 11. El botón `PIXEL ART` permite alternar al renderer ASCII durante la partida sin cambiar el estado de juego. La accesibilidad conserva reducción de movimiento, controles legibles y fallback Canvas.
+Los guardados existentes mantienen el esquema 11. El botón `ISOMÉTRICO` permite alternar al renderer ASCII durante la partida sin cambiar el estado de juego. La accesibilidad conserva reducción de movimiento, controles legibles y fallback Canvas.
 
 ## Historial técnico
 

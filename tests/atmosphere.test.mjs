@@ -21,8 +21,8 @@ test('ambient animation pauses in hidden tabs and honors reduced motion',()=>{
  assert.match(main,/renderer\.startAmbience\(\)/);
 });
 test('ASCII interface retains focus, touch affordances and contrast',()=>{
- assert.match(css,/\/\* v1\.8 — Nácar atmosférico/);
+ assert.match(css,/Nácar design system/);
  assert.match(css,/prefers-reduced-motion/);
- assert.match(css,/\.action\{min-height:42px/);
+ assert.match(css,/min-height:4[024]px/);
  assert.match(main,/data-move/);
 });

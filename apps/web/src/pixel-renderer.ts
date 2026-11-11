@@ -1,134 +1,165 @@
-import {Application,Container,Graphics,Matrix,Sprite,Texture} from 'pixi.js';
-import {ACTORS,biomeAt,BIOMES,HEIGHT,WIDTH,settlementCitizens,type GameState} from '../../../packages/core/src/game.js';
-import type {BiomeId} from '../../../packages/core/src/biomes.js';
-import {index} from '../../../packages/core/src/world.js';
-import {coordsForZone} from '../../../packages/core/src/frontier.js';
+import {ACTORS,ENEMY_DEFS,biomeAt,BIOMES,HEIGHT,WIDTH,settlementCitizens,type GameState,type Command} from '../../../packages/core/src/game.js';
+import {index,within,passable} from '../../../packages/core/src/world.js';
+import {nacarMark,NACAR_PHASES} from '../../../packages/core/src/campaign.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
-import {CAMERA_SCALE} from './ascii-art.js';
 import type {HeroAction} from './ascii-art.js';
-import {loadPixelAtlas,type PixelAsset} from './pixel-assets.js';
-
-/**
- * Pixel rebirth renderer. Assets are original 32px cells from the checked-in
- * atlas, enlarged with nearest-neighbour sampling. The simulation remains in
- * packages/core and the ASCII renderer remains available as a fallback.
- */
+import {parseRuin,themeForRuin} from '../../../packages/core/src/depths.js';
+import {coordsForZone} from '../../../packages/core/src/frontier.js';
+import {project,unproject,depth,direction} from './isometric.js';
+type Asset={rect:[number,number,number,number];pivot:[number,number]};
+type Entry={asset:string;x:number;y:number;alpha:number;order:number;id?:string};
+type Cue={x:number;y:number;kind:string;until:number;from?:{x:number;y:number}};
+/** Canvas painter is shared verbatim by the WebGL presenter and Canvas fallback. */
 export class PixelRenderer{
-  readonly mode='pixel' as const;
-  private readonly app=new Application();
-  private readonly scene=new Container();
-  private readonly terrain=new Container();
-  private readonly shadows=new Container();
-  private readonly actors=new Container();
-  private readonly effects=new Container();
-  private readonly fog=new Graphics();
-  private readonly sprites:Sprite[]=[];
-  private readonly terrainPool=new Map<string,Sprite>();
-  private readonly textures:Map<PixelAsset,Texture>;
-  private readonly old:AsciiRenderer;
-  private state:GameState|null=null;
-  private builds=0;private lastBuildMs=0;private totalBuildMs=0;private peakActiveSprites=0;private cachedCells=0;
-  private reducedMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
-  private cellW=25;private cellH=29;private ambience=0;private ambientFrame=0;private lastAmbient=0;private heroAction:HeroAction|null=null;private heroUntil=0;private heroTimer=0;private effectUntil=0;private effectKind:'attack'|'damage'|'mutation'|'scan'='scan';
-  private constructor(private readonly mount:HTMLElement,old:AsciiRenderer,textures:Map<PixelAsset,Texture>){this.old=old;this.textures=textures;}
-
-  static async create(mount:HTMLElement,old:AsciiRenderer):Promise<PixelRenderer>{
-    const probe=document.createElement('canvas');
-    if(!(probe.getContext('webgl2')||probe.getContext('webgl')))throw new Error('Pixel art necesita WebGL.');
-    const textures=await loadPixelAtlas();
-    const result=new PixelRenderer(mount,old,textures);
-    await result.app.init({preference:'webgl',background:0x02080d,antialias:false,width:1175,height:783,resolution:Math.min(devicePixelRatio||1,2),autoDensity:true});
-    result.app.canvas.className='world-canvas pixel-canvas';result.app.canvas.tabIndex=0;result.app.canvas.dataset.renderer='pixi-pixel';result.app.canvas.setAttribute('aria-label','Mapa isométrico pixel art interactivo. Flechas/WASD para moverse; E interactuar; X atacar.');
-    result.scene.addChild(result.terrain,result.shadows,result.actors,result.effects,result.fog);result.scene.sortableChildren=true;result.app.stage.addChild(result.scene);mount.appendChild(result.app.canvas);
-    for(const fallback of Array.from(mount.querySelectorAll<HTMLCanvasElement>('canvas:not(.pixel-canvas)')))fallback.style.display='none';
-    if(new URLSearchParams(location.search).has('profile'))Object.defineProperty(window,'__mutation404RenderProfile',{configurable:true,get:()=>result.profile});
-    return result;
+ readonly mode='pixel' as const;
+ private canvas=document.createElement('canvas');
+ private floor=document.createElement('canvas');
+ private ctx:CanvasRenderingContext2D;
+ private floorCtx:CanvasRenderingContext2D;
+ private state:GameState|null=null;
+ private entries:Entry[]=[];
+ private scale=1.15;private origin={x:0,y:0};
+ private reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ private raf=0;private running=false;private lastFrame=0;
+ private heroAction:HeroAction|null=null;private heroUntil=0;
+ private cues:Cue[]=[];private enemyActions=new Map<string,number>();private hits=new Map<string,number>();
+ private frames=0;private builds=0;private totalMs=0;private lastMs=0;
+ private present:(()=>void)|null=null;private dispose:(()=>void)|null=null;
+ private backend='canvas2d';
+ private constructor(private mount:HTMLElement,private old:AsciiRenderer,private atlas:HTMLImageElement,private assets:Record<string,Asset>){
+  this.canvas.width=this.floor.width=1175;this.canvas.height=this.floor.height=560;
+  this.ctx=this.canvas.getContext('2d')!;this.floorCtx=this.floor.getContext('2d')!;
+ }
+ static async create(mount:HTMLElement,old:AsciiRenderer):Promise<PixelRenderer>{
+  const image=new Image();image.src='./isometric/nacar.png';
+  const [assets]=await Promise.all([fetch('./isometric/nacar.json').then(r=>{if(!r.ok)throw new Error('Atlas metadata unavailable');return r.json() as Promise<Record<string,Asset>>;}),image.decode()]);
+  const r=new PixelRenderer(mount,old,image,assets);
+  // Canvas remains the rendering source, so lack of GPU never changes the artwork.
+  try{
+   const {Application,Texture,Sprite,CanvasSource}=await import('pixi.js');
+   const probe=document.createElement('canvas');const gl=probe.getContext('webgl2')??probe.getContext('webgl');
+   if(!gl)throw new Error('WebGL unavailable');gl.getExtension('WEBGL_lose_context')?.loseContext();
+   const app=new Application();await app.init({preference:'webgl',width:1175,height:560,antialias:false,background:0x10151b});
+   const texture=new Texture({source:new CanvasSource({resource:r.canvas})});texture.source.scaleMode='nearest';app.stage.addChild(new Sprite(texture));
+   r.present=()=>{texture.source.update();};r.dispose=()=>app.destroy(true,{children:true,texture:true});
+   app.canvas.className='world-canvas pixel-canvas';app.canvas.tabIndex=0;app.canvas.setAttribute('aria-label','Mapa isométrico de Nácar. WASD para moverse.');
+   mount.append(app.canvas);r.backend='pixi-webgl';
+  }catch(error){console.warn('Isometric WebGL presenter unavailable:',error);r.canvas.className='world-canvas pixel-canvas';r.canvas.tabIndex=0;r.canvas.setAttribute('aria-label','Mapa isométrico de Nácar. WASD para moverse.');mount.append(r.canvas);}
+  mount.dataset.renderer=r.backend;
+  const active=mount.querySelector<HTMLCanvasElement>('.pixel-canvas')!;
+  active.addEventListener('pointermove',event=>{
+   if(!r.state)return;const rect=active.getBoundingClientRect();
+   const fit=Math.min(rect.width/1175,rect.height/560);
+   const px=(event.clientX-rect.left-(rect.width-1175*fit)/2)/fit;
+   const py=(event.clientY-rect.top-(rect.height-560*fit)/2)/fit;
+   const p=unproject((px-r.origin.x)/r.scale,(py-r.origin.y)/r.scale);
+   const x=Math.round(p.x),y=Math.round(p.y);
+   const valid=x>=0&&y>=0&&x<WIDTH&&y<HEIGHT&&r.state.visible[index(x,y)]===1;
+   active.title=valid?`Casilla ${x}, ${y} · ${BIOMES[biomeAt(r.state.seed,x,y)].name}`:'Territorio desconocido';
+  });
+  if(new URLSearchParams(location.search).has('profile'))Object.defineProperty(window,'__mutation404RenderProfile',{configurable:true,get:()=>r.profile});
+  return r;
+ }
+ get profile(){return {backend:this.backend,builds:this.builds,frames:this.frames,meanBuildMs:this.builds?this.totalMs/this.builds:0,lastBuildMs:this.lastMs,floorDraws:this.builds,cachedCells:this.entries.length,textures:Object.keys(this.assets).length,allocatedSprites:this.entries.length,activeSprites:this.entries.length,peakActiveSprites:this.entries.length};}
+ private paint(ctx:CanvasRenderingContext2D,name:string,x:number,y:number,alpha=1){
+  const a=this.assets[name];if(!a)return;
+  const p=project(x,y);ctx.globalAlpha=alpha;ctx.drawImage(this.atlas,...a.rect,Math.round(p.x-a.pivot[0]),Math.round(p.y-a.pivot[1]),a.rect[2],a.rect[3]);ctx.globalAlpha=1;
+ }
+ private camera(ctx:CanvasRenderingContext2D){ctx.setTransform(this.scale,0,0,this.scale,this.origin.x,this.origin.y);ctx.imageSmoothingEnabled=false;}
+ private biome(s:GameState,x:number,y:number){
+  if(s.zone==='surface'||coordsForZone(s.zone))return biomeAt(s.seed,x,y);
+  const ruin=parseRuin(s.zone);
+  if(ruin){const symbol=themeForRuin(ruin.x,ruin.y).symbol;return symbol==='v'?'vidrio':symbol==='&'?'medula':symbol==='?'?'umbral':'hierro';}
+  return s.zone==='zero-3'?'umbral':'hierro';
+ }
+ draw(state:GameState):void{
+  const began=performance.now();this.state=state;this.entries=[];
+  const center=project(state.player.x,state.player.y);this.origin={x:1175/2-center.x*this.scale,y:315-center.y*this.scale};
+  const ctx=this.floorCtx;ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#10151b';ctx.fillRect(0,0,1175,560);this.camera(ctx);
+  for(let y=Math.max(0,state.player.y-18);y<Math.min(HEIGHT,state.player.y+19);y++)for(let x=Math.max(0,state.player.x-18);x<Math.min(WIDTH,state.player.x+19);x++){
+   const at=index(x,y);if(!state.seen[at])continue;
+   const p=project(x,y);if(Math.abs((p.x-center.x)*this.scale)>700||Math.abs((p.y-center.y)*this.scale)>540)continue;
+   const v=Math.floor(terrainHash(state.seed+917,x,y)*6),b=this.biome(state,x,y),tile=state.tiles[at];
+   const alpha=state.visible[at]===1?1:.24;
+   this.paint(ctx,`floor-${b}-${v}`,x,y,alpha);
+   let prop:string|null=null;
+   if(tile==='#')prop=`wall-${b}-${v%3}`;
+   else if(tile==='^'||tile==='%')prop=`rock-${b}-${v%3}`;
+   else if(['*','&',';',',','v','?'].includes(tile)&&v<3)prop=`flora-${b}-${v%3}`;
+   else if(tile==='~')prop='water';else if(tile==='+')prop='door';else if(tile==='o')prop='down';else if(tile==='x')prop='up';else if(tile==='T'||tile==='=')prop='terminal';else if(tile==='!')prop=`rock-${b}-2`;
+   if(prop)this.entries.push({asset:prop,x,y,alpha,order:depth(x,y)});
   }
-  get profile(){return {builds:this.builds,meanBuildMs:this.builds?this.totalBuildMs/this.builds:0,lastBuildMs:this.lastBuildMs,floorDraws:1,cachedCells:this.cachedCells,textures:this.textures.size,allocatedSprites:this.sprites.length,activeSprites:this.sprites.length,peakActiveSprites:this.peakActiveSprites};}
-  private tex(name:PixelAsset):Texture{return this.textures.get(name)??Texture.EMPTY;}
-  private clearLayer(layer:Container|Graphics):void{
-    for(const child of layer.removeChildren())child.destroy();
+  const add=(asset:string,x:number,y:number,id?:string)=>{if(x>=0&&y>=0&&x<WIDTH&&y<HEIGHT&&state.visible[index(x,y)]===1)this.entries.push({asset,x,y,alpha:1,order:depth(x,y,2),id});};
+  for(const item of state.ground)add('item' in item&&item.item==='medkit'?'heal':'loot',item.x,item.y);
+  for(const node of state.ecology.nodes)if(node.zone===state.zone&&node.quantity>0)add('resource',node.x,node.y);
+  for(const npc of [...(state.zone==='surface'?ACTORS:[]),...settlementCitizens(state.zone,state.tick)]){
+   const id=String(npc.id)+' '+npc.role;
+   const kind=/mara/i.test(id)?'mara':/iria/i.test(id)?'iria':/ferral|tamo|oren/i.test(id)?'ferral':/mercader|merchant|sira|kala/i.test(id)?'merchant':/guard|keral|keth/i.test(id)?'guard':'citizen';
+   add('npc-'+kind,npc.x,npc.y);
   }
-  private sprite(name:PixelAsset,x:number,y:number,alpha=1,scale=1,layer=1):void{
-    const sprite=new Sprite(this.tex(name));sprite.anchor.set(.5,.86);sprite.position.set((x+.5)*this.cellW,(y+.5)*this.cellH);sprite.scale.set(scale);sprite.alpha=alpha;sprite.zIndex=x*this.cellW+y*this.cellH+layer*.01;this.actors.addChild(sprite);this.sprites.push(sprite);
+  for(const e of state.enemies)if(e.hp>0)add(e.id.includes('heart')||e.id.includes('final-guardian')?'boss':e.id.includes('elite')||e.id.includes('resonance-guardian')?'elite':e.kind,e.x,e.y,e.id);
+  add('hero',state.player.x,state.player.y,'hero');
+  this.entries.sort((a,b)=>a.order-b.order);
+  this.builds++;this.lastMs=performance.now()-began;this.totalMs+=this.lastMs;this.render(performance.now());
+ }
+ private render(now:number){
+  if(!this.state)return;const ctx=this.ctx,state=this.state;this.frames++;
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(this.floor,0,0);this.camera(ctx);
+  const phase=this.reducedMotion?0:Math.floor(now/180)%4;
+  if(state.zone==='zero-3'&&state.tick%400===300&&state.enemies.some(e=>e.id==='campaign-heart-custodian'&&e.hp>0)){
+   for(const mark of nacarMark(state.events,state.tick+100)){
+    if(!within(mark.x,mark.y)||state.visible[index(mark.x,mark.y)]!==1||!passable(state.tiles[index(mark.x,mark.y)]))continue;
+    const p=project(mark.x,mark.y);ctx.strokeStyle=NACAR_PHASES[mark.phase].color;ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(p.x-29,p.y);ctx.lineTo(p.x,p.y-14);ctx.lineTo(p.x+29,p.y);ctx.lineTo(p.x,p.y+14);ctx.closePath();ctx.stroke();
+    ctx.fillRect(p.x-2,p.y-8,4,10);ctx.fillRect(p.x-2,p.y+5,4,3);
+   }
   }
-  private terrainSprite(name:PixelAsset,x:number,y:number,alpha=1,key=`${x}:${y}`):void{
-    const texture=this.tex(name);
-    let sprite=this.terrainPool.get(key);
-    if(!sprite){sprite=new Sprite(texture);sprite.anchor.set(.5,.72);sprite.scale.set(.9);this.terrainPool.set(key,sprite);this.terrain.addChild(sprite);}
-    else if(sprite.texture!==texture)sprite.texture=texture;
-    sprite.visible=true;sprite.position.set((x+.5)*this.cellW,(y+.5)*this.cellH);sprite.alpha=alpha;sprite.zIndex=x*this.cellW+y*this.cellH;sprite.tint=0xffffff;this.sprites.push(sprite);
+  for(const e of this.entries){
+   let asset=e.asset;const p=project(e.x,e.y),hero=project(state.player.x,state.player.y);
+   if(e.id){ctx.fillStyle='#060c16';ctx.globalAlpha=.6;ctx.beginPath();ctx.ellipse(p.x,p.y+1,15,6,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+   if(asset==='hero'){
+    const pose=state.stats.hp<=0?'death':!this.reducedMotion&&this.heroUntil>now?this.heroAction==='walk'?'walk':this.heroAction==='attack'?'attack':this.heroAction==='damage'?'hurt':'idle':'idle';
+    const f=pose==='walk'||pose==='attack'?phase:pose==='idle'?phase%2:0;
+    asset=`hero-${direction(state.genome.facing.dx,state.genome.facing.dy)}-${pose}-${f}`;
+   }else if(e.id)asset=`${e.asset}-${(this.hits.get(e.id)??0)>now?'hurt':(this.enemyActions.get(e.id)??0)>now?'attack':'idle'}-${phase%2}`;
+   // Tall foreground structures become transparent only when actually overlapping the hero.
+   const alpha=e.asset.startsWith('wall-')&&e.order>depth(state.player.x,state.player.y)&&Math.abs(p.x-hero.x)<63&&p.y-hero.y<115?e.alpha*.35:e.alpha;
+   this.paint(ctx,asset,e.x,e.y,alpha);
+   if(e.id&&e.id!=='hero'&&e.id===state.targetId){ctx.strokeStyle='#d5aa65';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,24,10,0,0,Math.PI*2);ctx.stroke();const enemy=state.enemies.find(n=>n.id===e.id);ctx.fillStyle='#c65362';ctx.fillRect(p.x-17,p.y-57,34*Math.min(1,(enemy?.hp??0)/(enemy?ENEMY_DEFS[enemy.kind].hp*(e.asset==='boss'?3:1):1)),3);}
   }
-  private floorAsset(biome:BiomeId):PixelAsset{return `floor-${biome}` as PixelAsset;}
-  private propAsset(biome:BiomeId):PixelAsset{return `prop-${biome}` as PixelAsset;}
-  private floraAsset(biome:BiomeId):PixelAsset{return `flora-${biome}` as PixelAsset;}
-  private rockAsset(biome:BiomeId):PixelAsset{return `rock-${biome}` as PixelAsset;}
-  private tileAsset(tile:string,variant:number,biome:BiomeId):PixelAsset{
-    if(tile==='#'||tile==='%'||tile==='=')return variant===2?this.propAsset(biome):this.rockAsset(biome);
-    if(tile==='*'||tile==='&')return this.floraAsset(biome);
-    if(tile==='^')return this.rockAsset(biome);
-    if(tile==='!')return 'mutation';
-    return this.floorAsset(biome);
+  for(const field of state.fields)if(state.visible[index(field.x,field.y)]===1){const p=project(field.x,field.y);ctx.strokeStyle=field.kind==='fire'?'#e69a5c':field.kind==='electric'?'#58cabf':'#ac8ebc';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(p.x,p.y,24,10,0,0,Math.PI*2);ctx.stroke();}
+  for(const cue of this.cues)if(cue.until>now&&!this.reducedMotion){
+   const p=project(cue.x,cue.y),t=this.reducedMotion ? .35 :1-(cue.until-now)/650;
+   ctx.globalAlpha=1-t;ctx.strokeStyle=cue.kind==='damage'?'#e56b75':cue.kind==='pyrokinesis'?'#f2aa67':cue.kind==='neural-shock'?'#b69bdd':'#83f3e2';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=3;
+   if(cue.kind==='fire'&&cue.from){const from=project(cue.from.x,cue.from.y);ctx.strokeStyle='#f1cb87';ctx.beginPath();ctx.moveTo(from.x,from.y-28);ctx.lineTo(from.x+(p.x-from.x)*Math.min(1,t*3),from.y-28+(p.y-from.y)*Math.min(1,t*3));ctx.stroke();}
+   else if(cue.kind==='heal'){ctx.strokeStyle='#8fe0b4';ctx.strokeRect(p.x-12,p.y-34,24,6);ctx.strokeRect(p.x-3,p.y-43,6,24);}
+   else if(cue.kind==='pyrokinesis')for(let i=0;i<5;i++){const x=p.x-15+i*8;ctx.beginPath();ctx.moveTo(x-4,p.y);ctx.lineTo(x+3,p.y-24-22*t);ctx.lineTo(x+8,p.y);ctx.fill();}
+   else if(cue.kind==='damage'||cue.kind==='attack'){for(let i=0;i<5;i++){const a=i*1.26;ctx.fillRect(p.x+Math.cos(a)*(9+22*t),p.y-20+Math.sin(a)*20*t,3,6);}}
+   else if(cue.kind==='phase-step'){ctx.strokeRect(p.x-12-20*t,p.y-52,24,48);ctx.strokeRect(p.x+6+20*t,p.y-48,24,48);}
+   else if(cue.kind==='neural-shock'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(p.x,p.y-30,10+28*t+i*8,0,Math.PI*2);ctx.stroke();}}
+   else if(cue.kind==='kinetic-pulse'){ctx.beginPath();ctx.moveTo(p.x-24,p.y-20);ctx.lineTo(p.x,p.y-42-18*t);ctx.lineTo(p.x+24,p.y-20);ctx.lineTo(p.x,p.y);ctx.closePath();ctx.stroke();}
+   else{ctx.beginPath();ctx.ellipse(p.x,p.y-8,12+65*t,6+32*t,0,0,Math.PI*2);ctx.stroke();}
+   ctx.globalAlpha=1;
   }
-  private actorAsset(kind:string,id:string,frame:number):PixelAsset{
-    if(id.includes('campaign-heart')||id.includes('final-guardian'))return `boss-heart-${frame?'b':'a'}` as PixelAsset;
-    if(id.includes('elite-')||id.includes('resonance-guardian'))return `elite-drone-${frame?'b':'a'}` as PixelAsset;
-    const species=kind==='crawler'?'crawler':kind==='sentinel'?'sentinel':kind==='larva'?'larva':kind==='moth'?'moth':kind==='drone'?'drone':'spore';
-    return `${species}-${frame?'b':'a'}` as PixelAsset;
-  }
-  private heroAsset(action:HeroAction|null,dead:boolean,frame:number):PixelAsset{
-    if(dead)return 'hero-death-a';
-    if(action==='damage')return 'hero-hurt-a';
-    const pose=action==='attack'?'attack':action==='walk'?'walk':'idle';
-    return `hero-${pose}-${frame?'b':'a'}` as PixelAsset;
-  }
-  draw(state:GameState):void{
-    const started=performance.now();
-    this.state=state;for(const sprite of this.terrainPool.values())sprite.visible=false;this.clearLayer(this.shadows);this.clearLayer(this.actors);this.clearLayer(this.effects);this.fog.clear();this.sprites.length=0;
-    const ox=Math.max(0,Math.min(WIDTH-47,state.player.x-23)),oy=Math.max(0,Math.min(HEIGHT-27,state.player.y-13));
-    // Keep the player at the centre of the viewport while the visible window
-    // moves through the larger simulation map. This is the same projection
-    // contract used by the legacy renderer, with crisp pixel-art scaling.
-    const anchorX=(state.player.x-ox+.5)*this.cellW;
-    const anchorY=(state.player.y-oy+.5)*this.cellH;
-    this.scene.setFromMatrix(new Matrix(CAMERA_SCALE,CAMERA_SCALE*.5,-CAMERA_SCALE,CAMERA_SCALE*.5,
-      47*this.cellW/2-CAMERA_SCALE*anchorX+CAMERA_SCALE*anchorY,
-      27*this.cellH/2-CAMERA_SCALE*(anchorX+anchorY)/2));
-    const surface=coordsForZone(state.zone)!==null;let cells=0;
-    for(let cy=0;cy<27;cy++)for(let cx=0;cx<47;cx++){
-      const x=ox+cx,y=oy+cy,at=index(x,y);if(!state.seen[at])continue;cells++;
-      const visible=state.visible[at]===1,dist=Math.hypot(x-state.player.x,y-state.player.y),radius=12;
-      const alpha=visible?Math.max(.28,1-Math.max(0,dist-radius*.3)/radius*.68):.14;
-      const biome=biomeAt(state.seed,x,y),tile=state.tiles[at],variant=Math.floor(terrainHash(state.seed+917,x,y)*3);
-      this.terrainSprite(this.tileAsset(tile,variant,biome),cx,cy,alpha,`${x}:${y}`);
-      if(visible&&surface&&dist<9){const light=new Graphics();light.circle((cx+.5)*this.cellW,(cy+.48)*this.cellH,Math.max(1,(9-dist)*2)).fill({color:BIOMES[biome].palette,alpha:.025});this.effects.addChild(light);}
-    }
-    for(const field of state.fields)if(state.visible[index(field.x,field.y)]===1){const x=field.x-ox,y=field.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite(field.kind==='fire'?'attack':field.kind==='electric'?'mutation-fx':'plant',x,y,.82,1.05,2);}
-    for(const node of state.ecology.nodes)if(node.zone===state.zone&&node.quantity>0&&state.visible[index(node.x,node.y)]===1){const x=node.x-ox,y=node.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite(node.kind==='spores'?'mutation':node.kind==='crystal'?'mutation-fx':'rock',x,y,.96,1.02,2);}
-    for(const item of state.ground)if(state.visible[index(item.x,item.y)]===1){const x=item.x-ox,y=item.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite('mutation-fx',x,y,.75,.7,2);}
-    for(const npc of [...(state.zone==='surface'?ACTORS:[]),...settlementCitizens(state.zone,state.tick)])if(state.visible[index(npc.x,npc.y)]===1){const x=npc.x-ox,y=npc.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite('sentinel',x,y,.8,.75,3);}
-    const enemyFrame=Math.floor(this.ambience/2)%2;
-    for(const enemy of state.enemies)if(enemy.hp>0&&state.visible[index(enemy.x,enemy.y)]===1){const x=enemy.x-ox,y=enemy.y-oy;if(x>=0&&y>=0&&x<47&&y<27)this.sprite(this.actorAsset(enemy.kind,enemy.id,enemyFrame),x,y,1,1.03,4);}
-    const hero=this.heroAction&&performance.now()<this.heroUntil?this.heroAction:null;
-    this.sprite(this.heroAsset(hero,state.stats.hp<=0,Math.floor(this.ambience/2)%2),state.player.x-ox,state.player.y-oy,1,1.08,5);
-    if(this.effectUntil>performance.now()&&!this.reducedMotion)this.sprite(this.effectKind==='damage'?'damage':this.effectKind==='mutation'?'mutation-fx':'attack',state.player.x-ox,state.player.y-oy,.85,1.3,6);
-    this.ambience++;
-    this.cachedCells=cells;
-    this.builds++;this.lastBuildMs=performance.now()-started;this.totalBuildMs+=this.lastBuildMs;this.peakActiveSprites=Math.max(this.peakActiveSprites,this.sprites.length);
-  }
-  renderMinimap(state:GameState,canvas:HTMLCanvasElement):void{this.old.renderMinimap(state,canvas);}
-  focus():void{this.app.canvas.focus({preventScroll:true});this.mount.scrollLeft=Math.max(0,(this.app.canvas.clientWidth-this.mount.clientWidth)/2);}
-  zoom(dir:number):void{this.cellW=Math.max(19,Math.min(31,this.cellW+dir*2));this.cellH=Math.round(this.cellW*1.16);this.app.renderer.resize(47*this.cellW,27*this.cellH);if(this.state)this.draw(this.state);}
-  setReducedMotion(value:boolean):void{this.reducedMotion=value;if(value)this.pauseAmbience();if(this.state)this.draw(this.state);}
-  startAmbience():void{if(this.reducedMotion||this.ambientFrame)return;const loop=(now:number):void=>{this.ambientFrame=0;if(document.visibilityState==='hidden'||!this.state)return;if(now-this.lastAmbient>=125){this.lastAmbient=now;this.draw(this.state);}this.ambientFrame=requestAnimationFrame(loop);};this.ambientFrame=requestAnimationFrame(loop);}
-  pauseAmbience():void{if(this.ambientFrame)cancelAnimationFrame(this.ambientFrame);this.ambientFrame=0;}
-  destroy():void{this.pauseAmbience();if(this.heroTimer)clearTimeout(this.heroTimer);this.app.destroy(true,{children:true});}
-  heroFeedback(state:GameState,action:HeroAction):void{if(this.reducedMotion)return;this.heroAction=action;this.heroUntil=performance.now()+420;if(this.heroTimer)clearTimeout(this.heroTimer);this.heroTimer=window.setTimeout(()=>{this.heroAction=null;if(this.state)this.draw(this.state);},440);this.draw(state);}
-  enemyFeedback(state:GameState):void{this.draw(state);}
-  combatFeedback(_previous:ReadonlyMap<string,{hp:number;x:number;y:number;zone:string;glyph:string}>,state:GameState):void{this.draw(state);}
-  environmentFeedback(_previous:ReadonlyArray<{x:number;y:number;kind:'fire'|'electric'|'spores';ttl:number}>,state:GameState):void{this.draw(state);}
-  bossFeedback(state:GameState):void{this.effect(state,'mutation');}
-  mutationFeedback(state:GameState):void{this.effect(state,'mutation');}
-  effect(state:GameState,kind:'attack'|'mutation'|'scan'|'damage'):void{if(this.reducedMotion)return;this.effectKind=kind;this.effectUntil=performance.now()+420;this.draw(state);}
+  this.cues=this.cues.filter(c=>c.until>now);ctx.setTransform(1,0,0,1,0,0);this.present?.();
+ }
+ renderMinimap(s:GameState,c:HTMLCanvasElement){this.old.renderMinimap(s,c);}
+ focus(){this.mount.querySelector<HTMLCanvasElement>('.pixel-canvas')?.focus({preventScroll:true});}
+ zoom(dir:number){this.scale=Math.max(.65,Math.min(1.6,this.scale+dir*.05));if(this.state)this.draw(this.state);}
+ setReducedMotion(value:boolean){this.reducedMotion=value;if(this.state)this.render(performance.now());}
+ startAmbience(){if(this.running)return;this.running=true;const loop=(now:number)=>{if(!this.running)return;if(now-this.lastFrame>100&&!this.reducedMotion){this.lastFrame=now;this.render(now);}this.raf=requestAnimationFrame(loop);};this.raf=requestAnimationFrame(loop);}
+ pauseAmbience(){this.running=false;cancelAnimationFrame(this.raf);}
+ destroy(){this.pauseAmbience();this.dispose?.();this.canvas.remove();}
+ heroFeedback(s:GameState,a:HeroAction){this.heroAction=a;this.heroUntil=performance.now()+650;this.draw(s);}
+ commandFeedback(s:GameState,command:Command){
+  if(command.type==='fire'){const e=s.enemies.find(e=>e.id===s.targetId);this.cues.push({x:e?.x??s.player.x,y:e?.y??s.player.y,from:{...s.player},kind:'fire',until:performance.now()+650});}
+  if(command.type==='heal')this.cues.push({...s.player,kind:'heal',until:performance.now()+650});
+ }
+ enemyFeedback(s:GameState,events:readonly import('../../../packages/core/src/game.js').EnemyVisualAction[]=[]){for(const e of events)if(e.zone===s.zone&&s.visible[index(e.x,e.y)]===1)this.enemyActions.set(e.id,performance.now()+650);}
+ combatFeedback(previous:ReadonlyMap<string,{hp:number;x:number;y:number;zone:string;glyph:string}>,s:GameState){for(const e of s.enemies)if(e.hp<(previous.get(e.id)?.hp??e.hp)){this.hits.set(e.id,performance.now()+600);this.cues.push({x:e.x,y:e.y,kind:'damage',until:performance.now()+650});}}
+ environmentFeedback(_previous:unknown,_s:GameState){void _previous;void _s;}
+ bossFeedback(s:GameState,_event?:unknown){void _event;this.effect(s,'mutation');}
+ mutationFeedback(s:GameState,mutation?:string){const e=s.enemies.find(e=>e.id===s.targetId&&s.visible[index(e.x,e.y)]===1);this.cues.push({x:e?.x??s.player.x,y:e?.y??s.player.y,kind:mutation??'mutation',until:performance.now()+650});}
+ effect(s:GameState,kind:'attack'|'mutation'|'scan'|'damage'){const target=kind==='attack'?s.enemies.find(e=>e.id===s.targetId&&s.visible[index(e.x,e.y)]===1):null;this.cues.push({x:target?.x??s.player.x,y:target?.y??s.player.y,kind,until:performance.now()+650});}
 }

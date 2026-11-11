@@ -1,0 +1,277 @@
+{
+  "status": "passed",
+  "browser": "/opt/hostedtoolcache/setup-chrome/chrome/stable/x64/chrome",
+  "results": [
+    {
+      "mode": "webgl",
+      "renderer": "pixi-webgl",
+      "before": "X:32 Y:32",
+      "after": "X:33 Y:32",
+      "errors": [],
+      "canvasCount": 3,
+      "screenshot": "qa-evidence/webgl.png"
+    },
+    {
+      "mode": "canvas-fallback",
+      "renderer": "canvas2d",
+      "before": "X:32 Y:32",
+      "after": "X:33 Y:32",
+      "errors": [],
+      "canvasCount": 2,
+      "screenshot": "qa-evidence/canvas-fallback.png"
+    },
+    {
+      "scene": "storage-denied",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "scene": "responsive-390",
+      "width": 390,
+      "height": 844,
+      "layout": {
+        "viewport": 390,
+        "scrollWidth": 390,
+        "dpadVisible": true
+      },
+      "screenshot": "qa-evidence/responsive-390.png",
+      "errors": []
+    },
+    {
+      "scene": "responsive-768",
+      "width": 768,
+      "height": 1024,
+      "layout": {
+        "viewport": 768,
+        "scrollWidth": 768,
+        "dpadVisible": true
+      },
+      "screenshot": "qa-evidence/responsive-768.png",
+      "errors": []
+    },
+    {
+      "scene": "faro-ascii-unified",
+      "mode": "pixel",
+      "zone": "Faro Ciego",
+      "screenshot": "qa-evidence/faro-ascii-unified.png",
+      "frameStats": {
+        "sampleCount": 24,
+        "meanFrameMs": 154.9,
+        "p95FrameMs": 416.7
+      },
+      "errors": []
+    },
+    {
+      "scene": "ojo-ascii-unified",
+      "mode": "pixel",
+      "zone": "Ojo del Silencio",
+      "screenshot": "qa-evidence/ojo-ascii-unified.png",
+      "frameStats": {
+        "sampleCount": 24,
+        "meanFrameMs": 134.7,
+        "p95FrameMs": 383.3
+      },
+      "errors": []
+    },
+    {
+      "scene": "render-profile-v29",
+      "baseline": {
+        "backend": "pixi-webgl",
+        "builds": 3,
+        "frames": 3,
+        "meanBuildMs": 1.5,
+        "lastBuildMs": 2.8999999999941792,
+        "floorDraws": 3,
+        "cachedCells": 64,
+        "textures": 200,
+        "allocatedSprites": 64,
+        "activeSprites": 64,
+        "peakActiveSprites": 64
+      },
+      "after": {
+        "backend": "pixi-webgl",
+        "builds": 3,
+        "frames": 4,
+        "meanBuildMs": 1.5,
+        "lastBuildMs": 2.8999999999941792,
+        "floorDraws": 3,
+        "cachedCells": 64,
+        "textures": 200,
+        "allocatedSprites": 64,
+        "activeSprites": 64,
+        "peakActiveSprites": 64
+      },
+      "note": "JavaScript scene construction only; browser GPU timing not measured"
+    },
+    {
+      "scene": "regional-v29-ascii-unified",
+      "screenshot": "qa-evidence/region-v29-ascii-unified.png",
+      "errors": []
+    },
+    {
+      "scene": "nacar-phase-1",
+      "screenshot": "qa-evidence/nacar-v29-phase-1.png",
+      "errors": []
+    },
+    {
+      "scene": "nacar-phase-2",
+      "screenshot": "qa-evidence/nacar-v29-phase-2.png",
+      "errors": []
+    },
+    {
+      "scene": "nacar-phase-3",
+      "screenshot": "qa-evidence/nacar-v29-phase-3.png",
+      "errors": []
+    },
+    {
+      "scene": "final-campana",
+      "status": "passed",
+      "savedEnding": "bind",
+      "screenshot": "qa-evidence/final-campana-v28.png"
+    },
+    {
+      "scene": "enemy-attack-crawler-webgl",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  __    ",
+        " /oo>  ",
+        "<||||>==",
+        " \\__/  ",
+        " _/  \\_"
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-sentinel-webgl",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  /\\   ",
+        " [o]=> ",
+        "/ V==> ",
+        "| | |  ",
+        "/___\\_"
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-larva-webgl",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  ___   ",
+        "(oo==> ",
+        " \\__/  ",
+        "~~/  \\_",
+        " _/\\_ "
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-moth-webgl",
+      "status": "passed",
+      "glyphRowsObserved": [
+        " \\ | / ",
+        "--o==> ",
+        " / | \\ ",
+        "  / \\  ",
+        " \\___/ "
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-drone-webgl",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  /\\   ",
+        " /o\\   ",
+        "[=|==> ",
+        " /|\\   ",
+        "/___\\  "
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-spore-webgl",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  .*.   ",
+        " /  ::\\",
+        "( o ):: ",
+        " \\ | / ",
+        "  / \\  "
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-crawler-canvas-fallback",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  __    ",
+        " /oo>  ",
+        "<||||>==",
+        " \\__/  ",
+        " _/  \\_"
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-sentinel-canvas-fallback",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  /\\   ",
+        " [o]=> ",
+        "/ V==> ",
+        "| | |  ",
+        "/___\\_"
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-larva-canvas-fallback",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  ___   ",
+        "(oo==> ",
+        " \\__/  ",
+        "~~/  \\_",
+        " _/\\_ "
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-moth-canvas-fallback",
+      "status": "passed",
+      "glyphRowsObserved": [
+        " \\ | / ",
+        "--o==> ",
+        " / | \\ ",
+        "  / \\  ",
+        " \\___/ "
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-drone-canvas-fallback",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  /\\   ",
+        " /o\\   ",
+        "[=|==> ",
+        " /|\\   ",
+        "/___\\  "
+      ],
+      "fixture": true
+    },
+    {
+      "scene": "enemy-attack-spore-canvas-fallback",
+      "status": "passed",
+      "glyphRowsObserved": [
+        "  .*.   ",
+        " /  ::\\",
+        "( o ):: ",
+        " \\ | / ",
+        "  / \\  "
+      ],
+      "fixture": true
+    }
+  ]
+}

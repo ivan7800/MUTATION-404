@@ -18,7 +18,7 @@ test('startup is an actual blocking menu with new, continue, load, import and se
  assert.match(main,/state=restored/);
  assert.match(main,/function beginGame\(\):void/);
  assert.match(main,/renderer\.pauseAmbience\(\)/);
- assert.match(css,/\.start-menu\.hidden/);
+ assert.match(css,/\.hidden\{display:none!important\}/);
 });
 test('sound offers opt-in, audible test, adjustable master and default volume',()=>{
  assert.match(audio,/async toggle\(\):Promise<boolean>/);

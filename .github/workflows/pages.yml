@@ -13,8 +13,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: mutation-404-pages
-  cancel-in-progress: false
+  group: mutation-404-pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
@@ -57,10 +57,17 @@ jobs:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: node scripts/qa-browser.mjs
       - name: Verify six pixel biome scenes in Chromium
+        if: ${{ !cancelled() }}
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: node scripts/qa-pixel-biomes.mjs
+      - name: Verify isometric Canvas and WebGL presentation
+        if: ${{ !cancelled() }}
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: node scripts/qa-isometric.mjs
       - name: Verify offline installation under a Pages subpath
+        if: ${{ !cancelled() }}
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: node scripts/qa-offline.mjs
