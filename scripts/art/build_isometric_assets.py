@@ -270,45 +270,119 @@ def architecture(d,p,v,biome):
   d.line([(30,y-4),(30,y)],fill=a);d.line([(61,y+1),(61,y+5)],fill=a)
 
 def human(d,color,pose,frame,direction,npc=False):
- # hand posed legs, cloak, face, equipment; no affine deformation
+ # Hand-posed, upright traveller: layered coat, equipment and readable gear.
  sway=[0,2,0,-2][frame%4] if pose=='walk' else 0
  if pose=='death':
-  d.ellipse((29,105,68,118),fill='#1b2430');d.rectangle((35,103,62,111),fill=color);d.rectangle((60,99,70,108),fill='#c0af8f');return
+  d.ellipse((27,106,70,120),fill='#101820')
+  poly(d,[(31,104),(40,92),(60,91),(70,101),(62,112),(39,115)],'#17232d')
+  poly(d,[(37,101),(43,94),(59,94),(64,102),(53,107)],color)
+  d.rectangle((60,98,70,104),fill='#c0af8f');d.line([(44,99),(55,101)],fill='#58cabf',width=2);return
+ bob=1 if pose=='idle' and frame%2 else 0
  d.ellipse((33,107,64,117),fill='#14212a')
- for x,step in [(42,sway),(53,-sway)]:d.rectangle((x-3,96,x+3,111+step),fill='#26323e');d.rectangle((x-4,109+step,x+5,113+step),fill='#111b24')
- poly(d,[(36,67),(59,67),(65,103),(50,109),(31,101)],'#17232d');poly(d,[(38,67),(55,67),(58,99),(47,104),(34,97)],color)
- d.line([(41,73),(38,95),(47,101)],fill='#9b9f8d',width=2)
- d.rectangle((40,54,55,69),fill='#19252e');poly(d,[(38,59),(43,49),(54,51),(59,60)],color)
- if direction=='north':d.line([(40,57),(45,51)],fill='#b0c1b1',width=2)
- if direction in ['south','east']:d.rectangle((47,59,55,65),fill='#baa88b');d.line([(48,60),(54,60)],fill='#64e6da',width=2)
- else:d.line([(41,57),(50,54)],fill='#a1b1a5',width=2)
- d.rectangle((42,84,59,89),fill='#634c3e');d.rectangle((51,84,54,89),fill='#d5aa65')
+ # Split legs, wrapped boots and small metal shin plates.
+ for x,step in [(41,sway),(53,-sway)]:
+  d.rectangle((x-4,94+bob,x+3,109+step+bob),fill='#26323e')
+  d.rectangle((x-3,97+bob,x+1,106+step+bob),fill='#45545a')
+  d.rectangle((x-5,108+step+bob,x+5,114+step+bob),fill='#111b24')
+  d.line([(x-3,110+step+bob),(x+3,110+step+bob)],fill='#b9ae92',width=1)
+ # Backpack and layered weather cloak.
+ d.polygon([(31,69),(37,66),(40,91),(34,96)],fill='#3e4a49')
+ d.rectangle((30,75,37,87),fill='#7b6854');d.line([(32,76),(35,76)],fill='#d5aa65',width=2)
+ poly(d,[(35,67),(59,67),(66,95),(62,104),(50,111),(35,104),(29,96)],'#111b24')
+ poly(d,[(37,66),(56,67),(62,94),(57,102),(49,106),(37,101),(33,94)],color)
+ poly(d,[(38,72),(48,75),(43,97),(37,94)],'#87948a')
+ d.line([(56,72),(59,92),(53,101)],fill='#c1b89f',width=2)
+ d.line([(34,95),(41,99),(47,101)],fill='#d6c8a7',width=1)
+ # Hood and face mask; orientation changes the visible eye and profile.
+ d.rectangle((39,53+bob,57,70+bob),fill='#19252e')
+ poly(d,[(36,61+bob),(40,50+bob),(49,46+bob),(58,51+bob),(62,63+bob),(57,70+bob),(39,69+bob)],color)
+ poly(d,[(40,57+bob),(44,52+bob),(54,53+bob),(58,59+bob),(54,66+bob),(43,65+bob)],'#17232d')
+ if direction in ['south','east']:
+  d.rectangle((47,57+bob,55,62+bob),fill='#baa88b')
+  d.line([(48,59+bob),(54,59+bob)],fill='#64e6da',width=2)
+  d.line([(47,64+bob),(56,64+bob)],fill='#a5a695',width=1)
+ elif direction=='west':
+  d.line([(41,58+bob),(48,56+bob)],fill='#a1b1a5',width=2)
+  d.point((44,57+bob),fill='#64e6da')
+ else:
+  d.line([(43,56+bob),(51,53+bob)],fill='#b0c1b1',width=2)
+  d.line([(39,62+bob),(55,62+bob)],fill='#687b7a',width=2)
+ # Harness, buckles, field pouches and mutation ampoule.
+ d.line([(39,70),(56,91)],fill='#b9aa86',width=2)
+ d.rectangle((42,82,59,88),fill='#634c3e');d.rectangle((49,83,54,88),fill='#d5aa65')
+ d.rectangle((34,85,40,93),fill='#80624c');d.rectangle((36,86,38,89),fill='#e0c68e')
+ d.rectangle((58,82,63,90),fill='#425352');d.line([(60,84),(60,88)],fill='#58cabf',width=2)
+ d.line([(43,76),(39,88)],fill='#d0b887',width=2)
  if pose=='attack':
-  x=61+frame*3;d.line([(57,74),(x,69),(x+7,58-frame*3)],fill='#c9cbbc',width=3);d.line([(x+7,58-frame*3),(x+12,47-frame*3)],fill='#77e7db',width=2)
- else:d.line([(59,75),(64,93),(66,106)],fill='#b8b6a1',width=3)
- if npc:d.rectangle((30,79,36,90),fill='#d5aa65')
- if pose=='hurt':d.line([(32,62),(23,57)],fill='#e56b75',width=2)
+  x=59+frame*3;d.line([(57,74),(x,69),(x+7,58-frame*3)],fill='#d6d2c1',width=4)
+  d.line([(x+7,58-frame*3),(x+12,47-frame*3)],fill='#77e7db',width=3)
+  d.line([(55,76),(59,72)],fill='#d5aa65',width=3)
+ else:
+  d.line([(59,75),(64,91),(66,104)],fill='#9d997f',width=4)
+  d.line([(59,75),(64,91)],fill='#d3ceb9',width=2)
+ if npc:d.rectangle((30,79,36,90),fill='#d5aa65');d.rectangle((31,80,34,84),fill='#58cabf')
+ if pose=='hurt':d.line([(32,62),(23,57)],fill='#e56b75',width=3);d.point((22,56),fill='#f5c0a4')
 def enemy(d,kind,pose,f):
  bone='#c9c6a6';dark='#273441';red='#d6717c';cyan='#64ded0';y=0 if f%2==0 else 2
  if kind in ['crawler','larva']:
   for i in range(5):
-   x=29+i*7;h=12+int(math.sin(i)*5);d.ellipse((x-8,96-h+y,x+9,112+y),fill=bone if kind=='larva' else '#897a65');d.line([(x,99+y),(x-7,116+(f+i)%2*2)],fill=dark,width=3)
-  d.rectangle((57,96+y,65,100+y),fill=red)
+   x=29+i*7;h=12+int(math.sin(i)*5)
+   shell=bone if kind=='larva' else '#897a65'
+   d.ellipse((x-8,96-h+y,x+9,112+y),fill=dark)
+   d.ellipse((x-6,94-h+y,x+7,109+y),fill=shell)
+   d.line([(x-3,97-h+y),(x-1,104+y)],fill='#e4dcc4' if kind=='larva' else '#b29c7a',width=2)
+   for side in [-1,1]:
+    knee=x+side*7;foot=x+side*12
+    d.line([(x+side*4,102+y),(knee,108+y),(foot,113+(f+i)%2*2)],fill=dark,width=2)
+    d.point((knee,108+y),fill='#b6aa91')
+  d.polygon([(56,97+y),(64,94+y),(68,99+y),(62,102+y)],fill=red)
+  d.line([(64,99+y),(71,96+y)],fill='#d7cba9',width=2)
  elif kind=='moth':
-  poly(d,[(45,85),(16,64+y),(20,99),(42,106)],'#8a78aa');poly(d,[(51,85),(80,64-y),(76,99),(54,106)],'#b7a5ba');d.line([(48,80),(48,112)],fill=bone,width=6)
-  for x in [27,65]:d.ellipse((x-4,84,x+4,92),fill=cyan)
+  poly(d,[(45,85),(16,64+y),(20,99),(42,106)],'#655b80');poly(d,[(51,85),(80,64-y),(76,99),(54,106)],'#837791')
+  poly(d,[(44,87),(22,70+y),(29,96),(42,102)],'#b7a5ba');poly(d,[(52,87),(74,70-y),(68,96),(55,102)],'#d2b7c1')
+  for x,sgn in [(27,1),(69,-1)]:
+   d.ellipse((x-5,79,x+5,90),fill='#8e718e');d.ellipse((x-2,82,x+2,86),fill=cyan)
+   d.line([(x,92),(x+sgn*5,102)],fill='#d4c4ca',width=2)
+  d.line([(48,79),(48,112)],fill=bone,width=7);d.line([(47,84),(47,105)],fill='#eee0d7',width=2)
+  d.line([(45,82),(39,71),(35,66)],fill='#c6b8c6',width=2);d.line([(51,82),(57,71),(61,66)],fill='#c6b8c6',width=2)
+  d.ellipse((44,77,52,86),fill='#6c536d');d.ellipse((46,79,50,83),fill=cyan)
  elif kind=='spore':
-  d.rectangle((44,86,52,113),fill=bone);d.ellipse((25,63+y,71,93+y),fill='#6b8a77');d.line([(29,83+y),(67,83+y)],fill=cyan,width=2)
-  for x in [33,45,57]:d.ellipse((x,72+y,x+3,75+y),fill=bone)
+  d.rectangle((44,86,52,113),fill='#52675c');d.rectangle((46,89,50,110),fill=bone)
+  d.line([(47,98),(35,106),(33,113)],fill='#82937a',width=3);d.line([(49,100),(61,107),(64,113)],fill='#82937a',width=3)
+  d.ellipse((22,67+y,74,96+y),fill='#3b594d');d.ellipse((27,63+y,69,87+y),fill='#6b8a77')
+  d.ellipse((34,67+y,61,83+y),fill='#8ca58a');d.arc((28,67+y,68,91+y),8,170,fill='#c2c7a6',width=2)
+  d.line([(28,84+y),(68,84+y)],fill=cyan,width=2);d.line([(36,89+y),(60,89+y)],fill='#c7c6a2',width=2)
+  for x in [32,43,55,65]:d.ellipse((x,73+y,x+4,78+y),fill=bone)
+  for x in [24,72]:d.line([(x,85+y),(x-5,91+y)],fill='#c2c7a6',width=2)
  elif kind in ['drone','elite','boss']:
   size=26 if kind=='boss' else 17
-  for dx in [-size,size]:d.line([(48,80+y),(48+dx,94+y),(48+dx+9,108)],fill='#8e7893',width=4)
-  poly(d,[(48,54+y-size//2),(48+size,78+y),(48,101+y),(48-size,78+y)],dark);d.ellipse((40,71+y,56,87+y),fill=red if kind=='boss' else cyan)
-  for i in range(3):d.arc((30-i*5,55-i*4,66+i*5,99+i*4),195,345,fill=bone,width=2)
+  for dx in [-size,size]:
+   d.line([(48,80+y),(48+dx,94+y),(48+dx+9,108)],fill='#4b4559',width=6)
+   d.line([(48+dx-2,95+y),(48+dx+5,98+y)],fill='#b3a18b',width=2)
+   d.ellipse((48+dx-4,91+y,48+dx+4,98+y),fill='#8e7893')
+  poly(d,[(48,54+y-size//2),(48+size,78+y),(48,101+y),(48-size,78+y)],'#171f2c')
+  poly(d,[(48,58+y-size//2),(48+size-4,78+y),(48,94+y),(48-size+4,78+y)],dark)
+  d.line([(48-size+5,78+y),(48,64+y-size//3),(48+size-5,78+y)],fill='#9d879f',width=3)
+  d.line([(48-size+6,82+y),(48,97+y),(48+size-6,82+y)],fill='#625d73',width=2)
+  d.ellipse((38,69+y,58,89+y),fill='#101820')
+  d.ellipse((40,71+y,56,87+y),fill=red if kind=='boss' else cyan)
+  d.ellipse((44,74+y,51,81+y),fill='#e4eee0')
+  if kind=='boss':
+   d.line([(33,65+y),(27,53+y),(35,59+y)],fill=bone,width=3);d.line([(63,65+y),(69,53+y),(61,59+y)],fill=bone,width=3)
+   for i in range(3):d.arc((27-i*5,50-i*5,69+i*5,101+i*5),195,345,fill='#c49db7',width=2)
+  else:
+   for i in range(2):d.arc((32-i*4,57-i*4,64+i*4,96+i*4),195,345,fill=bone,width=2)
  else:
-  d.rectangle((35,67,61,98),fill='#92735b');poly(d,[(32,70),(47,58),(64,69),(48,79)],bone)
-  for x in [38,56]:d.line([(x,96),(x-4+f%2*4,114)],fill=dark,width=5)
-  d.rectangle((44,65,53,68),fill=cyan)
+  # Sentinel: layered mask, shoulder plates and a damaged shield silhouette.
+  poly(d,[(30,71),(37,63),(47,67),(58,61),(67,72),(64,100),(50,109),(34,101)],'#4c514e')
+  poly(d,[(35,72),(42,66),(49,70),(57,65),(62,74),(59,96),(49,103),(38,96)],'#92735b')
+  poly(d,[(33,70),(47,58),(64,69),(49,78)],bone);d.line([(37,70),(47,62),(60,69)],fill='#f0e7d0',width=2)
+  d.rectangle((43,67,55,76),fill='#19252e');d.rectangle((45,69,53,72),fill=cyan)
+  d.line([(38,82),(59,82)],fill='#c49c6c',width=3);d.rectangle((47,80,52,85),fill='#25333c')
+  for x,dx in [(39,-5),(57,5)]:
+   d.line([(x,96),(x+dx,105),(x+dx+f%2*4,115)],fill=dark,width=5)
+   d.point((x+dx,105),fill='#bba98a')
+  poly(d,[(26,81),(34,79),(36,101),(27,104)],'#5f6170');d.line([(29,84),(33,99)],fill='#c5ae88',width=2)
  if pose=='attack':d.line([(60,92),(75+f*2,82)],fill=red,width=3)
  if pose=='hurt':d.line([(28,62),(20,53)],fill=red,width=3)
 for b,p in palettes.items():
