@@ -25,6 +25,45 @@ def floor(d,p,v):
   d.line([(x,y),(x+4,y-2),(x+8,y)],fill=c,width=1)
  if v%3==0:d.line([(40,101),(43,110),(38,115),(48,122)],fill=a,width=2)
  if v==4:d.line([(29,110),(47,108),(56,114)],fill=g,width=1)
+ # Salinas use layered evaporite plates and hairline mineral seams, not a
+ # flat repeating diamond. Keep all marks inside the walkable tile silhouette.
+ if p[0]=='#777c76':
+  seams=[[(25,111),(34,108),(40,110)],[(50,101),(58,104),(67,109)],
+         [(29,117),(37,114),(44,117)],[(51,115),(59,112),(69,114)]]
+  for i,line in enumerate(seams):
+   d.line(line,fill='#d9d2bd' if (i+v)%2 else '#696f6d',width=1)
+  if v in (1,4):
+   d.line([(35,104),(39,102),(42,103)],fill='#e6dfcc',width=1)
+   d.line([(55,119),(61,116),(64,117)],fill='#545d61',width=1)
+  if v==5:
+   d.ellipse((43,106,49,110),fill='#58cabf');d.point((46,108),fill='#e0f1d8')
+ elif p[0]=='#35363d': # ceniza: soot, hairline fractures and buried embers
+  d.line([(22,111),(31,107),(35,109),(42,106)],fill='#292a31',width=2)
+  d.line([(55,101),(52,107),(59,111),(56,117)],fill='#8b7471',width=1)
+  for x,y in [(31+v%3*5,111),(61-v%2*7,108)]:d.point((x,y),fill='#ed9560')
+  if v in (2,5):d.ellipse((39,104,52,112),fill='#2b2e35');d.point((45,108),fill='#d87e59')
+ elif p[0]=='#353f46': # hierro: bolted plates and a broken conductive seam
+  d.line([(22,111),(35,105),(45,110)],fill='#66777a',width=1)
+  d.line([(49,101),(61,106),(72,111)],fill='#28363d',width=2)
+  d.point((30,109),fill='#bd9568');d.point((65,109),fill='#bd9568')
+  if v%2==0:d.line([(34,115),(44,111),(51,114)],fill='#72c9c4',width=1)
+  if v==5:d.rectangle((45,105,51,108),fill='#bd9568');d.point((48,106),fill='#d9c08b')
+ elif p[0]=='#354a60': # vidrio: refracted facets, narrow highlights
+  d.line([(24,111),(34,105),(42,108),(48,103)],fill='#6485a4',width=1)
+  d.line([(51,115),(58,107),(68,109)],fill='#b1d2e0',width=1)
+  d.line([(31,112),(35,109),(38,110)],fill='#88edd5',width=1)
+  if v in (1,4):d.line([(54,103),(59,101),(64,103)],fill='#d1edf2',width=1)
+  if v==5:d.point((47,109),fill='#88edd5');d.point((48,108),fill='#e6ffff')
+ elif p[0]=='#343d3d': # medula: shallow root veins and dormant spores
+  d.line([(22,111),(33,108),(39,111),(47,107)],fill='#647b65',width=2)
+  d.line([(57,101),(55,108),(63,112),(68,111)],fill='#526b58',width=2)
+  d.ellipse((35+v%3*4,106,38+v%3*4,109),fill='#c8969f')
+  if v in (2,5):d.line([(48,116),(50,112),(56,110)],fill='#b2b48b',width=1)
+ elif p[0]=='#292a43': # umbral: angular fractures and faint alien marks
+  d.line([(22,111),(31,107),(36,110),(42,104)],fill='#5c5379',width=1)
+  d.line([(56,117),(54,111),(62,106),(70,109)],fill='#45425f',width=1)
+  if v in (1,4):d.line([(41,109),(45,105),(49,109),(45,113),(41,109)],fill='#72dfd3',width=1)
+  if v==5:d.ellipse((44,106,50,111),outline='#9a85b6',width=1);d.point((47,108),fill='#72dfd3')
 def rock(d,p,v):
  a,b,c,g=p;x=48;h=22+v*7
  poly(d,[(25,108),(28,100-h),(43,88-h),(64,96-h),(72,107),(48,119)],a)
@@ -33,6 +72,15 @@ def rock(d,p,v):
  d.line([(46,99-h),(54,103-h),(50,111)],fill=a,width=2)
  for i in range(4):d.line([(32+i*6,104-h//2+i),(37+i*6,102-h//2+i)],fill=a)
  if v==2:d.line([(55,98-h),(57,108-h),(51,116)],fill=g,width=2)
+ if p[0]=='#777c76':
+  # Salt-buried bone and stone strata give each outcrop a readable lit face.
+  poly(d,[(28,103-h),(43,91-h),(55,95-h),(45,101-h)],'#d7d0b8')
+  poly(d,[(47,103-h),(61,99-h),(68,106),(50,110)],'#85877e')
+  d.line([(30,105-h),(38,102-h),(42,104-h)],fill='#eee5cf',width=2)
+  d.line([(51,105-h),(58,103-h),(64,106-h)],fill='#c1bba8',width=1)
+  if v==1:
+   d.arc((34,86-h,61,111-h),200,335,fill='#58cabf',width=2)
+   d.point((51,96-h),fill='#d9ffff')
 def flora(d,p,v,biome):
  a,b,c,g=p
  if biome=='vidrio':
@@ -49,8 +97,141 @@ def flora(d,p,v,biome):
   for x,y in [(28,80),(65,67),(33,97)]:d.line([(47,103),(x,y),(x+2,y-12)],fill=c,width=2)
   if biome!='ceniza':
    for x,y in [(28,68),(65,55),(51,58-v*5)]:d.ellipse((x-3,y-3,x+4,y+3),fill=g)
+ if biome=='salinas':
+  # Bleached branching salt-bone with layered crust and translucent cyan tips.
+  d.ellipse((31,102,67,114),fill='#77776d')
+  if v==0:
+   d.line([(48,110),(45,92),(49,78),(45,65)],fill='#e0d7c0',width=5)
+   d.line([(46,91),(35,81),(29,68)],fill='#c8c1ad',width=4)
+   d.line([(48,86),(60,77),(66,64)],fill='#eee5d2',width=4)
+   d.line([(45,75),(38,69),(36,59)],fill='#d3ccb8',width=3)
+   tips=[(29,65),(35,56),(65,61),(47,62)]
+  elif v==1:
+   d.line([(47,111),(51,92),(45,79),(50,66)],fill='#e0d7c0',width=6)
+   d.line([(48,93),(35,87),(27,76)],fill='#c8c1ad',width=4)
+   d.line([(49,87),(63,78),(68,66)],fill='#eee5d2',width=4)
+   d.line([(46,80),(37,74),(37,65)],fill='#d3ccb8',width=3)
+   tips=[(27,73),(37,62),(68,63),(51,62)]
+  else:
+   d.line([(46,111),(43,94),(50,82),(47,72)],fill='#e0d7c0',width=6)
+   d.line([(45,95),(33,90),(25,83)],fill='#c8c1ad',width=4)
+   d.line([(48,85),(59,87),(70,80)],fill='#eee5d2',width=4)
+   d.line([(47,78),(39,70),(42,61)],fill='#d3ccb8',width=3)
+   tips=[(25,80),(42,58),(70,77),(48,68)]
+  for x,y in tips:
+   d.ellipse((x-4,y-4,x+4,y+3),fill='#58cabf');d.ellipse((x-1,y-2,x+1,y),fill='#d9fff5')
+  for x,y in [(38,97),(54,100),(35,105)]:d.line([(x,y),(x+5,y-2)],fill='#f2ead6',width=2)
 def architecture(d,p,v,biome):
  a,b,c,g=p
+ if biome=='salinas':
+  # Walls are often adjacent cells: mix low debris, ribs and rare landmarks so
+  # the map reads as terrain instead of a repeated row of full-sized buildings.
+  if v==0:
+   poly(d,[(18,111),(22,96),(33,88),(39,101),(48,94),(55,105),(67,91),(77,108),(49,122)],'#85877e')
+   poly(d,[(22,96),(33,88),(39,101),(31,104)],'#e0d7c0')
+   poly(d,[(48,94),(55,105),(47,110),(42,104)],'#d3ccb8')
+   d.line([(28,105),(34,102),(39,105)],fill='#eee5d2',width=2)
+   d.ellipse((56,105,62,109),fill='#58cabf')
+  elif v==1:
+   # Single broken rib arch, lower and narrower than the landmark tower.
+   d.ellipse((27,54,69,111),outline='#88897f',width=8)
+   d.arc((30,56,66,106),180,360,fill='#eee5d2',width=4)
+   d.line([(30,81),(25,109),(39,115)],fill='#d7d0b8',width=5)
+   d.line([(66,82),(72,109),(59,116)],fill='#c8c1ad',width=5)
+   d.line([(38,114),(48,119),(59,114)],fill='#555b5b',width=2)
+   d.ellipse((45,74,51,80),fill='#58cabf')
+  else:
+   # A landmark structure appears only on the tallest of the three variants.
+   poly(d,[(28,113),(29,49),(39,36),(44,53),(44,114)],'#777c76')
+   poly(d,[(55,114),(55,53),(64,36),(70,51),(70,109)],'#8e9184')
+   d.line([(34,106),(35,56),(39,45),(40,106)],fill='#eee5d2',width=4)
+   d.line([(61,106),(61,57),(64,45),(67,58),(67,106)],fill='#d7d0b8',width=4)
+   d.arc((37,39,62,91),180,360,fill='#e8dfcc',width=5)
+   d.arc((41,47,58,85),180,360,fill='#c9c1ad',width=3)
+   d.rectangle((44,72,54,116),fill='#101820')
+   d.line([(42,73),(49,64),(56,73)],fill='#eee5d2',width=3)
+   d.ellipse((46,48,52,54),fill='#58cabf')
+   if v==2:d.line([(49,42),(49,25)],fill='#e5ddc9',width=4);poly(d,[(45,27),(49,15),(54,27)],'#d7d0b8')
+  return
+ if biome!='salinas':
+  # Keep architecture readable across adjacent wall cells by mixing a low
+  # terrain fragment, one mid-height motif and a rare biome landmark.
+  if biome=='ceniza':
+   if v==0:
+    poly(d,[(19,110),(27,96),(42,91),(53,100),(70,95),(78,110),(48,121)],'#514d54')
+    poly(d,[(27,96),(42,91),(48,99),(34,103)],'#a08d80')
+    for x,y in [(31,106),(55,105),(64,108)]:d.point((x,y),fill='#ed9560')
+   elif v==1:
+    d.line([(27,112),(30,72),(39,60),(45,82),(45,115)],fill='#81776f',width=7)
+    d.line([(63,113),(61,78),(69,64),(74,107)],fill='#5d5960',width=7)
+    d.arc((31,44,68,91),190,350,fill='#c8a18c',width=4)
+    d.line([(39,67),(47,74),(57,68)],fill='#ed9560',width=2)
+   else:
+    d.rectangle((31,58,65,116),fill='#45444c');d.rectangle((39,68,57,110),fill='#282d35')
+    poly(d,[(28,59),(37,35),(48,48),(61,32),(70,60)],'#746b70')
+    d.rectangle((43,76,54,101),fill='#ed9560');d.rectangle((46,82,51,97),fill='#f6c47d')
+    d.line([(34,109),(63,109)],fill='#bd9585',width=3)
+  elif biome=='hierro':
+   if v==0:
+    d.rectangle((22,95,73,113),fill='#45535a');d.rectangle((29,87,65,98),fill='#806953')
+    for x in range(30,68,9):d.rectangle((x,100,x+4,108),fill='#bd9568')
+    d.line([(24,113),(75,113)],fill='#72c9c4',width=2)
+   elif v==1:
+    d.line([(25,113),(27,69),(37,58),(43,90),(43,114)],fill='#657078',width=6)
+    d.line([(64,114),(64,82),(73,69),(75,111)],fill='#4c5a61',width=6)
+    d.arc((34,43,67,92),190,350,fill='#bd9568',width=5)
+    d.line([(29,84),(39,84),(39,76)],fill='#72c9c4',width=3)
+   else:
+    d.rectangle((32,57,65,117),fill='#49565c');d.rectangle((39,68,58,110),fill='#27333a')
+    d.rectangle((37,49,60,61),fill='#bd9568');d.rectangle((41,42,56,51),fill='#45545a')
+    d.line([(49,42),(49,20)],fill='#72c9c4',width=4)
+    for y in [77,88,99]:d.line([(41,y),(55,y)],fill='#bd9568',width=3)
+  elif biome=='vidrio':
+   if v==0:
+    for x,h in [(25,24),(38,40),(54,29),(68,18)]:poly(d,[(x-6,112),(x-4,111-h),(x,105-h),(x+7,111-h),(x+5,114)],'#6485a4')
+    d.line([(38,69),(39,105)],fill='#b1d2e0',width=2);d.line([(54,80),(54,105)],fill='#88edd5',width=2)
+   elif v==1:
+    for x,h in [(29,35),(65,39)]:poly(d,[(x-7,112),(x-5,112-h),(x,103-h),(x+7,111-h),(x+6,114)],'#6485a4')
+    d.arc((30,40,66,104),195,345,fill='#b1d2e0',width=4)
+    d.line([(48,67),(48,110)],fill='#88edd5',width=3)
+   else:
+    for x,h in [(28,45),(47,68),(68,52)]:poly(d,[(x-8,114),(x-5,114-h),(x,105-h),(x+8,112-h),(x+6,115)],'#6485a4')
+    d.line([(47,47),(47,108)],fill='#d4f4fa',width=3);d.line([(31,80),(34,106)],fill='#88edd5',width=2)
+    d.ellipse((43,37,52,47),fill='#88edd5')
+  elif biome=='medula':
+   if v==0:
+    d.ellipse((21,91,75,118),fill='#4a5c4d')
+    for x,y in [(28,98),(40,88),(55,92),(66,99)]:
+     d.line([(x,111),(x+2,y),(x-2,y-8)],fill='#b2b48b',width=4)
+     d.ellipse((x-5,y-9,x+3,y-2),fill='#c8969f')
+   elif v==1:
+    d.line([(28,114),(33,78),(29,55)],fill='#647b65',width=6)
+    d.line([(68,114),(63,78),(68,52)],fill='#526b58',width=6)
+    d.arc((30,42,66,100),180,360,fill='#b2b48b',width=5)
+    for x,y in [(36,67),(60,65),(49,54)]:d.ellipse((x-4,y-4,x+4,y+4),fill='#c8969f')
+   else:
+    d.line([(47,116),(43,76),(49,44),(46,24)],fill='#647b65',width=8)
+    d.line([(46,82),(30,62),(25,45)],fill='#526b58',width=5)
+    d.line([(49,73),(66,55),(70,39)],fill='#647b65',width=5)
+    d.ellipse((38,20,57,41),fill='#c8969f');d.ellipse((43,25,52,36),fill='#343d3d')
+    for x,y in [(25,43),(69,37),(45,52)]:d.ellipse((x-4,y-4,x+4,y+4),fill='#b2b48b')
+  else: # umbral
+   if v==0:
+    poly(d,[(19,112),(27,95),(39,100),(48,88),(58,99),(73,92),(79,111),(49,122)],'#292a43')
+    d.line([(29,106),(39,102),(46,106),(57,101)],fill='#72dfd3',width=2)
+    d.line([(47,93),(45,103),(51,108)],fill='#9a85b6',width=2)
+   elif v==1:
+    d.line([(27,113),(31,64),(39,51),(45,79),(42,113)],fill='#4b4663',width=7)
+    d.line([(62,113),(63,74),(70,57),(75,110)],fill='#373750',width=7)
+    d.arc((32,39,67,96),190,350,fill='#9a85b6',width=4)
+    d.line([(41,76),(48,68),(56,77)],fill='#72dfd3',width=2)
+   else:
+    poly(d,[(33,116),(36,54),(45,27),(50,52),(52,116)],'#5c5379')
+    poly(d,[(51,116),(54,60),(64,36),(68,58),(69,112)],'#373750')
+    d.line([(43,102),(46,57),(47,39)],fill='#9a85b6',width=3)
+    d.line([(59,100),(61,64),(64,47)],fill='#72dfd3',width=2)
+    d.ellipse((43,65,54,77),fill='#292a43');d.ellipse((47,69,51,73),fill='#72dfd3')
+  return
  # buttressed structure, separately occluded by its ground anchor
  poly(d,[(19,109),(19,49),(49,32),(78,47),(78,109),(49,123)],a)
  poly(d,[(19,49),(49,32),(78,47),(48,63)],c);poly(d,[(19,49),(48,63),(48,123),(19,109)],b)
@@ -90,50 +271,145 @@ def architecture(d,p,v,biome):
   for x,y in [(25,93),(61,101),(53,67)]:d.line([(x,y),(x+4,y-2)],fill=g,width=2)
  else:
   for x,y in [(21,102),(65,106),(31,67)]:poly(d,[(x,y),(x+2,y-10),(x+7,y-4),(x+10,y)],c)
+ if biome=='salinas':
+  # A ribbed salt ossuary replaces the generic masonry silhouette.
+  poly(d,[(18,108),(20,54),(30,39),(35,55),(34,111)],'#777c76')
+  poly(d,[(62,113),(61,54),(69,37),(77,54),(78,109)],'#8e9184')
+  d.line([(24,104),(25,61),(30,49),(31,104)],fill='#e5ddc9',width=4)
+  d.line([(67,107),(67,61),(70,48),(73,62),(73,108)],fill='#d7d0b8',width=4)
+  # Interlocked ribs frame a deep, readable central opening.
+  d.arc((27,31,70,91),180,360,fill='#e8dfcc',width=5)
+  d.arc((32,40,65,85),180,360,fill='#c9c1ad',width=3)
+  d.rectangle((42,70,55,116),fill='#101820')
+  d.line([(40,70),(48,60),(57,70)],fill='#eee5d2',width=3)
+  for x,y in [(28,43),(69,41),(33,57),(64,55)]:
+   d.ellipse((x-3,y-3,x+3,y+3),fill='#58cabf')
+  d.line([(21,111),(34,115),(48,121),(63,116),(77,111)],fill='#514f4b',width=2)
+  if v==1:
+   d.line([(48,36),(48,18)],fill='#e5ddc9',width=4)
+   poly(d,[(44,20),(48,7),(53,20)],'#d7d0b8')
+   d.ellipse((45,28,51,34),fill='#58cabf')
+  elif v==2:
+   d.line([(29,51),(48,43),(68,50)],fill='#e8dfcc',width=3)
+   d.arc((38,31,58,53),190,350,fill='#58cabf',width=2)
  # Broken lintels and tiny masonry joints create scale without obscuring paths.
  for y in range(69,108,10):
   d.line([(30,y-4),(30,y)],fill=a);d.line([(61,y+1),(61,y+5)],fill=a)
 
 def human(d,color,pose,frame,direction,npc=False):
- # hand posed legs, cloak, face, equipment; no affine deformation
+ # Hand-posed, upright traveller: layered coat, equipment and readable gear.
  sway=[0,2,0,-2][frame%4] if pose=='walk' else 0
  if pose=='death':
-  d.ellipse((29,105,68,118),fill='#1b2430');d.rectangle((35,103,62,111),fill=color);d.rectangle((60,99,70,108),fill='#c0af8f');return
+  d.ellipse((27,106,70,120),fill='#101820')
+  poly(d,[(31,104),(40,92),(60,91),(70,101),(62,112),(39,115)],'#17232d')
+  poly(d,[(37,101),(43,94),(59,94),(64,102),(53,107)],color)
+  d.rectangle((60,98,70,104),fill='#c0af8f');d.line([(44,99),(55,101)],fill='#58cabf',width=2);return
+ bob=1 if pose=='idle' and frame%2 else 0
  d.ellipse((33,107,64,117),fill='#14212a')
- for x,step in [(42,sway),(53,-sway)]:d.rectangle((x-3,96,x+3,111+step),fill='#26323e');d.rectangle((x-4,109+step,x+5,113+step),fill='#111b24')
- poly(d,[(36,67),(59,67),(65,103),(50,109),(31,101)],'#17232d');poly(d,[(38,67),(55,67),(58,99),(47,104),(34,97)],color)
- d.line([(41,73),(38,95),(47,101)],fill='#9b9f8d',width=2)
- d.rectangle((40,54,55,69),fill='#19252e');poly(d,[(38,59),(43,49),(54,51),(59,60)],color)
- if direction=='north':d.line([(40,57),(45,51)],fill='#b0c1b1',width=2)
- if direction in ['south','east']:d.rectangle((47,59,55,65),fill='#baa88b');d.line([(48,60),(54,60)],fill='#64e6da',width=2)
- else:d.line([(41,57),(50,54)],fill='#a1b1a5',width=2)
- d.rectangle((42,84,59,89),fill='#634c3e');d.rectangle((51,84,54,89),fill='#d5aa65')
+ # Split legs, wrapped boots and small metal shin plates.
+ for x,step in [(41,sway),(53,-sway)]:
+  d.rectangle((x-4,94+bob,x+3,109+step+bob),fill='#26323e')
+  d.rectangle((x-3,97+bob,x+1,106+step+bob),fill='#45545a')
+  d.rectangle((x-5,108+step+bob,x+5,114+step+bob),fill='#111b24')
+  d.line([(x-3,110+step+bob),(x+3,110+step+bob)],fill='#b9ae92',width=1)
+ # Backpack and layered weather cloak.
+ d.polygon([(31,69),(37,66),(40,91),(34,96)],fill='#3e4a49')
+ d.rectangle((30,75,37,87),fill='#7b6854');d.line([(32,76),(35,76)],fill='#d5aa65',width=2)
+ poly(d,[(35,67),(59,67),(66,95),(62,104),(50,111),(35,104),(29,96)],'#111b24')
+ poly(d,[(37,66),(56,67),(62,94),(57,102),(49,106),(37,101),(33,94)],color)
+ poly(d,[(38,72),(48,75),(43,97),(37,94)],'#87948a')
+ d.line([(56,72),(59,92),(53,101)],fill='#c1b89f',width=2)
+ d.line([(34,95),(41,99),(47,101)],fill='#d6c8a7',width=1)
+ # Hood and face mask; orientation changes the visible eye and profile.
+ d.rectangle((39,53+bob,57,70+bob),fill='#19252e')
+ poly(d,[(36,61+bob),(40,50+bob),(49,46+bob),(58,51+bob),(62,63+bob),(57,70+bob),(39,69+bob)],color)
+ poly(d,[(40,57+bob),(44,52+bob),(54,53+bob),(58,59+bob),(54,66+bob),(43,65+bob)],'#17232d')
+ if direction in ['south','east']:
+  d.rectangle((47,57+bob,55,62+bob),fill='#baa88b')
+  d.line([(48,59+bob),(54,59+bob)],fill='#64e6da',width=2)
+  d.line([(47,64+bob),(56,64+bob)],fill='#a5a695',width=1)
+ elif direction=='west':
+  d.line([(41,58+bob),(48,56+bob)],fill='#a1b1a5',width=2)
+  d.point((44,57+bob),fill='#64e6da')
+ else:
+  d.line([(43,56+bob),(51,53+bob)],fill='#b0c1b1',width=2)
+  d.line([(39,62+bob),(55,62+bob)],fill='#687b7a',width=2)
+ # Harness, buckles, field pouches and mutation ampoule.
+ d.line([(39,70),(56,91)],fill='#b9aa86',width=2)
+ d.rectangle((42,82,59,88),fill='#634c3e');d.rectangle((49,83,54,88),fill='#d5aa65')
+ d.rectangle((34,85,40,93),fill='#80624c');d.rectangle((36,86,38,89),fill='#e0c68e')
+ d.rectangle((58,82,63,90),fill='#425352');d.line([(60,84),(60,88)],fill='#58cabf',width=2)
+ d.line([(43,76),(39,88)],fill='#d0b887',width=2)
  if pose=='attack':
-  x=61+frame*3;d.line([(57,74),(x,69),(x+7,58-frame*3)],fill='#c9cbbc',width=3);d.line([(x+7,58-frame*3),(x+12,47-frame*3)],fill='#77e7db',width=2)
- else:d.line([(59,75),(64,93),(66,106)],fill='#b8b6a1',width=3)
- if npc:d.rectangle((30,79,36,90),fill='#d5aa65')
- if pose=='hurt':d.line([(32,62),(23,57)],fill='#e56b75',width=2)
+  x=59+frame*3;d.line([(57,74),(x,69),(x+7,58-frame*3)],fill='#d6d2c1',width=4)
+  d.line([(x+7,58-frame*3),(x+12,47-frame*3)],fill='#77e7db',width=3)
+  d.line([(55,76),(59,72)],fill='#d5aa65',width=3)
+ else:
+  d.line([(59,75),(64,91),(66,104)],fill='#9d997f',width=4)
+  d.line([(59,75),(64,91)],fill='#d3ceb9',width=2)
+ if npc:d.rectangle((30,79,36,90),fill='#d5aa65');d.rectangle((31,80,34,84),fill='#58cabf')
+ if pose=='hurt':d.line([(32,62),(23,57)],fill='#e56b75',width=3);d.point((22,56),fill='#f5c0a4')
 def enemy(d,kind,pose,f):
  bone='#c9c6a6';dark='#273441';red='#d6717c';cyan='#64ded0';y=0 if f%2==0 else 2
  if kind in ['crawler','larva']:
   for i in range(5):
-   x=29+i*7;h=12+int(math.sin(i)*5);d.ellipse((x-8,96-h+y,x+9,112+y),fill=bone if kind=='larva' else '#897a65');d.line([(x,99+y),(x-7,116+(f+i)%2*2)],fill=dark,width=3)
-  d.rectangle((57,96+y,65,100+y),fill=red)
+   x=29+i*7;h=12+int(math.sin(i)*5)
+   shell=bone if kind=='larva' else '#897a65'
+   d.ellipse((x-8,96-h+y,x+9,112+y),fill=dark)
+   d.ellipse((x-6,94-h+y,x+7,109+y),fill=shell)
+   d.line([(x-3,97-h+y),(x-1,104+y)],fill='#e4dcc4' if kind=='larva' else '#b29c7a',width=2)
+   for side in [-1,1]:
+    knee=x+side*7;foot=x+side*12
+    d.line([(x+side*4,102+y),(knee,108+y),(foot,113+(f+i)%2*2)],fill=dark,width=2)
+    d.point((knee,108+y),fill='#b6aa91')
+  d.polygon([(56,97+y),(64,94+y),(68,99+y),(62,102+y)],fill=red)
+  d.line([(64,99+y),(71,96+y)],fill='#d7cba9',width=2)
  elif kind=='moth':
-  poly(d,[(45,85),(16,64+y),(20,99),(42,106)],'#8a78aa');poly(d,[(51,85),(80,64-y),(76,99),(54,106)],'#b7a5ba');d.line([(48,80),(48,112)],fill=bone,width=6)
-  for x in [27,65]:d.ellipse((x-4,84,x+4,92),fill=cyan)
+  poly(d,[(45,85),(16,64+y),(20,99),(42,106)],'#655b80');poly(d,[(51,85),(80,64-y),(76,99),(54,106)],'#837791')
+  poly(d,[(44,87),(22,70+y),(29,96),(42,102)],'#b7a5ba');poly(d,[(52,87),(74,70-y),(68,96),(55,102)],'#d2b7c1')
+  for x,sgn in [(27,1),(69,-1)]:
+   d.ellipse((x-5,79,x+5,90),fill='#8e718e');d.ellipse((x-2,82,x+2,86),fill=cyan)
+   d.line([(x,92),(x+sgn*5,102)],fill='#d4c4ca',width=2)
+  d.line([(48,79),(48,112)],fill=bone,width=7);d.line([(47,84),(47,105)],fill='#eee0d7',width=2)
+  d.line([(45,82),(39,71),(35,66)],fill='#c6b8c6',width=2);d.line([(51,82),(57,71),(61,66)],fill='#c6b8c6',width=2)
+  d.ellipse((44,77,52,86),fill='#6c536d');d.ellipse((46,79,50,83),fill=cyan)
  elif kind=='spore':
-  d.rectangle((44,86,52,113),fill=bone);d.ellipse((25,63+y,71,93+y),fill='#6b8a77');d.line([(29,83+y),(67,83+y)],fill=cyan,width=2)
-  for x in [33,45,57]:d.ellipse((x,72+y,x+3,75+y),fill=bone)
+  d.rectangle((44,86,52,113),fill='#52675c');d.rectangle((46,89,50,110),fill=bone)
+  d.line([(47,98),(35,106),(33,113)],fill='#82937a',width=3);d.line([(49,100),(61,107),(64,113)],fill='#82937a',width=3)
+  d.ellipse((22,67+y,74,96+y),fill='#3b594d');d.ellipse((27,63+y,69,87+y),fill='#6b8a77')
+  d.ellipse((34,67+y,61,83+y),fill='#8ca58a');d.arc((28,67+y,68,91+y),8,170,fill='#c2c7a6',width=2)
+  d.line([(28,84+y),(68,84+y)],fill=cyan,width=2);d.line([(36,89+y),(60,89+y)],fill='#c7c6a2',width=2)
+  for x in [32,43,55,65]:d.ellipse((x,73+y,x+4,78+y),fill=bone)
+  for x in [24,72]:d.line([(x,85+y),(x-5,91+y)],fill='#c2c7a6',width=2)
  elif kind in ['drone','elite','boss']:
   size=26 if kind=='boss' else 17
-  for dx in [-size,size]:d.line([(48,80+y),(48+dx,94+y),(48+dx+9,108)],fill='#8e7893',width=4)
-  poly(d,[(48,54+y-size//2),(48+size,78+y),(48,101+y),(48-size,78+y)],dark);d.ellipse((40,71+y,56,87+y),fill=red if kind=='boss' else cyan)
-  for i in range(3):d.arc((30-i*5,55-i*4,66+i*5,99+i*4),195,345,fill=bone,width=2)
+  for dx in [-size,size]:
+   d.line([(48,80+y),(48+dx,94+y),(48+dx+9,108)],fill='#4b4559',width=6)
+   d.line([(48+dx-2,95+y),(48+dx+5,98+y)],fill='#b3a18b',width=2)
+   d.ellipse((48+dx-4,91+y,48+dx+4,98+y),fill='#8e7893')
+  poly(d,[(48,54+y-size//2),(48+size,78+y),(48,101+y),(48-size,78+y)],'#171f2c')
+  poly(d,[(48,58+y-size//2),(48+size-4,78+y),(48,94+y),(48-size+4,78+y)],dark)
+  d.line([(48-size+5,78+y),(48,64+y-size//3),(48+size-5,78+y)],fill='#9d879f',width=3)
+  d.line([(48-size+6,82+y),(48,97+y),(48+size-6,82+y)],fill='#625d73',width=2)
+  d.ellipse((38,69+y,58,89+y),fill='#101820')
+  d.ellipse((40,71+y,56,87+y),fill=red if kind=='boss' else cyan)
+  d.ellipse((44,74+y,51,81+y),fill='#e4eee0')
+  if kind=='boss':
+   d.line([(33,65+y),(27,53+y),(35,59+y)],fill=bone,width=3);d.line([(63,65+y),(69,53+y),(61,59+y)],fill=bone,width=3)
+   for i in range(3):d.arc((27-i*5,50-i*5,69+i*5,101+i*5),195,345,fill='#c49db7',width=2)
+  else:
+   for i in range(2):d.arc((32-i*4,57-i*4,64+i*4,96+i*4),195,345,fill=bone,width=2)
  else:
-  d.rectangle((35,67,61,98),fill='#92735b');poly(d,[(32,70),(47,58),(64,69),(48,79)],bone)
-  for x in [38,56]:d.line([(x,96),(x-4+f%2*4,114)],fill=dark,width=5)
-  d.rectangle((44,65,53,68),fill=cyan)
+  # Sentinel: layered mask, shoulder plates and a damaged shield silhouette.
+  poly(d,[(30,71),(37,63),(47,67),(58,61),(67,72),(64,100),(50,109),(34,101)],'#4c514e')
+  poly(d,[(35,72),(42,66),(49,70),(57,65),(62,74),(59,96),(49,103),(38,96)],'#92735b')
+  poly(d,[(33,70),(47,58),(64,69),(49,78)],bone);d.line([(37,70),(47,62),(60,69)],fill='#f0e7d0',width=2)
+  d.rectangle((43,67,55,76),fill='#19252e');d.rectangle((45,69,53,72),fill=cyan)
+  d.line([(38,82),(59,82)],fill='#c49c6c',width=3);d.rectangle((47,80,52,85),fill='#25333c')
+  for x,dx in [(39,-5),(57,5)]:
+   d.line([(x,96),(x+dx,105),(x+dx+f%2*4,115)],fill=dark,width=5)
+   d.point((x+dx,105),fill='#bba98a')
+  poly(d,[(26,81),(34,79),(36,101),(27,104)],'#5f6170');d.line([(29,84),(33,99)],fill='#c5ae88',width=2)
  if pose=='attack':d.line([(60,92),(75+f*2,82)],fill=red,width=3)
  if pose=='hurt':d.line([(28,62),(20,53)],fill=red,width=3)
 for b,p in palettes.items():

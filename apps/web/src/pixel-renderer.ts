@@ -6,7 +6,7 @@ import type {AsciiRenderer} from './renderer.js';
 import type {HeroAction} from './ascii-art.js';
 import {parseRuin,themeForRuin} from '../../../packages/core/src/depths.js';
 import {coordsForZone} from '../../../packages/core/src/frontier.js';
-import {project,unproject,depth,direction} from './isometric.js';
+import {project,unproject,depth,direction,wallVariant,ambientCells} from './isometric.js';
 type Asset={rect:[number,number,number,number];pivot:[number,number]};
 type Entry={asset:string;x:number;y:number;alpha:number;order:number;id?:string};
 type Cue={x:number;y:number;kind:string;until:number;from?:{x:number;y:number}};
@@ -84,7 +84,7 @@ export class PixelRenderer{
    const alpha=state.visible[at]===1?1:.24;
    this.paint(ctx,`floor-${b}-${v}`,x,y,alpha);
    let prop:string|null=null;
-   if(tile==='#')prop=`wall-${b}-${v%3}`;
+   if(tile==='#')prop=`wall-${b}-${wallVariant(x,y,v)}`;
    else if(tile==='^'||tile==='%')prop=`rock-${b}-${v%3}`;
    else if(['*','&',';',',','v','?'].includes(tile)&&v<3)prop=`flora-${b}-${v%3}`;
    else if(tile==='~')prop='water';else if(tile==='+')prop='door';else if(tile==='o')prop='down';else if(tile==='x')prop='up';else if(tile==='T'||tile==='=')prop='terminal';else if(tile==='!')prop=`rock-${b}-2`;
@@ -107,6 +107,16 @@ export class PixelRenderer{
   if(!this.state)return;const ctx=this.ctx,state=this.state;this.frames++;
   ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(this.floor,0,0);this.camera(ctx);
   const phase=this.reducedMotion?0:Math.floor(now/180)%4;
+  const climate=this.biome(state,state.player.x,state.player.y);
+  const moteColor:Record<string,string>={salinas:'#d9ffff',ceniza:'#ed9560',hierro:'#72c9c4',vidrio:'#d8f6ff',medula:'#c8969f',umbral:'#9a85b6'};
+  ambientCells(state.seed,state.player.x,state.player.y).forEach((mote,i)=>{
+   if(!within(mote.x,mote.y)||state.visible[index(mote.x,mote.y)]!==1)return;
+   const p=project(mote.x,mote.y),drift=this.reducedMotion?0:Math.sin(now/720+i*1.71)*4;
+   ctx.globalAlpha=.18+((mote.phase%5)*.035);ctx.fillStyle=moteColor[climate]??'#83f3e2';
+   ctx.fillRect(p.x+drift,p.y-18-(this.reducedMotion?0:Math.sin(now/850+i)*5),2.5,2.5);
+   if(i%5===0){ctx.globalAlpha=.28;ctx.fillRect(p.x+drift-1,p.y-19,4.5,1);}
+  });
+  ctx.globalAlpha=1;
   if(state.zone==='zero-3'&&state.tick%400===300&&state.enemies.some(e=>e.id==='campaign-heart-custodian'&&e.hp>0)){
    for(const mark of nacarMark(state.events,state.tick+100)){
     if(!within(mark.x,mark.y)||state.visible[index(mark.x,mark.y)]!==1||!passable(state.tiles[index(mark.x,mark.y)]))continue;
@@ -132,10 +142,24 @@ export class PixelRenderer{
   for(const cue of this.cues)if(cue.until>now&&!this.reducedMotion){
    const p=project(cue.x,cue.y),t=this.reducedMotion ? .35 :1-(cue.until-now)/650;
    ctx.globalAlpha=1-t;ctx.strokeStyle=cue.kind==='damage'?'#e56b75':cue.kind==='pyrokinesis'?'#f2aa67':cue.kind==='neural-shock'?'#b69bdd':'#83f3e2';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=3;
-   if(cue.kind==='fire'&&cue.from){const from=project(cue.from.x,cue.from.y);ctx.strokeStyle='#f1cb87';ctx.beginPath();ctx.moveTo(from.x,from.y-28);ctx.lineTo(from.x+(p.x-from.x)*Math.min(1,t*3),from.y-28+(p.y-from.y)*Math.min(1,t*3));ctx.stroke();}
+   if(cue.kind==='fire'&&cue.from){
+    const from=project(cue.from.x,cue.from.y),u=Math.min(1,t*3),x=from.x+(p.x-from.x)*u,y=from.y-28+(p.y-from.y)*u;
+    ctx.strokeStyle='#ed9560';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(from.x,from.y-28);ctx.lineTo(x,y);ctx.stroke();
+    ctx.strokeStyle='#fff0bd';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(from.x,from.y-28);ctx.lineTo(x,y);ctx.stroke();
+    ctx.fillStyle='#ffe0a1';ctx.beginPath();ctx.arc(x,y,4+3*(1-t),0,Math.PI*2);ctx.fill();
+    for(let i=0;i<3;i++){const q=u*(i+1)/4;ctx.fillStyle=i%2?'#f5b276':'#fff0bd';ctx.fillRect(from.x+(p.x-from.x)*q-2,from.y-28+(p.y-from.y)*q-2,3,3);}
+   }
    else if(cue.kind==='heal'){ctx.strokeStyle='#8fe0b4';ctx.strokeRect(p.x-12,p.y-34,24,6);ctx.strokeRect(p.x-3,p.y-43,6,24);}
    else if(cue.kind==='pyrokinesis')for(let i=0;i<5;i++){const x=p.x-15+i*8;ctx.beginPath();ctx.moveTo(x-4,p.y);ctx.lineTo(x+3,p.y-24-22*t);ctx.lineTo(x+8,p.y);ctx.fill();}
-   else if(cue.kind==='damage'||cue.kind==='attack'){for(let i=0;i<5;i++){const a=i*1.26;ctx.fillRect(p.x+Math.cos(a)*(9+22*t),p.y-20+Math.sin(a)*20*t,3,6);}}
+   else if(cue.kind==='attack'){
+    ctx.strokeStyle='#f2d79b';ctx.lineWidth=5;ctx.beginPath();ctx.arc(p.x-5,p.y-25,31,-1.9+t*.8,.4+t*.8);ctx.stroke();
+    ctx.strokeStyle='#83f3e2';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x-5,p.y-25,38,-1.8+t*.8,.25+t*.8);ctx.stroke();
+    for(let i=0;i<4;i++){const q=i/3;ctx.fillStyle=q<.5?'#fff1c8':'#83f3e2';ctx.fillRect(p.x-24+q*38,p.y-47+q*17,3,3);}
+   }
+   else if(cue.kind==='damage'){
+    ctx.strokeStyle='#e56b75';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(p.x,p.y-18,10+26*t,5+13*t,0,0,Math.PI*2);ctx.stroke();
+    for(let i=0;i<6;i++){const a=i*Math.PI/3;const r=13+17*t;ctx.beginPath();ctx.moveTo(p.x+Math.cos(a)*r,p.y-18+Math.sin(a)*r*.5);ctx.lineTo(p.x+Math.cos(a)*(r+8),p.y-18+Math.sin(a)*(r+8)*.5);ctx.stroke();}
+   }
    else if(cue.kind==='phase-step'){ctx.strokeRect(p.x-12-20*t,p.y-52,24,48);ctx.strokeRect(p.x+6+20*t,p.y-48,24,48);}
    else if(cue.kind==='neural-shock'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(p.x,p.y-30,10+28*t+i*8,0,Math.PI*2);ctx.stroke();}}
    else if(cue.kind==='kinetic-pulse'){ctx.beginPath();ctx.moveTo(p.x-24,p.y-20);ctx.lineTo(p.x,p.y-42-18*t);ctx.lineTo(p.x+24,p.y-20);ctx.lineTo(p.x,p.y);ctx.closePath();ctx.stroke();}
