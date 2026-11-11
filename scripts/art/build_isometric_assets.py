@@ -96,6 +96,36 @@ def flora(d,p,v,biome):
   for x,y in [(38,97),(54,100),(35,105)]:d.line([(x,y),(x+5,y-2)],fill='#f2ead6',width=2)
 def architecture(d,p,v,biome):
  a,b,c,g=p
+ if biome=='salinas':
+  # Walls are often adjacent cells: mix low debris, ribs and rare landmarks so
+  # the map reads as terrain instead of a repeated row of full-sized buildings.
+  if v==0:
+   poly(d,[(18,111),(22,96),(33,88),(39,101),(48,94),(55,105),(67,91),(77,108),(49,122)],'#85877e')
+   poly(d,[(22,96),(33,88),(39,101),(31,104)],'#e0d7c0')
+   poly(d,[(48,94),(55,105),(47,110),(42,104)],'#d3ccb8')
+   d.line([(28,105),(34,102),(39,105)],fill='#eee5d2',width=2)
+   d.ellipse((56,105,62,109),fill='#58cabf')
+  elif v==1:
+   # Single broken rib arch, lower and narrower than the landmark tower.
+   d.ellipse((27,54,69,111),outline='#88897f',width=8)
+   d.arc((30,56,66,106),180,360,fill='#eee5d2',width=4)
+   d.line([(30,81),(25,109),(39,115)],fill='#d7d0b8',width=5)
+   d.line([(66,82),(72,109),(59,116)],fill='#c8c1ad',width=5)
+   d.line([(38,114),(48,119),(59,114)],fill='#555b5b',width=2)
+   d.ellipse((45,74,51,80),fill='#58cabf')
+  else:
+   # A landmark structure appears only on the tallest of the three variants.
+   poly(d,[(28,113),(29,49),(39,36),(44,53),(44,114)],'#777c76')
+   poly(d,[(55,114),(55,53),(64,36),(70,51),(70,109)],'#8e9184')
+   d.line([(34,106),(35,56),(39,45),(40,106)],fill='#eee5d2',width=4)
+   d.line([(61,106),(61,57),(64,45),(67,58),(67,106)],fill='#d7d0b8',width=4)
+   d.arc((37,39,62,91),180,360,fill='#e8dfcc',width=5)
+   d.arc((41,47,58,85),180,360,fill='#c9c1ad',width=3)
+   d.rectangle((44,72,54,116),fill='#101820')
+   d.line([(42,73),(49,64),(56,73)],fill='#eee5d2',width=3)
+   d.ellipse((46,48,52,54),fill='#58cabf')
+   if v==2:d.line([(49,42),(49,25)],fill='#e5ddc9',width=4);poly(d,[(45,27),(49,15),(54,27)],'#d7d0b8')
+  return
  # buttressed structure, separately occluded by its ground anchor
  poly(d,[(19,109),(19,49),(49,32),(78,47),(78,109),(49,123)],a)
  poly(d,[(19,49),(49,32),(78,47),(48,63)],c);poly(d,[(19,49),(48,63),(48,123),(19,109)],b)
