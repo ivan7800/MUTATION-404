@@ -1,0 +1,11 @@
+{
+  "name": "MUTATION 404 — ASCENSION",
+  "short_name": "MUTATION 404",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#081113",
+  "theme_color": "#142922",
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}

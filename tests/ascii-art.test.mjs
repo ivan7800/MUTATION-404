@@ -1,0 +1,93 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {composition,isOccludingTerrain,terrainComposition,terrainHeight} from '../play/js/apps/web/src/ascii-art.js';
+
+test('visual elevation shares solid and walkable terrain rules',()=>{
+  assert.equal(terrainHeight('#',0),7);
+  assert.equal(terrainHeight('#',.99),13);
+  assert.equal(terrainHeight('%',.99),9);
+  assert.equal(terrainHeight('=',0),5);
+  assert.equal(terrainHeight('T',.99),4);
+  for(const tile of ['.','~',':','+'])assert.equal(terrainHeight(tile,.99),0);
+});
+
+test('hero actions retain distinct printable ASCII silhouettes in the shipped renderer data',()=>{
+  const idle=composition('@').join('\n');
+  for(const action of ['walk','attack','damage','mutation','interact','death']){
+    const rows=composition(`hero:${action}`);
+    assert.ok(rows.length>=3,`${action} must have a full silhouette`);
+    assert.notEqual(rows.join('\n'),idle,`${action} must read differently from idle`);
+    for(const row of rows)assert.match(row,/^[\x20-\x7e]+$/,`${action} contains a non-ASCII drawing character`);
+  }
+  assert.notDeepEqual(composition('hero:attack',0),composition('hero:attack',1));
+});
+test('all original enemy types and boss have a visible ASCII wound pose',()=>{
+  for(const glyph of ['s','V','l','p','D','f','✺','◆']){
+    const idle=composition(glyph),hurt=composition(`enemy:hurt:${glyph}`);
+    assert.ok(hurt.length>=3,`${glyph} wound pose missing`);
+    assert.notDeepEqual(hurt,idle,`${glyph} wound pose must differ from idle`);
+    for(const row of hurt)assert.match(row,/^[\x20-\x7e]+$/);
+  }
+});
+test('all original enemy types and boss leave distinct printable ASCII death marks',()=>{
+  for(const glyph of ['s','V','l','p','D','f','✺','◆']){
+    const rows=composition(`enemy:death:${glyph}`);
+    assert.ok(rows.length>=3,`${glyph} death mark missing`);
+    assert.notDeepEqual(rows,composition(`enemy:hurt:${glyph}`));
+    for(const row of rows)assert.match(row,/^[\x20-\x7e]+$/);
+  }
+});
+test('every creature has a readable post-impact recovery silhouette',()=>{
+  for(const glyph of ['s','V','l','p','D','f','✺','◆']){
+    const rows=composition(`enemy:recover:${glyph}`);
+    assert.ok(rows.length>=3,`${glyph} recovery pose missing`);
+    assert.ok(rows.join('').trim().length>=6,`${glyph} recovery pose is too sparse`);
+  }
+});
+test('terrain keeps volumetric compositions for the original tile vocabulary',()=>{
+  for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!','+','?','x','v','T','o']){
+    const rows=composition(terrainComposition(tile));
+    assert.ok(rows.length>=2,`${tile} terrain should have a visible top and side`);
+  }
+});
+test('terrain variants are deterministic and visibly distinct where variants exist',()=>{
+  assert.deepEqual(composition(terrainComposition('.',1)),composition(terrainComposition('.',1)));
+  assert.notDeepEqual(composition(terrainComposition('.',0)),composition(terrainComposition('.',1)));
+  assert.notDeepEqual(composition(terrainComposition('%',0)),composition(terrainComposition('%',2)));
+});
+test('terrain compositions provide stable dense character tramas',()=>{
+  for(const tile of ['.',';',':',',','^','#','%','=','~','*','&','!']){
+    const first=composition(terrainComposition(tile,1)).join('\n');
+    const second=composition(terrainComposition(tile,1)).join('\n');
+    assert.equal(first,second,`${tile} trama must remain stable`);
+    assert.ok(first.replace(/\s/g,'').length>=8,`${tile} trama is too sparse`);
+  }
+});
+test('only solid terrain creates a foreground occlusion lip',()=>{
+  assert.equal(isOccludingTerrain('#'),true);assert.equal(isOccludingTerrain('%'),true);assert.equal(isOccludingTerrain('='),true);
+  for(const tile of ['.','~','*','!','T','o'])assert.equal(isOccludingTerrain(tile),false);
+});
+test('gothic atmosphere and feedback share complete ASCII compositions',()=>{
+  for(const weather of ['polvo','esporas','estatica','distorsion']){
+    const rows=composition(`weather:${weather}`);
+    assert.ok(rows.length>=1,`${weather} weather glyph missing`);
+    assert.ok(rows.join('').trim().length>0);
+  }
+  for(const effect of ['attack','damage','mutation','scan']){
+    const rows=composition(`effect:${effect}`);
+    assert.ok(rows.length>=2,`${effect} feedback composition missing`);
+    assert.ok(rows.join('').trim().length>0);
+  }
+});
+test('art rescue vertical slice uses dense readable silhouettes and architecture',()=>{
+  assert.ok(composition('@').length>=5,'hero must have a cloak and readable stance');
+  for(const glyph of ['s','V','l']){
+    assert.ok(composition(glyph).length>=5,`${glyph} must have a detailed silhouette`);
+    assert.ok(composition(glyph).join('').replace(/\s/g,'').length>=18,`${glyph} must carry visual mass`);
+  }
+  for(const tile of ['#','%','=','^','*','&']){
+    const rows=composition(terrainComposition(tile,1));
+    assert.ok(rows.length>=4,`${tile} must read as a structure or organic formation`);
+    assert.ok(rows.join('').replace(/\s/g,'').length>=14,`${tile} must have dense material detail`);
+  }
+});
