@@ -367,12 +367,11 @@ try{
       await page.locator('#start-continue').click();
       const expected=mode==='webgl'?'pixi-webgl':'canvas2d';
       await page.waitForFunction(value=>document.querySelector('#viewport')?.dataset.renderer===value,expected);
-      if(mode==='webgl'){
-        await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='pixel',{timeout:25000});
-        await page.screenshot({path:`qa-evidence/enemy-pixel-${kind}.png`,fullPage:true,animations:'disabled'});
-        await page.locator('#art-mode-btn').click();
-        await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='ascii');
-      }
+      // Audit the pixel scene on BOTH backends before exercising legacy ASCII poses.
+      await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='pixel',{timeout:25000});
+      await page.screenshot({path:`qa-evidence/enemy-pixel-${kind}-${mode}.png`,fullPage:true,animations:'disabled'});
+      await page.locator('#art-mode-btn').click();
+      await page.waitForFunction(()=>document.querySelector('#viewport')?.dataset.artMode==='ascii');
       await page.evaluate(()=>{window.__attackRows=[];});
       await page.locator('.secondary-actions').evaluate(el=>el.open=true);await page.locator('#wait-btn').click();
       const rows=composition('enemy:attack:'+ENEMY_DEFS[kind].glyph);

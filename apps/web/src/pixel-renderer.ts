@@ -1,4 +1,4 @@
-import {ACTORS,ENEMY_DEFS,biomeAt,BIOMES,HEIGHT,WIDTH,settlementCitizens,type GameState} from '../../../packages/core/src/game.js';
+import {ACTORS,ENEMY_DEFS,biomeAt,BIOMES,HEIGHT,WIDTH,settlementCitizens,type GameState,type Command} from '../../../packages/core/src/game.js';
 import {index} from '../../../packages/core/src/world.js';
 import {terrainHash} from '../../../packages/core/src/biomes.js';
 import type {AsciiRenderer} from './renderer.js';
@@ -8,7 +8,7 @@ import {coordsForZone} from '../../../packages/core/src/frontier.js';
 import {project,unproject,depth,direction} from './isometric.js';
 type Asset={rect:[number,number,number,number];pivot:[number,number]};
 type Entry={asset:string;x:number;y:number;alpha:number;order:number;id?:string};
-type Cue={x:number;y:number;kind:string;until:number};
+type Cue={x:number;y:number;kind:string;until:number;from?:{x:number;y:number}};
 /** Canvas painter is shared verbatim by the WebGL presenter and Canvas fallback. */
 export class PixelRenderer{
  readonly mode='pixel' as const;
@@ -123,7 +123,9 @@ export class PixelRenderer{
   for(const cue of this.cues)if(cue.until>now&&!this.reducedMotion){
    const p=project(cue.x,cue.y),t=this.reducedMotion ? .35 :1-(cue.until-now)/650;
    ctx.globalAlpha=1-t;ctx.strokeStyle=cue.kind==='damage'?'#e56b75':cue.kind==='pyrokinesis'?'#f2aa67':cue.kind==='neural-shock'?'#b69bdd':'#83f3e2';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=3;
-   if(cue.kind==='pyrokinesis')for(let i=0;i<5;i++){const x=p.x-15+i*8;ctx.beginPath();ctx.moveTo(x-4,p.y);ctx.lineTo(x+3,p.y-24-22*t);ctx.lineTo(x+8,p.y);ctx.fill();}
+   if(cue.kind==='fire'&&cue.from){const from=project(cue.from.x,cue.from.y);ctx.strokeStyle='#f1cb87';ctx.beginPath();ctx.moveTo(from.x,from.y-28);ctx.lineTo(from.x+(p.x-from.x)*Math.min(1,t*3),from.y-28+(p.y-from.y)*Math.min(1,t*3));ctx.stroke();}
+   else if(cue.kind==='heal'){ctx.strokeStyle='#8fe0b4';ctx.strokeRect(p.x-12,p.y-34,24,6);ctx.strokeRect(p.x-3,p.y-43,6,24);}
+   else if(cue.kind==='pyrokinesis')for(let i=0;i<5;i++){const x=p.x-15+i*8;ctx.beginPath();ctx.moveTo(x-4,p.y);ctx.lineTo(x+3,p.y-24-22*t);ctx.lineTo(x+8,p.y);ctx.fill();}
    else if(cue.kind==='damage'||cue.kind==='attack'){for(let i=0;i<5;i++){const a=i*1.26;ctx.fillRect(p.x+Math.cos(a)*(9+22*t),p.y-20+Math.sin(a)*20*t,3,6);}}
    else if(cue.kind==='phase-step'){ctx.strokeRect(p.x-12-20*t,p.y-52,24,48);ctx.strokeRect(p.x+6+20*t,p.y-48,24,48);}
    else if(cue.kind==='neural-shock'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(p.x,p.y-30,10+28*t+i*8,0,Math.PI*2);ctx.stroke();}}
@@ -141,6 +143,10 @@ export class PixelRenderer{
  pauseAmbience(){this.running=false;cancelAnimationFrame(this.raf);}
  destroy(){this.pauseAmbience();this.dispose?.();this.canvas.remove();}
  heroFeedback(s:GameState,a:HeroAction){this.heroAction=a;this.heroUntil=performance.now()+650;this.draw(s);}
+ commandFeedback(s:GameState,command:Command){
+  if(command.type==='fire'){const e=s.enemies.find(e=>e.id===s.targetId);this.cues.push({x:e?.x??s.player.x,y:e?.y??s.player.y,from:{...s.player},kind:'fire',until:performance.now()+650});}
+  if(command.type==='heal')this.cues.push({...s.player,kind:'heal',until:performance.now()+650});
+ }
  enemyFeedback(s:GameState,events:readonly import('../../../packages/core/src/game.js').EnemyVisualAction[]=[]){for(const e of events)if(e.zone===s.zone&&s.visible[index(e.x,e.y)]===1)this.enemyActions.set(e.id,performance.now()+650);}
  combatFeedback(previous:ReadonlyMap<string,{hp:number;x:number;y:number;zone:string;glyph:string}>,s:GameState){for(const e of s.enemies)if(e.hp<(previous.get(e.id)?.hp??e.hp)){this.hits.set(e.id,performance.now()+600);this.cues.push({x:e.x,y:e.y,kind:'damage',until:performance.now()+650});}}
  environmentFeedback(_previous:unknown,_s:GameState){void _previous;void _s;}

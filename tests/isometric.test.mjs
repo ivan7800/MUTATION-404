@@ -25,3 +25,22 @@ test('production atlas includes complete directional poses and six biomes',()=>{
  }
  for(const [name,a] of Object.entries(meta)){assert.deepEqual(a.pivot,[48,112],name);assert.equal(a.rect[2],96);assert.equal(a.rect[3],128);}
 });
+
+import {PixelRenderer} from '../play/js/apps/web/src/pixel-renderer.js';
+import {createGame,serialize} from '../dist/core/core/src/game.js';
+test('production painter keeps the save immutable, actors upright and cached floor out of animation',()=>{
+ const calls=[],floorCalls=[];
+ const context=list=>new Proxy({globalAlpha:1,drawImage(...args){list.push({alpha:this.globalAlpha,args});}}, {get:(obj,key)=>key in obj?obj[key]:()=>{}});
+ const renderer=Object.create(PixelRenderer.prototype);
+ Object.assign(renderer,{ctx:context(calls),floorCtx:context(floorCalls),floor:{},atlas:{},assets:meta,scale:1,entries:[],origin:{x:0,y:0},frames:0,builds:0,totalMs:0,lastMs:0,reducedMotion:true,heroAction:null,heroUntil:0,cues:[],hits:new Map(),enemyActions:new Map(),present:null});
+ const s=createGame(404);s.tiles.fill('.');s.visible.fill(1);s.seen.fill(1);s.enemies=[];
+ s.tiles[32*96+31]='#';s.tiles[32*96+33]='#';
+ const before=serialize(s);renderer.draw(s);assert.equal(serialize(s),before);
+ const back=renderer.entries.findIndex(e=>e.x===31&&e.y===32);
+ const hero=renderer.entries.findIndex(e=>e.id==='hero');
+ const front=renderer.entries.findIndex(e=>e.x===33&&e.y===32);
+ assert.ok(back<hero&&hero<front);
+ assert.ok(calls.some(c=>c.alpha===.35),'foreground obstruction must fade when overlapping the hero');
+ for(const c of calls.filter(c=>c.args.length===9)){assert.equal(c.args[7],96);assert.equal(c.args[8],128,'upright sprite height must stay intact');}
+ const built=floorCalls.length;renderer.render(180);assert.equal(floorCalls.length,built,'ambient presentation must reuse the built floor');assert.equal(serialize(s),before);
+});

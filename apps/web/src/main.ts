@@ -320,6 +320,7 @@ function act(command:Command):void{
   const beforeFields=state.fields.map(field=>({...field}));
   const priorNacar=state.zone==='zero-3'?beforeEnemies.get(FINAL_GUARDIAN_ID):undefined;
   const {result,events}=dispatchWithFeedback(state,command);
+  if(result.accepted&&'commandFeedback' in renderer)renderer.commandFeedback(state,command);
   if(result.accepted)renderer.enemyFeedback(state,events);
   if(result.accepted&&'combatFeedback' in renderer)renderer.combatFeedback(beforeEnemies,state);
   if(result.accepted&&'environmentFeedback' in renderer)renderer.environmentFeedback(beforeFields,state);

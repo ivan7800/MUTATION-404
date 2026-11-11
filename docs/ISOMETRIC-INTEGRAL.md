@@ -20,13 +20,17 @@ Cada celda del atlas mide 96×128 con pivote (48,112); el suelo es un rombo 64×
 
 - `npm ci --no-audit --no-fund`: realizado.
 - `npm run typecheck`, `npm run lint`, `npm run build:offline`: correctos.
-- `npm test`: 199 pruebas, 0 fallos.
+- `npm test`: 200 pruebas, 0 fallos.
 - `node scripts/qa-campaign.mjs`: 3/3 finales, 12 checkpoints.
 - Chromium local bloqueado por sockets AF_UNIX (`Operation not permitted`); ejecución con permisos ampliados rechazada por política. La CI realiza los recorridos en navegador y guarda qa-evidence como artefacto.
 
-## Pendiente de aceptación
+## Revisión visual y continuidad
 
-Revisión visual real y resultados de navegador; efectos específicos de cada habilidad todavía necesitan una pasada artística (varios comparten un anillo). La arquitectura comparte módulo de base con variaciones estructurales por bioma; la fidelidad a la referencia no está certificada. Los estados de ataque de enemigos existen en el atlas pero falta vincularlos a cada evento individual. El terreno interior conserva actualmente la paleta derivada de coordenadas. No presentar la rama como transformación integral terminada mientras estos puntos y la revisión visual estén pendientes.
+Se han generado y revisado capturas reales de los seis biomas, mundo inicial, inventario y móvil en Chromium. Esa revisión llevó a compactar el encuadre y la cabecera móvil, adelantar la misión y separar las descripciones del inventario.
+
+Las pruebas de navegador detectaron y motivaron correcciones de preservación del elemento de coordenadas, selección de Canvas sin WebGL y precarga offline de PNG/JSON. Los efectos de mutación tienen geometría propia y los ataques de enemigos usan sus eventos aceptados. Los interiores seleccionan materiales por identidad de zona; el core no cambia.
+
+La guía completa está en ISOMETRIC-ART-GUIDE.md. Falta cerrar la ejecución de navegador del último commit y adjuntar su evidencia. No hay certificación en GPU física, revisión humana de toda la campaña ni equivalencia pictórica con la imagen conceptual. El arte nuevo tiene un acabado geométrico reproducible. La rama no se publica en main por esta PR.
 
 ## Reproducir
 

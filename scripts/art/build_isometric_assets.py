@@ -36,10 +36,10 @@ def rock(d,p,v):
 def flora(d,p,v,biome):
  a,b,c,g=p
  if biome=='vidrio':
-  for x,h in [(35,28),(49,50),(61,22)]:
+  for x,h in [(31+v*3,22+v*4),(49,42+v*7),(65-v*2,17+v*5)]:
    poly(d,[(x-6,111),(x-4,111-h),(x,103-h),(x+7,109-h),(x+5,113)],b);d.line([(x,104-h),(x,110)],fill=g,width=2)
  elif biome=='hierro':
-  for x,h in [(33,17),(49,36),(61,24)]:
+  for x,h in [(30+v*4,17+v*5),(49,36-v*4),(65-v*3,24+v*3)]:
    d.rectangle((x-4,110-h,x+4,112),fill=b);d.rectangle((x-2,110-h,x,109),fill=c);d.rectangle((x-7,106-h,x+7,112-h),fill=a)
  elif biome=='medula':
   d.line([(45,113),(49,65-v*6),(43,44-v*4)],fill=c,width=5)
