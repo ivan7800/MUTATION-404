@@ -20,7 +20,7 @@ Cada celda del atlas mide 96×128 con pivote (48,112); el suelo es un rombo 64×
 
 - `npm ci --no-audit --no-fund`: realizado.
 - `npm run typecheck`, `npm run lint`, `npm run build:offline`: correctos.
-- `npm test`: 200 pruebas, 0 fallos.
+- `npm test`: 201 pruebas, 0 fallos.
 - `node scripts/qa-campaign.mjs`: 3/3 finales, 12 checkpoints.
 - Chromium local bloqueado por sockets AF_UNIX (`Operation not permitted`); ejecución con permisos ampliados rechazada por política. La CI realiza los recorridos en navegador y guarda qa-evidence como artefacto.
 
@@ -30,7 +30,7 @@ Se han generado y revisado capturas reales de los seis biomas, mundo inicial, in
 
 Las pruebas de navegador detectaron y motivaron correcciones de preservación del elemento de coordenadas, selección de Canvas sin WebGL y precarga offline de PNG/JSON. Los efectos de mutación tienen geometría propia y los ataques de enemigos usan sus eventos aceptados. Los interiores seleccionan materiales por identidad de zona; el core no cambia.
 
-La guía completa está en ISOMETRIC-ART-GUIDE.md. Falta cerrar la ejecución de navegador del último commit y adjuntar su evidencia. No hay certificación en GPU física, revisión humana de toda la campaña ni equivalencia pictórica con la imagen conceptual. El arte nuevo tiene un acabado geométrico reproducible. La rama no se publica en main por esta PR.
+La guía completa está en ISOMETRIC-ART-GUIDE.md. El run 42928209791 verificó los seis biomas, el recorrido isométrico WebGL/Canvas y el modo offline con actualización de caché. Su batería legacy falló al intentar buscar glifos ASCII sobre el modo pixel Canvas; el recorrido ya selecciona ASCII explícitamente para esa comprobación. Está pendiente cerrar esa batería en el último commit y adjuntar la evidencia. No hay certificación en GPU física, revisión humana de toda la campaña ni equivalencia pictórica con la imagen conceptual. El arte nuevo tiene un acabado geométrico reproducible. La rama no se publica en main por esta PR.
 
 ## Reproducir
 
