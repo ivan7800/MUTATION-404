@@ -25,6 +25,18 @@ def floor(d,p,v):
   d.line([(x,y),(x+4,y-2),(x+8,y)],fill=c,width=1)
  if v%3==0:d.line([(40,101),(43,110),(38,115),(48,122)],fill=a,width=2)
  if v==4:d.line([(29,110),(47,108),(56,114)],fill=g,width=1)
+ # Salinas use layered evaporite plates and hairline mineral seams, not a
+ # flat repeating diamond. Keep all marks inside the walkable tile silhouette.
+ if p[0]=='#777c76':
+  seams=[[(25,111),(34,108),(40,110)],[(50,101),(58,104),(67,109)],
+         [(29,117),(37,114),(44,117)],[(51,115),(59,112),(69,114)]]
+  for i,line in enumerate(seams):
+   d.line(line,fill='#d9d2bd' if (i+v)%2 else '#696f6d',width=1)
+  if v in (1,4):
+   d.line([(35,104),(39,102),(42,103)],fill='#e6dfcc',width=1)
+   d.line([(55,119),(61,116),(64,117)],fill='#545d61',width=1)
+  if v==5:
+   d.ellipse((43,106,49,110),fill='#58cabf');d.point((46,108),fill='#e0f1d8')
 def rock(d,p,v):
  a,b,c,g=p;x=48;h=22+v*7
  poly(d,[(25,108),(28,100-h),(43,88-h),(64,96-h),(72,107),(48,119)],a)
@@ -33,6 +45,15 @@ def rock(d,p,v):
  d.line([(46,99-h),(54,103-h),(50,111)],fill=a,width=2)
  for i in range(4):d.line([(32+i*6,104-h//2+i),(37+i*6,102-h//2+i)],fill=a)
  if v==2:d.line([(55,98-h),(57,108-h),(51,116)],fill=g,width=2)
+ if p[0]=='#777c76':
+  # Salt-buried bone and stone strata give each outcrop a readable lit face.
+  poly(d,[(28,103-h),(43,91-h),(55,95-h),(45,101-h)],'#d7d0b8')
+  poly(d,[(47,103-h),(61,99-h),(68,106),(50,110)],'#85877e')
+  d.line([(30,105-h),(38,102-h),(42,104-h)],fill='#eee5cf',width=2)
+  d.line([(51,105-h),(58,103-h),(64,106-h)],fill='#c1bba8',width=1)
+  if v==1:
+   d.arc((34,86-h,61,111-h),200,335,fill='#58cabf',width=2)
+   d.point((51,96-h),fill='#d9ffff')
 def flora(d,p,v,biome):
  a,b,c,g=p
  if biome=='vidrio':
@@ -49,6 +70,30 @@ def flora(d,p,v,biome):
   for x,y in [(28,80),(65,67),(33,97)]:d.line([(47,103),(x,y),(x+2,y-12)],fill=c,width=2)
   if biome!='ceniza':
    for x,y in [(28,68),(65,55),(51,58-v*5)]:d.ellipse((x-3,y-3,x+4,y+3),fill=g)
+ if biome=='salinas':
+  # Bleached branching salt-bone with layered crust and translucent cyan tips.
+  d.ellipse((31,102,67,114),fill='#77776d')
+  if v==0:
+   d.line([(48,110),(45,92),(49,78),(45,65)],fill='#e0d7c0',width=5)
+   d.line([(46,91),(35,81),(29,68)],fill='#c8c1ad',width=4)
+   d.line([(48,86),(60,77),(66,64)],fill='#eee5d2',width=4)
+   d.line([(45,75),(38,69),(36,59)],fill='#d3ccb8',width=3)
+   tips=[(29,65),(35,56),(65,61),(47,62)]
+  elif v==1:
+   d.line([(47,111),(51,92),(45,79),(50,66)],fill='#e0d7c0',width=6)
+   d.line([(48,93),(35,87),(27,76)],fill='#c8c1ad',width=4)
+   d.line([(49,87),(63,78),(68,66)],fill='#eee5d2',width=4)
+   d.line([(46,80),(37,74),(37,65)],fill='#d3ccb8',width=3)
+   tips=[(27,73),(37,62),(68,63),(51,62)]
+  else:
+   d.line([(46,111),(43,94),(50,82),(47,72)],fill='#e0d7c0',width=6)
+   d.line([(45,95),(33,90),(25,83)],fill='#c8c1ad',width=4)
+   d.line([(48,85),(59,87),(70,80)],fill='#eee5d2',width=4)
+   d.line([(47,78),(39,70),(42,61)],fill='#d3ccb8',width=3)
+   tips=[(25,80),(42,58),(70,77),(48,68)]
+  for x,y in tips:
+   d.ellipse((x-4,y-4,x+4,y+3),fill='#58cabf');d.ellipse((x-1,y-2,x+1,y),fill='#d9fff5')
+  for x,y in [(38,97),(54,100),(35,105)]:d.line([(x,y),(x+5,y-2)],fill='#f2ead6',width=2)
 def architecture(d,p,v,biome):
  a,b,c,g=p
  # buttressed structure, separately occluded by its ground anchor
@@ -90,6 +135,27 @@ def architecture(d,p,v,biome):
   for x,y in [(25,93),(61,101),(53,67)]:d.line([(x,y),(x+4,y-2)],fill=g,width=2)
  else:
   for x,y in [(21,102),(65,106),(31,67)]:poly(d,[(x,y),(x+2,y-10),(x+7,y-4),(x+10,y)],c)
+ if biome=='salinas':
+  # A ribbed salt ossuary replaces the generic masonry silhouette.
+  poly(d,[(18,108),(20,54),(30,39),(35,55),(34,111)],'#777c76')
+  poly(d,[(62,113),(61,54),(69,37),(77,54),(78,109)],'#8e9184')
+  d.line([(24,104),(25,61),(30,49),(31,104)],fill='#e5ddc9',width=4)
+  d.line([(67,107),(67,61),(70,48),(73,62),(73,108)],fill='#d7d0b8',width=4)
+  # Interlocked ribs frame a deep, readable central opening.
+  d.arc((27,31,70,91),180,360,fill='#e8dfcc',width=5)
+  d.arc((32,40,65,85),180,360,fill='#c9c1ad',width=3)
+  d.rectangle((42,70,55,116),fill='#101820')
+  d.line([(40,70),(48,60),(57,70)],fill='#eee5d2',width=3)
+  for x,y in [(28,43),(69,41),(33,57),(64,55)]:
+   d.ellipse((x-3,y-3,x+3,y+3),fill='#58cabf')
+  d.line([(21,111),(34,115),(48,121),(63,116),(77,111)],fill='#514f4b',width=2)
+  if v==1:
+   d.line([(48,36),(48,18)],fill='#e5ddc9',width=4)
+   poly(d,[(44,20),(48,7),(53,20)],'#d7d0b8')
+   d.ellipse((45,28,51,34),fill='#58cabf')
+  elif v==2:
+   d.line([(29,51),(48,43),(68,50)],fill='#e8dfcc',width=3)
+   d.arc((38,31,58,53),190,350,fill='#58cabf',width=2)
  # Broken lintels and tiny masonry joints create scale without obscuring paths.
  for y in range(69,108,10):
   d.line([(30,y-4),(30,y)],fill=a);d.line([(61,y+1),(61,y+5)],fill=a)
